@@ -208,7 +208,7 @@
     color:var(--text);
     transition:border-color .15s, background .15s;
   }
-  .answer:hover{border-color:var(--border)}
+  @media (hover:hover){ .answer:hover{border-color:var(--border)} }
   .answer .letter{
     flex:0 0 28px;height:28px;border-radius:50%;
     background:var(--surface);border:1px solid var(--border);
@@ -906,10 +906,13 @@ function scheduleNext(){
   const last = session.idx === session.questions.length-1;
   btn.textContent = last ? 'Voir les résultats' : 'Question suivante';
   btn.classList.remove('hidden');
-  setTimeout(()=>{ if(session.locked) goNext(); }, FEEDBACK_DELAY_MS);
+  clearTimeout(session.autoNextId);
+  session.autoNextId = setTimeout(()=>{ if(session.locked) goNext(); }, FEEDBACK_DELAY_MS);
 }
 
 function goNext(){
+  clearTimeout(session.autoNextId);
+  session.autoNextId = null;
   if(session.idx < session.questions.length-1){
     session.idx += 1;
     renderQuestion();
@@ -995,6 +998,7 @@ $('btnStart').addEventListener('click', ()=>{
 });
 $('btnNext').addEventListener('click', goNext);
 $('btnRestart').addEventListener('click', ()=>{
+  if(session){ clearTimeout(session.autoNextId); session.autoNextId=null; }
   hide('screen-result');
   show('screen-start');
 });
