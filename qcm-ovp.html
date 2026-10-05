@@ -300,11 +300,10 @@
   <!-- START SCREEN -->
   <section id="screen-start" class="card">
     <h1>QCM Opérateur en vidéoprotection</h1>
-    <p class="lead">30 questions tirées au hasard parmi la banque. Ordre des questions et des réponses mélangés à chaque session. 45 secondes par question.</p>
+    <p class="lead">30 questions tirées au hasard parmi la banque. Ordre des questions et des réponses mélangés à chaque session. 1 minute par question.</p>
     <div class="stat-row">
       <div class="stat"><div class="n">30</div><div class="lab">Questions</div></div>
-      <div class="stat"><div class="n">45 s</div><div class="lab">Par question</div></div>
-      <div class="stat"><div class="n" id="poolSize">—</div><div class="lab">Banque</div></div>
+      <div class="stat"><div class="n">1 min</div><div class="lab">Par question</div></div>
     </div>
     <ul style="color:var(--muted);font-size:14px;padding-left:18px;margin:4px 0 0">
       <li>Uniformes et insignes</li>
@@ -322,7 +321,7 @@
   <section id="screen-quiz" class="card hidden">
     <div class="status">
       <span id="qCounter">Question 1 / 30</span>
-      <span class="timer-text" id="timerText">0:45</span>
+      <span class="timer-text" id="timerText">1:00</span>
     </div>
     <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
     <div class="timer-wrap"><div class="timer-bar" id="timerBar"></div></div>
@@ -748,7 +747,7 @@ const BANK = [
 
 /* ========= Config ========= */
 const QCM_SIZE = 30;
-const TIME_PER_Q = 45; // seconds
+const TIME_PER_Q = 60; // seconds
 const FEEDBACK_DELAY_MS = 1300; // auto-advance when answered
 
 /* ========= State ========= */
@@ -962,7 +961,6 @@ function escapeHtml(s){
 }
 
 /* ========= Wire up ========= */
-$('poolSize').textContent = BANK.length;
 $('btnStart').addEventListener('click', ()=>{
   newSession();
   hide('screen-start');
