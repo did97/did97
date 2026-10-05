@@ -1,0 +1,1139 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b2545" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a1222" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-title" content="QCM OVP">
+<title>QCM OVP 8 thèmes — Android</title>
+<style>
+  :root{
+    --bg:#f4f6fb;
+    --surface:#ffffff;
+    --surface-2:#eef1f8;
+    --text:#0b2545;
+    --muted:#4a5a73;
+    --border:#d6dcea;
+    --primary:#0b2545;
+    --primary-contrast:#ffffff;
+    --accent:#1d4ed8;
+    --good:#15803d;
+    --good-bg:#dcfce7;
+    --bad:#b91c1c;
+    --bad-bg:#fee2e2;
+    --warn:#b45309;
+    --shadow:0 2px 8px rgba(11,37,69,.08);
+    --radius:14px;
+    --radius-sm:10px;
+  }
+  :root:not([data-theme="light"]) {}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1222;
+      --surface:#111a2e;
+      --surface-2:#172240;
+      --text:#eaf0ff;
+      --muted:#9fb0cf;
+      --border:#243354;
+      --primary:#eaf0ff;
+      --primary-contrast:#0b1a33;
+      --accent:#60a5fa;
+      --good:#4ade80;
+      --good-bg:#0f3d26;
+      --bad:#f87171;
+      --bad-bg:#3f1414;
+      --warn:#fbbf24;
+      --shadow:0 2px 10px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1222;
+    --surface:#111a2e;
+    --surface-2:#172240;
+    --text:#eaf0ff;
+    --muted:#9fb0cf;
+    --border:#243354;
+    --primary:#eaf0ff;
+    --primary-contrast:#0b1a33;
+    --accent:#60a5fa;
+    --good:#4ade80;
+    --good-bg:#0f3d26;
+    --bad:#f87171;
+    --bad-bg:#3f1414;
+    --warn:#fbbf24;
+    --shadow:0 2px 10px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:16px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+    overscroll-behavior-y:contain;
+    min-height:100vh;
+    min-height:100dvh;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .app{
+    max-width:720px;
+    margin:0 auto;
+    padding:16px;
+  }
+  header.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:8px 4px 16px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    letter-spacing:.3px;
+    font-size:15px;
+  }
+  .brand .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 0 4px rgba(29,78,216,.25);
+  }
+  .theme-toggle{
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text);
+    width:40px;height:40px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:18px;
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px;
+  }
+  h1{font-size:22px;margin:0 0 6px}
+  h2{font-size:18px;margin:0 0 10px}
+  p.lead{color:var(--muted);margin:0 0 16px}
+  .btn,.answer,.theme-toggle{
+    -webkit-appearance:none;appearance:none;
+    -webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none;user-select:none;
+    -webkit-touch-callout:none;
+    touch-action:manipulation;
+  }
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    gap:8px;
+    padding:14px 18px;
+    border-radius:999px;
+    border:1px solid transparent;
+    font-size:16px;font-weight:600;
+    cursor:pointer;
+    min-height:48px;
+    width:100%;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--primary);color:var(--primary-contrast)}
+  .btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+  .btn-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .btn-row .btn{flex:1 1 140px}
+
+  /* Progress + timer */
+  .status{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:12px;margin-bottom:12px;
+    font-size:13px;color:var(--muted);
+  }
+  .progress-wrap{
+    height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin-bottom:6px;
+  }
+  .progress-bar{height:100%;background:var(--accent);width:0;transition:width .2s ease}
+  .timer-wrap{
+    height:8px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin:14px 0 18px;
+  }
+  .timer-bar{height:100%;width:100%;background:var(--good);transition:width 1s linear, background .3s ease}
+  .timer-bar.warn{background:var(--warn)}
+  .timer-bar.danger{background:var(--bad)}
+  .timer-text{
+    font-variant-numeric:tabular-nums;
+    font-weight:700;
+    color:var(--text);
+  }
+
+  .q-text{
+    font-size:17px;
+    font-weight:600;
+    margin:4px 0 14px;
+    line-height:1.4;
+  }
+  .q-topic{
+    display:inline-block;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--muted);
+    background:var(--surface-2);
+    padding:4px 10px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .answers{display:flex;flex-direction:column;gap:10px}
+  .answer{
+    display:flex;align-items:flex-start;gap:12px;
+    padding:14px 16px;
+    background:var(--surface-2);
+    border:2px solid transparent;
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    min-height:52px;
+    font-size:15.5px;
+    text-align:left;
+    width:100%;
+    color:var(--text);
+    transition:border-color .15s, background .15s;
+  }
+  @media (hover:hover){ .answer:hover{border-color:var(--border)} }
+  .answer .letter{
+    flex:0 0 28px;height:28px;border-radius:50%;
+    background:var(--surface);border:1px solid var(--border);
+    display:inline-flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:13px;
+  }
+  .answer.selected{border-color:var(--accent)}
+  .answer.correct{background:var(--good-bg);border-color:var(--good);color:var(--text)}
+  .answer.wrong{background:var(--bad-bg);border-color:var(--bad);color:var(--text)}
+  .answer.correct .letter{background:var(--good);color:#fff;border-color:var(--good)}
+  .answer.wrong .letter{background:var(--bad);color:#fff;border-color:var(--bad)}
+  .answer:disabled{cursor:default}
+
+  .feedback{
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:var(--radius-sm);
+    font-size:14.5px;
+    display:none;
+  }
+  .feedback.show{display:block}
+  .feedback.good{background:var(--good-bg);color:var(--good);border:1px solid var(--good)}
+  .feedback.bad{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad)}
+
+  /* Results */
+  .score-ring{
+    width:160px;height:160px;margin:8px auto 16px;
+    position:relative;
+  }
+  .score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .score-ring .track{stroke:var(--surface-2);stroke-width:12;fill:none}
+  .score-ring .fill{stroke:var(--accent);stroke-width:12;fill:none;stroke-linecap:round;transition:stroke-dasharray .8s ease}
+  .score-ring .label{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;
+    font-weight:700;
+  }
+  .score-ring .pct{font-size:28px;letter-spacing:-.5px}
+  .score-ring .small{font-size:12px;color:var(--muted);font-weight:500;margin-top:4px;text-align:center}
+
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+  .stat{background:var(--surface-2);border-radius:var(--radius-sm);padding:10px;text-align:center}
+  .stat .n{font-size:20px;font-weight:700}
+  .stat .lab{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+  .review-item{
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:14px;
+    margin-top:10px;
+    background:var(--surface);
+  }
+  .review-item .q{font-weight:600;margin-bottom:8px;font-size:15px}
+  .review-item .tag{
+    font-size:11px;text-transform:uppercase;letter-spacing:.5px;
+    padding:3px 8px;border-radius:999px;margin-left:6px;
+  }
+  .tag.good{background:var(--good-bg);color:var(--good)}
+  .tag.bad{background:var(--bad-bg);color:var(--bad)}
+  .tag.skip{background:var(--surface-2);color:var(--muted)}
+  .review-item ul{list-style:none;padding:0;margin:8px 0 0}
+  .review-item li{
+    padding:8px 10px;border-radius:8px;margin-bottom:4px;
+    font-size:14px;
+    background:var(--surface-2);
+    display:flex;align-items:center;gap:8px;
+  }
+  .review-item li.correct{background:var(--good-bg);color:var(--text)}
+  .review-item li.mychoice.wrong{background:var(--bad-bg);color:var(--text)}
+  .review-item li .mark{
+    width:18px;height:18px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;font-size:11px;
+    flex:0 0 18px;
+    background:var(--surface);border:1px solid var(--border);
+  }
+  .review-item li.correct .mark{background:var(--good);color:#fff;border-color:var(--good)}
+  .review-item li.mychoice.wrong .mark{background:var(--bad);color:#fff;border-color:var(--bad)}
+
+  footer{
+    text-align:center;color:var(--muted);font-size:12px;padding:20px 10px 10px;
+  }
+  @media (max-width:420px){
+    .app{padding:12px}
+    .card{padding:16px}
+    h1{font-size:20px}
+    .q-text{font-size:16px}
+    .answer{font-size:15px;padding:12px 14px}
+    .score-ring{width:140px;height:140px}
+    .score-ring .pct{font-size:24px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important}
+  }
+
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span><span>QCM OVP — 8 thèmes</span></div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Basculer thème" title="Basculer thème">◐</button>
+  </header>
+
+  <!-- START SCREEN -->
+  <section id="screen-start" class="card">
+    <h1>QCM OVP — 8 thèmes</h1>
+    <div class="stat-row">
+      <div class="stat"><div class="n">30</div><div class="lab">Questions</div></div>
+      <div class="stat"><div class="n">1 min</div><div class="lab">Par question</div></div>
+    </div>
+    <ul style="color:var(--muted);font-size:14px;padding-left:18px;margin:4px 0 0">
+      <li>Principes républicains, neutralité, discrimination</li>
+      <li>Droit de la sécurité privée</li>
+      <li>Attitude professionnelle</li>
+      <li>Conflits et stress</li>
+      <li>Consignes, information et alerte</li>
+      <li>Droit de la vidéoprotection</li>
+      <li>Systèmes et outils vidéo</li>
+      <li>Risque terroriste</li>
+    </ul>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnStart">Commencer le QCM</button>
+    </div>
+  </section>
+
+  <!-- QUIZ SCREEN -->
+  <section id="screen-quiz" class="card hidden">
+    <div class="status">
+      <span id="qCounter">Question 1 / 30</span>
+      <span class="timer-text" id="timerText">1:00</span>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="timer-wrap"><div class="timer-bar" id="timerBar"></div></div>
+    <span class="q-topic" id="qTopic">Thème</span>
+    <div class="q-text" id="qText"></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary hidden" id="btnNext">Question suivante</button>
+    </div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section id="screen-result" class="card hidden">
+    <h1>Résultats</h1>
+    <div class="score-ring">
+      <svg viewBox="0 0 120 120">
+        <circle class="track" cx="60" cy="60" r="52"></circle>
+        <circle class="fill" id="scoreFill" cx="60" cy="60" r="52" stroke-dasharray="0 327"></circle>
+      </svg>
+      <div class="label"><div class="pct" id="scoreNote">0 / 20</div><div class="small" id="scoreScore">0% · 0 / 30</div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="n" id="statGood" style="color:var(--good)">0</div><div class="lab">Bonnes</div></div>
+      <div class="stat"><div class="n" id="statBad" style="color:var(--bad)">0</div><div class="lab">Mauvaises</div></div>
+      <div class="stat"><div class="n" id="statSkip">0</div><div class="lab">Non répondues</div></div>
+    </div>
+    <h2 style="margin-top:16px">Correction détaillée</h2>
+    <div id="reviewList"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnRestart">Nouveau QCM</button>
+    </div>
+  </section>
+
+  <footer>TLF — Toute La Formation · QCM OVP</footer>
+</div>
+
+<script>
+/* ========= Theme toggle ========= */
+(function(){
+  const KEY = 'qcm-ovp-theme';
+  const root = document.documentElement;
+  const stored = (()=>{try{return localStorage.getItem(KEY)}catch(e){return null}})();
+  if(stored==='light'||stored==='dark') root.setAttribute('data-theme',stored);
+  document.getElementById('themeToggle').addEventListener('click',()=>{
+    const current = root.getAttribute('data-theme');
+    let next;
+    if(!current){
+      const sysDark = matchMedia('(prefers-color-scheme: dark)').matches;
+      next = sysDark ? 'light' : 'dark';
+    } else {
+      next = current==='dark' ? 'light' : 'dark';
+    }
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem(KEY,next)}catch(e){}
+  });
+})();
+
+/* ========= Question bank =========
+   Each question: {topic, q, answers:[{t:"text", c:true/false}, ...]}
+*/
+const BANK = [
+  // ==== Thème 1 : Principes républicains ====
+  {topic:"Principes républicains", q:"Deux visiteurs remplissent les mêmes conditions d’accès. Quelle décision respecte la neutralité ?", answers:[
+    {t:"Adapter le contrôle à leurs convictions supposées"},
+    {t:"Appliquer les mêmes critères objectifs aux deux visiteurs", c:true},
+    {t:"Favoriser celui qui partage les opinions de l’agent"},
+    {t:"Appliquer un contrôle renforcé selon leur origine"}
+  ]},
+  {topic:"Principes républicains", q:"Que protège d’abord le principe de laïcité présenté dans le livre ?", answers:[
+    {t:"La priorité de la religion majoritaire"},
+    {t:"L’interdiction de toute conviction personnelle"},
+    {t:"Le financement public de tous les cultes"},
+    {t:"La liberté de conscience et le libre exercice des cultes", c:true}
+  ]},
+  {topic:"Principes républicains", q:"Des citoyens participent au choix de leurs représentants. Quel principe républicain mettent-ils en œuvre ?", answers:[
+    {t:"Le principe démocratique", c:true},
+    {t:"Le principe de laïcité"},
+    {t:"Le principe d’indivisibilité"},
+    {t:"Le principe de salubrité"}
+  ]},
+  {topic:"Principes républicains", q:"Des politiques facilitent l’accès à la santé et au logement. Quel principe illustrent-elles ?", answers:[
+    {t:"La séparation des Églises et de l’État"},
+    {t:"La neutralité des entreprises de sécurité"},
+    {t:"Le caractère social de la République", c:true},
+    {t:"Le caractère indivisible du territoire"}
+  ]},
+  {topic:"Principes républicains", q:"Quel énoncé traduit le principe d’indivisibilité de la République ?", answers:[
+    {t:"Chaque groupe peut s’attribuer une part de souveraineté"},
+    {t:"La souveraineté appartient au peuple dans son ensemble", c:true},
+    {t:"Chaque entreprise fixe les lois applicables sur son site"},
+    {t:"Les convictions individuelles remplacent la loi commune"}
+  ]},
+  {topic:"Principes républicains", q:"Un contrôle vise à éviter des accidents et des dommages aux personnes. Quelle composante de l’ordre public concerne-t- il ?", answers:[
+    {t:"La sécurité", c:true},
+    {t:"La salubrité"},
+    {t:"La tranquillité"},
+    {t:"La moralité publique"}
+  ]},
+  {topic:"Principes républicains", q:"Un responsable demande de refuser un visiteur uniquement en raison de son handicap. Comment qualifier cette demande ?", answers:[
+    {t:"Une simple adaptation des horaires d’ouverture"},
+    {t:"Une mesure de sûreté justifiée par principe"},
+    {t:"Une application normale du droit de propriété"},
+    {t:"Un traitement discriminatoire fondé sur un critère interdit", c:true}
+  ]},
+  {topic:"Principes républicains", q:"Un agent profite de son accueil du public pour promouvoir ses convictions religieuses. Quel devoir méconnaît-il ?", answers:[
+    {t:"L’obligation de maintenance du matériel"},
+    {t:"La traçabilité des rondes"},
+    {t:"La neutralité dans l’exercice de sa mission", c:true},
+    {t:"L’obligation de signaler une panne"}
+  ]},
+  {topic:"Principes républicains", q:"Une personne estime subir une discrimination lors d’un contrôle. Vers quelle institution peut-elle se tourner ?", answers:[
+    {t:"Le Défenseur des droits", c:true},
+    {t:"Le Centre national de prévention et de protection"},
+    {t:"L’Agence nationale de la sécurité des systèmes d’information"},
+    {t:"La commission départementale de vidéoprotection"}
+  ]},
+  {topic:"Principes républicains", q:"Quel ensemble associe correctement trois symboles officiels de la République ?", answers:[
+    {t:"Drapeau tricolore, Chant des partisans, Liberté Égalité Fraternité"},
+    {t:"Drapeau tricolore, Marseillaise, Liberté Égalité Fraternité", c:true},
+    {t:"Drapeau tricolore, Marseillaise, Travail Famille Patrie"},
+    {t:"Drapeau européen, Marseillaise, Honneur et Patrie"}
+  ]},
+  // ==== Thème 2 : Droit de la sécurité privée ====
+  {topic:"Droit de la sécurité privée", q:"Quel organisme délivre les autorisations et contrôle le respect des règles de la sécurité privée ?", answers:[
+    {t:"La CNIL"},
+    {t:"L’ANSSI"},
+    {t:"Le CNAPS", c:true},
+    {t:"Le CNPP"}
+  ]},
+  {topic:"Droit de la sécurité privée", q:"Un candidat a obtenu sa qualification. Que doit-il aussi détenir pour exercer une activité privée de sécurité réglementée ?", answers:[
+    {t:"Une carte professionnelle valide pour l’activité exercée", c:true},
+    {t:"Uniquement une attestation de présence en formation"},
+    {t:"Uniquement un badge délivré par le client"},
+    {t:"Une autorisation de filmer délivrée par la mairie"}
+  ]},
+  {topic:"Droit de la sécurité privée", q:"Une tenue de sécurité privée ressemble à celle de la police. Quel principe faut-il respecter ?", answers:[
+    {t:"Utiliser les mêmes insignes pour faciliter l’identification"},
+    {t:"Remplacer le logo de l’entreprise par un emblème de police"},
+    {t:"Réserver la ressemblance aux missions de nuit"},
+    {t:"Éviter toute confusion avec les uniformes des services publics", c:true}
+  ]},
+  {topic:"Droit de la sécurité privée", q:"Une personne est en péril. L’agent peut appeler les secours sans risque. Quelle conduite est attendue ?", answers:[
+    {t:"Attendre l’accord écrit de la victime avant tout appel"},
+    {t:"Provoquer les secours sans attendre la fin de sa mission", c:true},
+    {t:"Reporter l’appel à la relève pour rester à son poste"},
+    {t:"Appeler seulement si la personne est cliente du site"}
+  ]},
+  {topic:"Droit de la sécurité privée", q:"Quelle situation peut relever de la légitime défense des personnes ?", answers:[
+    {t:"Une riposte différée pour punir l’auteur après sa fuite"},
+    {t:"Une force supérieure au danger pour donner l’exemple"},
+    {t:"Une riposte immédiate, nécessaire et proportionnée à l’attaque", c:true},
+    {t:"Une action préventive fondée sur une simple antipathie"}
+  ]},
+  {topic:"Droit de la sécurité privée", q:"Dans quel cas l’article 73 du CPP permet-il à toute personne d’appréhender un auteur ?", answers:[
+    {t:"Toute infraction supposée, même sans élément matériel"},
+    {t:"Toute contravention constatée plusieurs jours auparavant"},
+    {t:"Tout refus de répondre à une question de l’agent"},
+    {t:"Un crime flagrant ou un délit flagrant puni d’emprisonnement", c:true}
+  ]},
+  {topic:"Droit de la sécurité privée", q:"Un client refuse la fouille de son sac. Que peut faire l’agent de sécurité privée ?", answers:[
+    {t:"Expliquer la règle d’accès sans imposer la fouille par la force", c:true},
+    {t:"Fouiller le sac puisque le magasin est un lieu privé"},
+    {t:"Retenir le client jusqu’à ce qu’il donne son accord"},
+    {t:"Confisquer le sac jusqu’à la fermeture du magasin"}
+  ]},
+  {topic:"Droit de la sécurité privée", q:"Un agent doit contrôler l’accès par badge. Quel acte dépasse ce simple contrôle contractuel ?", answers:[
+    {t:"Vérifier la validité du badge selon les consignes"},
+    {t:"Imposer un contrôle d’identité comme un policier habilité", c:true},
+    {t:"Comparer le badge présenté à l’autorisation d’accès"},
+    {t:"Demander au visiteur quel service il vient rencontrer"}
+  ]},
+  {topic:"Droit de la sécurité privée", q:"Un ancien collègue demande des procédures internes confidentielles. Quelle réponse convient ?", answers:[
+    {t:"Transmettre les documents si la demande reste orale"},
+    {t:"Les envoyer depuis une adresse personnelle"},
+    {t:"Les communiquer dès lors que le collègue connaît le site"},
+    {t:"Refuser la transmission hors d’un cadre autorisé", c:true}
+  ]},
+  {topic:"Droit de la sécurité privée", q:"Un employeur demande de surveiller les opinions syndicales du personnel. Quelle conduite adopter ?", answers:[
+    {t:"L’accepter si les images restent dans l’entreprise"},
+    {t:"L’accepter si aucun enregistrement n’est conservé"},
+    {t:"Refuser cette surveillance et signaler la demande", c:true},
+    {t:"La limiter aux salariés présents dans les zones communes"}
+  ]},
+  // ==== Thème 3 : Attitude professionnelle ====
+  {topic:"Attitude professionnelle", q:"À la prise de poste, un opérateur découvre un équipement défectueux. Quelle conduite traduit le professionnalisme ?", answers:[
+    {t:"Laisser le défaut au prochain opérateur"},
+    {t:"Débrancher tout le poste pour éviter les alertes"},
+    {t:"Utiliser son matériel personnel sans en informer le service"},
+    {t:"Vérifier le défaut et le signaler selon la procédure", c:true}
+  ]},
+  {topic:"Attitude professionnelle", q:"La surveillance devient monotone. Quel comportement correspond à la vigilance ?", answers:[
+    {t:"Se concentrer sur une seule caméra pendant toute la vacation"},
+    {t:"Rechercher activement les changements et les anomalies", c:true},
+    {t:"Attendre uniquement une alarme automatique"},
+    {t:"Consulter son téléphone tout en gardant le son des alarmes"}
+  ]},
+  {topic:"Attitude professionnelle", q:"Un visiteur ne comprend pas le vocabulaire technique utilisé. Comment l’agent adapte-t-il son message ?", answers:[
+    {t:"Répéter les mêmes termes en augmentant le volume"},
+    {t:"Accélérer l’explication pour réduire l’attente"},
+    {t:"Employer des mots simples et vérifier la compréhension", c:true},
+    {t:"Demander au visiteur de se débrouiller seul"}
+  ]},
+  {topic:"Attitude professionnelle", q:"Un responsable formule une remarque fondée sur une erreur de l’opérateur. Quelle réaction est constructive ?", answers:[
+    {t:"Comprendre la remarque et améliorer sa pratique", c:true},
+    {t:"Contester immédiatement pour préserver son autorité"},
+    {t:"Cacher les prochaines erreurs au responsable"},
+    {t:"Appliquer seulement les remarques formulées devant témoins"}
+  ]},
+  {topic:"Attitude professionnelle", q:"Un opérateur travaille seul au poste. Que signifie être autonome ?", answers:[
+    {t:"Modifier les procédures sans validation"},
+    {t:"Résoudre chaque problème sans jamais demander d’aide"},
+    {t:"Décider seul des droits d’accès à toutes les images"},
+    {t:"Agir dans les consignes et rendre compte quand c’est nécessaire", c:true}
+  ]},
+  {topic:"Attitude professionnelle", q:"Un collègue fait une erreur durant une relève. Quelle attitude favorise l’esprit d’équipe ?", answers:[
+    {t:"Attendre qu’un incident révèle son erreur"},
+    {t:"Diffuser son erreur à des personnes étrangères au service"},
+    {t:"Partager l’information utile et corriger la situation ensemble", c:true},
+    {t:"Garder l’information pour améliorer son propre classement"}
+  ]},
+  {topic:"Attitude professionnelle", q:"Un agent parle calmement mais pointe un doigt accusateur. Quel risque crée cette attitude ?", answers:[
+    {t:"Le geste garantit que la consigne sera mieux comprise"},
+    {t:"Le geste peut contredire le message et augmenter la tension", c:true},
+    {t:"Le ton calme annule nécessairement l’effet du geste"},
+    {t:"Le geste remplace utilement toute explication verbale"}
+  ]},
+  {topic:"Attitude professionnelle", q:"Un visiteur reste silencieux. Quelle interprétation est la plus prudente ?", answers:[
+    {t:"Rechercher le contexte avant de donner un sens au silence", c:true},
+    {t:"Conclure immédiatement qu’il refuse de coopérer"},
+    {t:"Considérer le silence comme un aveu"},
+    {t:"Déduire qu’il n’a pas compris le français"}
+  ]},
+  {topic:"Attitude professionnelle", q:"Quelle association distingue correctement savoir-faire et savoir-être ?", answers:[
+    {t:"Porter une tenue et connaître uniquement son horaire"},
+    {t:"Appliquer une procédure et adopter une attitude maîtrisée", c:true},
+    {t:"Obéir à une règle et mémoriser la même règle"},
+    {t:"Détenir une carte professionnelle et posséder un badge"}
+  ]},
+  {topic:"Attitude professionnelle", q:"Lors d’un accueil difficile, quelle attitude reste conforme au savoir-vivre professionnel ?", answers:[
+    {t:"Tutoyer pour reprendre l’avantage sur le visiteur"},
+    {t:"Répondre avec ironie pour désamorcer la demande"},
+    {t:"Éviter tout regard et toute formule de politesse"},
+    {t:"Garder le vouvoiement et une présence courtoise", c:true}
+  ]},
+  // ==== Thème 4 : Conflits et stress ====
+  {topic:"Conflits et stress", q:"Un désaccord provient d’une mauvaise interprétation des paroles. Quel type de conflit faut-il d’abord rechercher ?", answers:[
+    {t:"Un malentendu", c:true},
+    {t:"Un conflit d’autorité nécessairement"},
+    {t:"Une rivalité économique obligatoirement"},
+    {t:"Une violence physique déjà établie"}
+  ]},
+  {topic:"Conflits et stress", q:"Un visiteur hausse le ton et serre les poings. Quel usage faire de ces observations ?", answers:[
+    {t:"Les considérer comme une preuve certaine d’agression future"},
+    {t:"Les ignorer tant qu’aucun coup n’est porté"},
+    {t:"Les traiter comme des signaux de tension à évaluer", c:true},
+    {t:"En déduire automatiquement une infraction pénale"}
+  ]},
+  {topic:"Conflits et stress", q:"« Si je comprends bien, vous contestez le délai d’attente. » À quoi sert cette reformulation ?", answers:[
+    {t:"Obtenir un aveu sans poser de question"},
+    {t:"Vérifier que le problème exprimé a bien été compris", c:true},
+    {t:"Promettre une suppression immédiate du délai"},
+    {t:"Montrer que la discussion est définitivement close"}
+  ]},
+  {topic:"Conflits et stress", q:"Quelle question permet de comprendre une difficulté sans orienter la réponse ?", answers:[
+    {t:"« Vous reconnaissez que vous avez tort ? »"},
+    {t:"« Pourquoi refusez-vous toujours les règles ? »"},
+    {t:"« Vous cherchez à provoquer un incident ? »"},
+    {t:"« Que s’est-il passé ? »", c:true}
+  ]},
+  {topic:"Conflits et stress", q:"Face à un interlocuteur irritable, quelle attitude réduit le risque d’escalade ?", answers:[
+    {t:"Conserver une distance adaptée et une voix maîtrisée", c:true},
+    {t:"S’approcher très près pour imposer l’écoute"},
+    {t:"Fixer durablement son regard pour le faire céder"},
+    {t:"Parler plus fort pour montrer sa détermination"}
+  ]},
+  {topic:"Conflits et stress", q:"Deux personnes s’opposent sur l’organisation d’un passage. Quel objectif guide une négociation constructive ?", answers:[
+    {t:"Faire céder l’une des parties à tout prix"},
+    {t:"Trouver une solution acceptable dans le respect des règles", c:true},
+    {t:"Éviter de rechercher la cause du désaccord"},
+    {t:"Promettre une exception que l’on ne peut pas autoriser"}
+  ]},
+  {topic:"Conflits et stress", q:"Un opérateur donne une consigne urgente. Quelle formulation facilite sa compréhension ?", answers:[
+    {t:"Une longue justification avant d’indiquer l’action"},
+    {t:"Plusieurs doubles négations pour nuancer la demande"},
+    {t:"Un message court, précis et centré sur les faits", c:true},
+    {t:"Une suite d’abréviations inconnues du destinataire"}
+  ]},
+  {topic:"Conflits et stress", q:"Sous stress, un opérateur se focalise sur une seule information et néglige le reste. Quel risque illustre ce cas ?", answers:[
+    {t:"Une amélioration certaine de l’analyse globale"},
+    {t:"Une disparition de tous les réflexes acquis"},
+    {t:"Une preuve de manque de motivation"},
+    {t:"Un rétrécissement de l’attention, appelé effet tunnel", c:true}
+  ]},
+  {topic:"Conflits et stress", q:"Plusieurs alarmes dépassent la capacité immédiate d’un opérateur. Quelle réaction est adaptée ?", answers:[
+    {t:"Traiter tout seul pour ne pas montrer ses difficultés"},
+    {t:"Supprimer les alarmes les plus anciennes sans vérification"},
+    {t:"Prioriser les urgences et demander l’aide prévue", c:true},
+    {t:"Quitter le poste sans transmettre la situation"}
+  ]},
+  {topic:"Conflits et stress", q:"Comment une équipe peut-elle mieux se préparer à une situation stressante ?", answers:[
+    {t:"Anticiper les scénarios et répartir les tâches", c:true},
+    {t:"Éviter tout exercice pour conserver la spontanéité"},
+    {t:"Laisser chaque agent découvrir seul les procédures"},
+    {t:"Compter uniquement sur l’ancienneté du plus expérimenté"}
+  ]},
+  // ==== Thème 5 : Consignes et alerte ====
+  {topic:"Consignes et alerte", q:"Une règle d’évacuation s’adresse à tout le personnel. De quel type de consigne s’agit-il ?", answers:[
+    {t:"Une consigne spéciale"},
+    {t:"Une consigne générale", c:true},
+    {t:"Une consigne ponctuelle"},
+    {t:"Une consigne individuelle confidentielle"}
+  ]},
+  {topic:"Consignes et alerte", q:"Une instruction désigne la personne chargée d’appeler les secours et précise son message. C’est une consigne…", answers:[
+    {t:"Spéciale, liée à une fonction définie", c:true},
+    {t:"Générale, sans destinataire particulier"},
+    {t:"Ponctuelle, nécessairement valable une heure"},
+    {t:"Sans valeur si elle est diffusée par écrit"}
+  ]},
+  {topic:"Consignes et alerte", q:"Un prestataire reçoit un accès exceptionnel pour une intervention unique. Quelle consigne convient ?", answers:[
+    {t:"Une consigne permanente sans date de fin"},
+    {t:"Une autorisation orale transmise sans trace"},
+    {t:"Une consigne ponctuelle écrite, avec durée et autorisation", c:true},
+    {t:"Une modification de toutes les consignes générales"}
+  ]},
+  {topic:"Consignes et alerte", q:"Une consigne orale semble ambiguë. Que fait l’opérateur avant de l’exécuter ?", answers:[
+    {t:"Choisir l’interprétation la plus rapide sans vérifier"},
+    {t:"Attendre une erreur pour demander une précision"},
+    {t:"La transmettre mot pour mot sans chercher à comprendre"},
+    {t:"Demander une explication, reformuler et en garder une trace", c:true}
+  ]},
+  {topic:"Consignes et alerte", q:"Au début de sa vacation, que doit vérifier l’opérateur dans la main courante ?", answers:[
+    {t:"Uniquement le nombre de pages utilisées"},
+    {t:"Les derniers événements et les consignes encore applicables", c:true},
+    {t:"Seulement la signature de l’agent précédent"},
+    {t:"Les événements anciens déjà clos, avant les incidents en cours"}
+  ]},
+  {topic:"Consignes et alerte", q:"Quelle rédaction convient à une main courante ?", answers:[
+    {t:"« Encore une alarme absurde, sûrement le même visiteur. »"},
+    {t:"« Un problème est arrivé quelque part dans l’après-midi. »"},
+    {t:"« Rien à signaler », alors qu’une intervention a eu lieu"},
+    {t:"« 14 h 10, porte nord : alarme reçue, agent dépêché. »", c:true}
+  ]},
+  {topic:"Consignes et alerte", q:"Une erreur figure dans une main courante papier. Comment la corriger selon le livre ?", answers:[
+    {t:"Rayer proprement l’erreur en la laissant lisible, puis corriger", c:true},
+    {t:"Utiliser du correcteur pour masquer totalement l’ancienne mention"},
+    {t:"Arracher la page et recopier les seules informations utiles"},
+    {t:"Laisser une page blanche pour une correction ultérieure"}
+  ]},
+  {topic:"Consignes et alerte", q:"Un opérateur signale un accident. Quelle information permet de guider les secours ?", answers:[
+    {t:"Le nom du fournisseur des caméras"},
+    {t:"La marque des écrans du poste de contrôle"},
+    {t:"L’adresse précise, la commune et les modalités d’accès", c:true},
+    {t:"Le nombre total d’agents employés dans l’entreprise"}
+  ]},
+  {topic:"Consignes et alerte", q:"Après avoir transmis l’alerte, quand l’opérateur termine-t-il l’appel ?", answers:[
+    {t:"Dès qu’il a donné le nom du site"},
+    {t:"Après une durée fixe de trente secondes"},
+    {t:"Dès qu’un collègue demande le téléphone"},
+    {t:"Quand le service de secours lui dit de raccrocher", c:true}
+  ]},
+  {topic:"Consignes et alerte", q:"Après une effraction sans danger immédiat pour les personnes, comment préserver les traces ?", answers:[
+    {t:"Ranger la zone pour permettre la reprise rapide d’activité"},
+    {t:"Protéger les lieux et limiter les accès sans déplacer les objets", c:true},
+    {t:"Rassembler tous les objets trouvés sur une seule table"},
+    {t:"Laisser les témoins entrer pour vérifier ce qui manque"}
+  ]},
+  // ==== Thème 6 : Droit de la vidéoprotection ====
+  {topic:"Droit de la vidéoprotection", q:"Un commerce filme sa zone de vente ouverte au public. Quel régime le livre associe-t-il à cette zone ?", answers:[
+    {t:"Un usage domestique sans règle professionnelle"},
+    {t:"La seule télésurveillance sans traitement d’images"},
+    {t:"La vidéoprotection des lieux ouverts au public", c:true},
+    {t:"Un système privé dispensé de toute autorisation"}
+  ]},
+  {topic:"Droit de la vidéoprotection", q:"Pour installer un système de vidéoprotection dans un lieu ouvert au public, quelle autorité délivre l’autorisation ?", answers:[
+    {t:"Le maire, pour une durée illimitée"},
+    {t:"La CNIL, pour dix ans renouvelables"},
+    {t:"L’assureur, pour la durée du contrat"},
+    {t:"Le préfet, pour cinq ans renouvelables", c:true}
+  ]},
+  {topic:"Droit de la vidéoprotection", q:"L’autorisation fixe quinze jours de conservation. Hors procédure pénale, l’exploitant peut-il conserver un mois ?", answers:[
+    {t:"Oui, le maximum légal remplace la durée autorisée"},
+    {t:"Non, il respecte les quinze jours fixés par l’autorisation", c:true},
+    {t:"Oui, si le disque possède assez d’espace"},
+    {t:"Oui, à condition de ne pas consulter les images"}
+  ]},
+  {topic:"Droit de la vidéoprotection", q:"Une caméra de voie publique peut visualiser l’intérieur d’un appartement. Quelle correction faut-il demander ?", answers:[
+    {t:"Masquer la zone privée ou corriger le champ de la caméra", c:true},
+    {t:"Conserver l’image en interdisant seulement son exportation"},
+    {t:"Désactiver uniquement le son de la caméra"},
+    {t:"Filmer cette zone seulement pendant la nuit"}
+  ]},
+  {topic:"Droit de la vidéoprotection", q:"Un salarié non habilité demande à visionner une séquence par curiosité. Quelle réponse convient ?", answers:[
+    {t:"Accepter si le visionnage dure moins d’une minute"},
+    {t:"Accepter si aucune copie n’est réalisée"},
+    {t:"Refuser l’accès et appliquer la procédure d’habilitation", c:true},
+    {t:"Laisser l’accès sous le compte d’un collègue habilité"}
+  ]},
+  {topic:"Droit de la vidéoprotection", q:"Une alarme signale une possible intrusion dans un local fermé. Que vérifie la levée de doute ?", answers:[
+    {t:"La réalité et la concordance des indices d’infraction", c:true},
+    {t:"Uniquement le montant assuré des biens du client"},
+    {t:"Seulement la disponibilité d’une patrouille de police"},
+    {t:"Le nombre d’alarmes reçues pendant le mois"}
+  ]},
+  {topic:"Droit de la vidéoprotection", q:"Une agression est visible en direct. Faut-il attendre deux appels au client avant d’alerter ?", answers:[
+    {t:"Oui, cette attente s’impose même en cas d’agression visible"},
+    {t:"Oui, sauf si la victime possède un badge du site"},
+    {t:"Non, mais attendre le compte rendu écrit du responsable"},
+    {t:"Non, transmettre l’alerte urgente sans ce délai", c:true}
+  ]},
+  {topic:"Droit de la vidéoprotection", q:"Un employeur veut filmer en permanence un poste sans risque particulier. Quel principe doit guider l’examen ?", answers:[
+    {t:"La seule préférence personnelle de l’employeur"},
+    {t:"La justification du dispositif et sa proportionnalité", c:true},
+    {t:"La capacité maximale de stockage disponible"},
+    {t:"L’accord oral du fournisseur des caméras"}
+  ]},
+  {topic:"Droit de la vidéoprotection", q:"Un système applique les recommandations techniques de l’ANSSI. Que reste-t-il à faire ?", answers:[
+    {t:"Respecter la réglementation et analyser les risques du site", c:true},
+    {t:"Remplacer l’autorisation préfectorale par un audit technique"},
+    {t:"Supprimer l’information des personnes filmées"},
+    {t:"Considérer que toute finalité de surveillance devient permise"}
+  ]},
+  {topic:"Droit de la vidéoprotection", q:"Un opérateur reçoit une clé USB inconnue à brancher sur le poste vidéo. Quelle conduite limite le risque cyber ?", answers:[
+    {t:"La brancher pour vérifier rapidement son contenu"},
+    {t:"L’ouvrir depuis le compte administrateur"},
+    {t:"Ne pas la connecter et suivre la procédure de sécurité", c:true},
+    {t:"Désactiver la protection du poste avant de la tester"}
+  ]},
+  // ==== Thème 7 : Systèmes et outils vidéo ====
+  {topic:"Systèmes et outils vidéo", q:"Au début d’un projet vidéo, quelle démarche précède le choix des caméras ?", answers:[
+    {t:"Choisir le modèle doté du plus grand nombre de pixels"},
+    {t:"Installer le même nombre de caméras que le site voisin"},
+    {t:"Fixer uniquement le budget des moniteurs"},
+    {t:"Analyser les risques, les besoins et les moyens existants", c:true}
+  ]},
+  {topic:"Systèmes et outils vidéo", q:"Un assureur exige un référentiel APSAD dans le contrat. Quelle distinction reste correcte ?", answers:[
+    {t:"Le contrat supprime les autorisations administratives"},
+    {t:"Toute règle APSAD devient une loi générale"},
+    {t:"L’exigence contractuelle ne remplace pas la réglementation", c:true},
+    {t:"La réglementation ne concerne plus un système certifié"}
+  ]},
+  {topic:"Systèmes et outils vidéo", q:"Une personne apparaît trop petite pour être reconnue. Quel objectif technique faut-il améliorer ?", answers:[
+    {t:"Le niveau de détail utile dans la zone observée", c:true},
+    {t:"Le nombre de fenêtres affichées sur le moniteur"},
+    {t:"La durée totale de conservation des autres caméras"},
+    {t:"La couleur des menus du logiciel de gestion"}
+  ]},
+  {topic:"Systèmes et outils vidéo", q:"Une personne reste sombre devant une entrée lumineuse. Quel réglage corrige ce contre-jour ?", answers:[
+    {t:"La durée de conservation des séquences"},
+    {t:"La compensation de contre-jour BLC", c:true},
+    {t:"Le cycle automatique des prépositions"},
+    {t:"La fréquence d’envoi des rapports"}
+  ]},
+  {topic:"Systèmes et outils vidéo", q:"Une caméra mobile doit rester sur un incident malgré son cycle automatique. Quelle fonction utiliser ?", answers:[
+    {t:"La suppression de toutes les prépositions enregistrées"},
+    {t:"Le redémarrage permanent du cycle automatique"},
+    {t:"La fermeture du logiciel de supervision"},
+    {t:"Le mode caméra figée sur la scène", c:true}
+  ]},
+  {topic:"Systèmes et outils vidéo", q:"Le poste doit croiser vidéo, intrusion et contrôle d’accès dans une interface unique. Quel outil correspond ?", answers:[
+    {t:"Un simple écran de contrôle"},
+    {t:"Un logiciel d’hypervision", c:true},
+    {t:"Une caméra analogique isolée"},
+    {t:"Un support de stockage amovible"}
+  ]},
+  {topic:"Systèmes et outils vidéo", q:"Une alerte automatique signale une course vers un bus comme une fuite suspecte. Que fait l’opérateur ?", answers:[
+    {t:"Valider automatiquement la qualification de menace"},
+    {t:"Désactiver définitivement toutes les analyses vidéo"},
+    {t:"Vérifier les images et le contexte avant de conclure", c:true},
+    {t:"Déduire l’identité et l’intention de la personne"}
+  ]},
+  {topic:"Systèmes et outils vidéo", q:"Pendant une exportation de séquence, quelle exigence doit être maintenue ?", answers:[
+    {t:"L’enregistrement actif et l’intégrité des images exportées", c:true},
+    {t:"L’arrêt de toutes les caméras jusqu’à la fin du transfert"},
+    {t:"La retouche de l’original pour améliorer son apparence"},
+    {t:"L’accès libre au dossier partagé pour accélérer l’échange"}
+  ]},
+  {topic:"Systèmes et outils vidéo", q:"Le taux de fausses alarmes augmente fortement. Quelle réaction améliore la fiabilité du système ?", answers:[
+    {t:"Désactiver les alarmes sans conserver de trace"},
+    {t:"Analyser les causes et faire contrôler les réglages", c:true},
+    {t:"Considérer toutes les nouvelles alarmes comme fausses"},
+    {t:"Augmenter seulement le nombre de moniteurs"}
+  ]},
+  {topic:"Systèmes et outils vidéo", q:"Pour un site sensible, que signifie une protection en profondeur ?", answers:[
+    {t:"Concentrer toutes les protections sur une seule caméra"},
+    {t:"Supprimer le contrôle d’accès si la clôture est surveillée"},
+    {t:"Remplacer les procédures humaines par la vidéo seule"},
+    {t:"Combiner des protections jusqu’aux zones sensibles", c:true}
+  ]},
+  // ==== Thème 8 : Risque terroriste ====
+  {topic:"Risque terroriste", q:"Quel objectif distingue la qualification terroriste décrite par le Code pénal ?", answers:[
+    {t:"Troubler gravement l’ordre public par l’intimidation ou la terreur", c:true},
+    {t:"Provoquer uniquement une nuisance sonore ponctuelle"},
+    {t:"Contester une consigne sans violence ni menace"},
+    {t:"Commettre nécessairement une infraction à l’étranger"}
+  ]},
+  {topic:"Risque terroriste", q:"Quel est l’objectif général du plan Vigipirate ?", answers:[
+    {t:"Remplacer toutes les consignes propres aux établissements"},
+    {t:"Adapter la vigilance et la protection à la menace terroriste", c:true},
+    {t:"Confier les enquêtes judiciaires aux opérateurs vidéo"},
+    {t:"Autoriser une surveillance sans limite de la population"}
+  ]},
+  {topic:"Risque terroriste", q:"La posture de sécurité du site évolue. Que doit vérifier l’opérateur avant sa vacation ?", answers:[
+    {t:"Uniquement le niveau mentionné dans un ancien support"},
+    {t:"Les commentaires non vérifiés publiés sur les réseaux"},
+    {t:"La dernière consigne dont il se souvient sans la relire"},
+    {t:"Les mesures et consignes actualisées applicables au site", c:true}
+  ]},
+  {topic:"Risque terroriste", q:"Un individu dépose un sac puis quitte la zone. Que fait d’abord l’opérateur vidéo ?", answers:[
+    {t:"Attendre l’apparition d’une fumée avant de signaler"},
+    {t:"Demander à un passant d’ouvrir le sac"},
+    {t:"Alerter selon les consignes et maintenir l’observation", c:true},
+    {t:"Classer le sac en objet perdu sans autre vérification"}
+  ]},
+  {topic:"Risque terroriste", q:"Un agent sur place découvre un objet suspect. Quelle consigne doit être transmise ?", answers:[
+    {t:"Ne pas le toucher ni le déplacer, éloigner les personnes", c:true},
+    {t:"Le porter à l’extérieur pour libérer la circulation"},
+    {t:"Le recouvrir avant d’appeler les secours"},
+    {t:"Le déplacer derrière une porte puis attendre"}
+  ]},
+  {topic:"Risque terroriste", q:"Après le signalement d’un objet suspect, quelle information vidéo aide le plus les intervenants ?", answers:[
+    {t:"Une estimation non vérifiée de sa composition chimique"},
+    {t:"La certitude qu’il est dangereux d’après sa seule couleur"},
+    {t:"Son emplacement précis et les faits observés, avec les heures", c:true},
+    {t:"Un commentaire sur les convictions supposées du déposant"}
+  ]},
+  {topic:"Risque terroriste", q:"Une attitude paraît inhabituelle à l’écran, sans menace établie. Comment poursuivre l’analyse ?", answers:[
+    {t:"La qualifier immédiatement de comportement terroriste"},
+    {t:"La comparer au lieu, au moment et aux autres faits observés", c:true},
+    {t:"Ignorer toute observation tant qu’aucun dommage n’existe"},
+    {t:"Fonder le signalement sur l’origine supposée de la personne"}
+  ]},
+  {topic:"Risque terroriste", q:"Un véhicule reste longtemps près d’un accès sensible, avec plusieurs allées et venues. Que faire ?", answers:[
+    {t:"Diffuser sa plaque sur les réseaux sociaux"},
+    {t:"Conclure immédiatement que ses occupants préparent un attentat"},
+    {t:"Demander à un passant de bloquer le véhicule"},
+    {t:"Relever les faits utiles et les signaler selon la procédure", c:true}
+  ]},
+  {topic:"Risque terroriste", q:"Pourquoi la routine peut-elle devenir un risque pour un opérateur vidéo ?", answers:[
+    {t:"Elle garantit que toutes les anomalies seront vues"},
+    {t:"Elle rend inutiles les consignes de prise de poste"},
+    {t:"Elle peut diminuer l’attention portée aux changements", c:true},
+    {t:"Elle remplace l’analyse du contexte par l’expérience"}
+  ]},
+  {topic:"Risque terroriste", q:"Les secours arrivent après une alerte sur le site. Quel soutien doit organiser le poste de contrôle ?", answers:[
+    {t:"Un accès dégagé et un guidage vers la zone concernée", c:true},
+    {t:"L’envoi des intervenants sans indication de localisation"},
+    {t:"La fermeture de tous les accès, y compris celui convenu"},
+    {t:"L’arrêt des communications pour libérer les opérateurs"}
+  ]}
+];
+
+/* ========= Config ========= */
+const QCM_SIZE = 30;
+const TIME_PER_Q = 60; // seconds
+const FEEDBACK_DELAY_MS = 1300; // auto-advance when answered
+
+/* ========= State ========= */
+let session = null;
+
+/* ========= Utilities ========= */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function $(id){return document.getElementById(id)}
+function show(id){$(id).classList.remove('hidden')}
+function hide(id){$(id).classList.add('hidden')}
+
+/* ========= Session setup ========= */
+function newSession(){
+  const picked = shuffle(BANK).slice(0, Math.min(QCM_SIZE, BANK.length));
+  const questions = picked.map(src=>{
+    const shuffled = shuffle(src.answers);
+    return {
+      topic: src.topic,
+      q: src.q,
+      answers: shuffled,
+      correctIndex: shuffled.findIndex(a=>a.c===true),
+      selectedIndex: null,
+      timedOut: false
+    };
+  });
+  session = { questions, idx:0, timerId:null, remain:TIME_PER_Q, locked:false };
+}
+
+/* ========= Rendering ========= */
+function renderQuestion(){
+  const total = session.questions.length;
+  const i = session.idx;
+  const q = session.questions[i];
+
+  $('qCounter').textContent = `Question ${i+1} / ${total}`;
+  $('progressBar').style.width = `${(i/total)*100}%`;
+  $('qTopic').textContent = q.topic;
+  $('qText').textContent = q.q;
+
+  const ansEl = $('answers');
+  ansEl.innerHTML = '';
+  const letters = ['A','B','C','D','E','F'];
+  q.answers.forEach((a,idx)=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'answer';
+    btn.innerHTML = `<span class="letter">${letters[idx]}</span><span class="text"></span>`;
+    btn.querySelector('.text').textContent = a.t;
+    btn.addEventListener('click', ()=>onAnswer(idx));
+    ansEl.appendChild(btn);
+  });
+
+  $('feedback').className = 'feedback';
+  $('feedback').textContent = '';
+  $('btnNext').classList.add('hidden');
+
+  session.locked = false;
+  startTimer();
+}
+
+function startTimer(){
+  stopTimer();
+  session.deadline = Date.now() + TIME_PER_Q*1000;
+  session.remain = TIME_PER_Q;
+  updateTimerUI();
+  session.timerId = setInterval(tick, 250);
+}
+function tick(){
+  if(!session || session.deadline==null) return;
+  const left = Math.max(0, Math.ceil((session.deadline - Date.now())/1000));
+  if(left !== session.remain){
+    session.remain = left;
+    updateTimerUI();
+  }
+  if(left <= 0){
+    stopTimer();
+    onTimeout();
+  }
+}
+function stopTimer(){
+  if(session.timerId){clearInterval(session.timerId); session.timerId=null}
+}
+function updateTimerUI(){
+  const r = Math.max(0,session.remain);
+  const m = Math.floor(r/60), s = r%60;
+  $('timerText').textContent = `${m}:${String(s).padStart(2,'0')}`;
+  const pct = (r/TIME_PER_Q)*100;
+  const bar = $('timerBar');
+  bar.style.width = `${pct}%`;
+  bar.classList.toggle('warn', r<=15 && r>5);
+  bar.classList.toggle('danger', r<=5);
+}
+
+function onAnswer(idx){
+  if(session.locked) return;
+  session.locked = true;
+  stopTimer();
+  const q = session.questions[session.idx];
+  q.selectedIndex = idx;
+  revealAnswers();
+  const good = idx === q.correctIndex;
+  const fb = $('feedback');
+  fb.classList.add('show', good?'good':'bad');
+  fb.textContent = good
+    ? 'Bonne réponse !'
+    : `Mauvaise réponse. Bonne réponse : ${q.answers[q.correctIndex].t}`;
+  scheduleNext();
+}
+
+function onTimeout(){
+  if(session.locked) return;
+  session.locked = true;
+  const q = session.questions[session.idx];
+  q.timedOut = true;
+  revealAnswers();
+  const fb = $('feedback');
+  fb.classList.add('show','bad');
+  fb.textContent = `Temps écoulé. Bonne réponse : ${q.answers[q.correctIndex].t}`;
+  scheduleNext();
+}
+
+function revealAnswers(){
+  const q = session.questions[session.idx];
+  const nodes = $('answers').querySelectorAll('.answer');
+  nodes.forEach((n,i)=>{
+    n.disabled = true;
+    if(i===q.correctIndex) n.classList.add('correct');
+    if(q.selectedIndex!=null && i===q.selectedIndex && i!==q.correctIndex) n.classList.add('wrong');
+  });
+}
+
+function scheduleNext(){
+  const btn = $('btnNext');
+  const last = session.idx === session.questions.length-1;
+  btn.textContent = last ? 'Voir les résultats' : 'Question suivante';
+  btn.classList.remove('hidden');
+  clearTimeout(session.autoNextId);
+  session.autoNextId = setTimeout(()=>{ if(session.locked) goNext(); }, FEEDBACK_DELAY_MS);
+}
+
+function goNext(){
+  clearTimeout(session.autoNextId);
+  session.autoNextId = null;
+  if(session.idx < session.questions.length-1){
+    session.idx += 1;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+/* ========= Results ========= */
+function showResults(){
+  stopTimer();
+  hide('screen-quiz');
+  show('screen-result');
+
+  const qs = session.questions;
+  const total = qs.length;
+  let good=0, bad=0, skip=0;
+  qs.forEach(q=>{
+    if(q.timedOut || q.selectedIndex==null) skip++;
+    else if(q.selectedIndex === q.correctIndex) good++;
+    else bad++;
+  });
+  const pct = Math.round((good/total)*100);
+  const note20 = (good/total)*20;
+  const noteStr = note20.toLocaleString('fr-FR', {minimumFractionDigits:1, maximumFractionDigits:1});
+  $('scoreNote').textContent = `${noteStr} / 20`;
+  $('scoreScore').textContent = `${pct}% · ${good} / ${total}`;
+  $('statGood').textContent = good;
+  $('statBad').textContent = bad;
+  $('statSkip').textContent = skip;
+
+  // ring circumference ~= 2*pi*52 = 326.7
+  const C = 2*Math.PI*52;
+  const fill = (good/total)*C;
+  $('scoreFill').setAttribute('stroke-dasharray', `${fill} ${C-fill}`);
+  $('scoreFill').setAttribute('stroke', pct>=70 ? 'var(--good)' : pct>=50 ? 'var(--warn)' : 'var(--bad)');
+
+  const list = $('reviewList');
+  list.innerHTML = '';
+  const letters = ['A','B','C','D','E','F'];
+  qs.forEach((q,i)=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'review-item';
+    let tag;
+    if(q.timedOut || q.selectedIndex==null) tag = '<span class="tag skip">Non répondue</span>';
+    else if(q.selectedIndex===q.correctIndex) tag = '<span class="tag good">Correct</span>';
+    else tag = '<span class="tag bad">Faux</span>';
+    const head = document.createElement('div');
+    head.className = 'q';
+    head.innerHTML = `${i+1}. ${escapeHtml(q.q)} ${tag} <div style="font-size:11px;color:var(--muted);font-weight:500;margin-top:4px">${escapeHtml(q.topic)}</div>`;
+    wrap.appendChild(head);
+    const ul = document.createElement('ul');
+    q.answers.forEach((a,ai)=>{
+      const li = document.createElement('li');
+      const isCorrect = ai===q.correctIndex;
+      const isMine = q.selectedIndex===ai;
+      if(isCorrect) li.classList.add('correct');
+      if(isMine) li.classList.add('mychoice');
+      if(isMine && !isCorrect) li.classList.add('wrong');
+      const mark = isCorrect ? '✓' : (isMine ? '✗' : letters[ai]);
+      li.innerHTML = `<span class="mark">${mark}</span><span></span>`;
+      li.querySelector('span:last-child').textContent = a.t + (isMine ? '  (votre réponse)' : '');
+      ul.appendChild(li);
+    });
+    wrap.appendChild(ul);
+    list.appendChild(wrap);
+  });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ========= Wire up ========= */
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden && session && session.timerId){ tick(); }
+});
+$('btnStart').addEventListener('click', ()=>{
+  newSession();
+  hide('screen-start');
+  show('screen-quiz');
+  renderQuestion();
+});
+$('btnNext').addEventListener('click', goNext);
+$('btnRestart').addEventListener('click', ()=>{
+  if(session){ clearTimeout(session.autoNextId); session.autoNextId=null; }
+  hide('screen-result');
+  show('screen-start');
+});
+</script>
+</body>
+</html>
