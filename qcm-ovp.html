@@ -230,8 +230,8 @@
     flex-direction:column;
     font-weight:700;
   }
-  .score-ring .pct{font-size:34px}
-  .score-ring .small{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px}
+  .score-ring .pct{font-size:28px;letter-spacing:-.5px}
+  .score-ring .small{font-size:12px;color:var(--muted);font-weight:500;margin-top:4px;text-align:center}
 
   .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
   .stat{background:var(--surface-2);border-radius:var(--radius-sm);padding:10px;text-align:center}
@@ -281,7 +281,7 @@
     .q-text{font-size:16px}
     .answer{font-size:15px;padding:12px 14px}
     .score-ring{width:140px;height:140px}
-    .score-ring .pct{font-size:28px}
+    .score-ring .pct{font-size:24px}
   }
   @media (prefers-reduced-motion:reduce){
     *{transition:none !important;animation:none !important}
@@ -341,7 +341,7 @@
         <circle class="track" cx="60" cy="60" r="52"></circle>
         <circle class="fill" id="scoreFill" cx="60" cy="60" r="52" stroke-dasharray="0 327"></circle>
       </svg>
-      <div class="label"><div class="pct" id="scorePct">0%</div><div class="small" id="scoreScore">0 / 30</div></div>
+      <div class="label"><div class="pct" id="scoreNote">0 / 20</div><div class="small" id="scoreScore">0% · 0 / 30</div></div>
     </div>
     <div class="stat-row">
       <div class="stat"><div class="n" id="statGood" style="color:var(--good)">0</div><div class="lab">Bonnes</div></div>
@@ -911,8 +911,10 @@ function showResults(){
     else bad++;
   });
   const pct = Math.round((good/total)*100);
-  $('scorePct').textContent = `${pct}%`;
-  $('scoreScore').textContent = `${good} / ${total}`;
+  const note20 = (good/total)*20;
+  const noteStr = note20.toLocaleString('fr-FR', {minimumFractionDigits:1, maximumFractionDigits:1});
+  $('scoreNote').textContent = `${noteStr} / 20`;
+  $('scoreScore').textContent = `${pct}% · ${good} / ${total}`;
   $('statGood').textContent = good;
   $('statBad').textContent = bad;
   $('statSkip').textContent = skip;
