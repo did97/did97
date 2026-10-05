@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b2545" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a1222" media="(prefers-color-scheme: dark)">
+<title>QCM OVP — Sécurité privée</title>
+<style>
+  :root{
+    --bg:#f4f6fb;
+    --surface:#ffffff;
+    --surface-2:#eef1f8;
+    --text:#0b2545;
+    --muted:#4a5a73;
+    --border:#d6dcea;
+    --primary:#0b2545;
+    --primary-contrast:#ffffff;
+    --accent:#1d4ed8;
+    --good:#15803d;
+    --good-bg:#dcfce7;
+    --bad:#b91c1c;
+    --bad-bg:#fee2e2;
+    --warn:#b45309;
+    --shadow:0 2px 8px rgba(11,37,69,.08);
+    --radius:14px;
+    --radius-sm:10px;
+  }
+  :root:not([data-theme="light"]) {}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1222;
+      --surface:#111a2e;
+      --surface-2:#172240;
+      --text:#eaf0ff;
+      --muted:#9fb0cf;
+      --border:#243354;
+      --primary:#eaf0ff;
+      --primary-contrast:#0b1a33;
+      --accent:#60a5fa;
+      --good:#4ade80;
+      --good-bg:#0f3d26;
+      --bad:#f87171;
+      --bad-bg:#3f1414;
+      --warn:#fbbf24;
+      --shadow:0 2px 10px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1222;
+    --surface:#111a2e;
+    --surface-2:#172240;
+    --text:#eaf0ff;
+    --muted:#9fb0cf;
+    --border:#243354;
+    --primary:#eaf0ff;
+    --primary-contrast:#0b1a33;
+    --accent:#60a5fa;
+    --good:#4ade80;
+    --good-bg:#0f3d26;
+    --bad:#f87171;
+    --bad-bg:#3f1414;
+    --warn:#fbbf24;
+    --shadow:0 2px 10px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:16px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    min-height:100dvh;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .app{
+    max-width:720px;
+    margin:0 auto;
+    padding:16px;
+  }
+  header.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:8px 4px 16px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    letter-spacing:.3px;
+    font-size:15px;
+  }
+  .brand .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 20%,transparent);
+  }
+  .theme-toggle{
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text);
+    width:40px;height:40px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:18px;
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px;
+  }
+  h1{font-size:22px;margin:0 0 6px}
+  h2{font-size:18px;margin:0 0 10px}
+  p.lead{color:var(--muted);margin:0 0 16px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    gap:8px;
+    padding:14px 18px;
+    border-radius:999px;
+    border:1px solid transparent;
+    font-size:16px;font-weight:600;
+    cursor:pointer;
+    min-height:48px;
+    width:100%;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--primary);color:var(--primary-contrast)}
+  .btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+  .btn-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .btn-row .btn{flex:1 1 140px}
+
+  /* Progress + timer */
+  .status{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:12px;margin-bottom:12px;
+    font-size:13px;color:var(--muted);
+  }
+  .progress-wrap{
+    height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin-bottom:6px;
+  }
+  .progress-bar{height:100%;background:var(--accent);width:0;transition:width .2s ease}
+  .timer-wrap{
+    height:8px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin:14px 0 18px;
+  }
+  .timer-bar{height:100%;width:100%;background:var(--good);transition:width 1s linear, background .3s ease}
+  .timer-bar.warn{background:var(--warn)}
+  .timer-bar.danger{background:var(--bad)}
+  .timer-text{
+    font-variant-numeric:tabular-nums;
+    font-weight:700;
+    color:var(--text);
+  }
+
+  .q-text{
+    font-size:17px;
+    font-weight:600;
+    margin:4px 0 14px;
+    line-height:1.4;
+  }
+  .q-topic{
+    display:inline-block;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--muted);
+    background:var(--surface-2);
+    padding:4px 10px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .answers{display:flex;flex-direction:column;gap:10px}
+  .answer{
+    display:flex;align-items:flex-start;gap:12px;
+    padding:14px 16px;
+    background:var(--surface-2);
+    border:2px solid transparent;
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    min-height:52px;
+    font-size:15.5px;
+    text-align:left;
+    width:100%;
+    color:var(--text);
+    transition:border-color .15s, background .15s;
+  }
+  .answer:hover{border-color:var(--border)}
+  .answer .letter{
+    flex:0 0 28px;height:28px;border-radius:50%;
+    background:var(--surface);border:1px solid var(--border);
+    display:inline-flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:13px;
+  }
+  .answer.selected{border-color:var(--accent)}
+  .answer.correct{background:var(--good-bg);border-color:var(--good);color:var(--text)}
+  .answer.wrong{background:var(--bad-bg);border-color:var(--bad);color:var(--text)}
+  .answer.correct .letter{background:var(--good);color:#fff;border-color:var(--good)}
+  .answer.wrong .letter{background:var(--bad);color:#fff;border-color:var(--bad)}
+  .answer:disabled{cursor:default}
+
+  .feedback{
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:var(--radius-sm);
+    font-size:14.5px;
+    display:none;
+  }
+  .feedback.show{display:block}
+  .feedback.good{background:var(--good-bg);color:var(--good);border:1px solid var(--good)}
+  .feedback.bad{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad)}
+
+  /* Results */
+  .score-ring{
+    width:160px;height:160px;margin:8px auto 16px;
+    position:relative;
+  }
+  .score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .score-ring .track{stroke:var(--surface-2);stroke-width:12;fill:none}
+  .score-ring .fill{stroke:var(--accent);stroke-width:12;fill:none;stroke-linecap:round;transition:stroke-dasharray .8s ease}
+  .score-ring .label{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;
+    font-weight:700;
+  }
+  .score-ring .pct{font-size:34px}
+  .score-ring .small{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px}
+
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+  .stat{background:var(--surface-2);border-radius:var(--radius-sm);padding:10px;text-align:center}
+  .stat .n{font-size:20px;font-weight:700}
+  .stat .lab{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+  .review-item{
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:14px;
+    margin-top:10px;
+    background:var(--surface);
+  }
+  .review-item .q{font-weight:600;margin-bottom:8px;font-size:15px}
+  .review-item .tag{
+    font-size:11px;text-transform:uppercase;letter-spacing:.5px;
+    padding:3px 8px;border-radius:999px;margin-left:6px;
+  }
+  .tag.good{background:var(--good-bg);color:var(--good)}
+  .tag.bad{background:var(--bad-bg);color:var(--bad)}
+  .tag.skip{background:var(--surface-2);color:var(--muted)}
+  .review-item ul{list-style:none;padding:0;margin:8px 0 0}
+  .review-item li{
+    padding:8px 10px;border-radius:8px;margin-bottom:4px;
+    font-size:14px;
+    background:var(--surface-2);
+    display:flex;align-items:center;gap:8px;
+  }
+  .review-item li.correct{background:var(--good-bg);color:var(--text)}
+  .review-item li.mychoice.wrong{background:var(--bad-bg);color:var(--text)}
+  .review-item li .mark{
+    width:18px;height:18px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;font-size:11px;
+    flex:0 0 18px;
+    background:var(--surface);border:1px solid var(--border);
+  }
+  .review-item li.correct .mark{background:var(--good);color:#fff;border-color:var(--good)}
+  .review-item li.mychoice.wrong .mark{background:var(--bad);color:#fff;border-color:var(--bad)}
+
+  footer{
+    text-align:center;color:var(--muted);font-size:12px;padding:20px 10px 10px;
+  }
+  @media (max-width:420px){
+    .app{padding:12px}
+    .card{padding:16px}
+    h1{font-size:20px}
+    .q-text{font-size:16px}
+    .answer{font-size:15px;padding:12px 14px}
+    .score-ring{width:140px;height:140px}
+    .score-ring .pct{font-size:28px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important}
+  }
+
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span><span>QCM OVP — Sécurité privée</span></div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Basculer thème" title="Basculer thème">◐</button>
+  </header>
+
+  <!-- START SCREEN -->
+  <section id="screen-start" class="card">
+    <h1>QCM Opérateur en vidéoprotection</h1>
+    <p class="lead">30 questions tirées au hasard parmi la banque. Ordre des questions et des réponses mélangés à chaque session. 45 secondes par question.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="n">30</div><div class="lab">Questions</div></div>
+      <div class="stat"><div class="n">45 s</div><div class="lab">Par question</div></div>
+      <div class="stat"><div class="n" id="poolSize">—</div><div class="lab">Banque</div></div>
+    </div>
+    <ul style="color:var(--muted);font-size:14px;padding-left:18px;margin:4px 0 0">
+      <li>Uniformes et insignes</li>
+      <li>Services internes, carte professionnelle, CNAPS</li>
+      <li>Livre VI du CSI et peines liées aux armes</li>
+      <li>Dispositions utiles du Code pénal</li>
+      <li>Responsabilité pénale</li>
+    </ul>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnStart">Commencer le QCM</button>
+    </div>
+  </section>
+
+  <!-- QUIZ SCREEN -->
+  <section id="screen-quiz" class="card hidden">
+    <div class="status">
+      <span id="qCounter">Question 1 / 30</span>
+      <span class="timer-text" id="timerText">0:45</span>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="timer-wrap"><div class="timer-bar" id="timerBar"></div></div>
+    <span class="q-topic" id="qTopic">Thème</span>
+    <div class="q-text" id="qText"></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary hidden" id="btnNext">Question suivante</button>
+    </div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section id="screen-result" class="card hidden">
+    <h1>Résultats</h1>
+    <div class="score-ring">
+      <svg viewBox="0 0 120 120">
+        <circle class="track" cx="60" cy="60" r="52"></circle>
+        <circle class="fill" id="scoreFill" cx="60" cy="60" r="52" stroke-dasharray="0 327"></circle>
+      </svg>
+      <div class="label"><div class="pct" id="scorePct">0%</div><div class="small" id="scoreScore">0 / 30</div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="n" id="statGood" style="color:var(--good)">0</div><div class="lab">Bonnes</div></div>
+      <div class="stat"><div class="n" id="statBad" style="color:var(--bad)">0</div><div class="lab">Mauvaises</div></div>
+      <div class="stat"><div class="n" id="statSkip">0</div><div class="lab">Non répondues</div></div>
+    </div>
+    <h2 style="margin-top:16px">Correction détaillée</h2>
+    <div id="reviewList"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnRestart">Nouveau QCM</button>
+    </div>
+  </section>
+
+  <footer>TLF — Toute La Formation · QCM OVP</footer>
+</div>
+
+<script>
+/* ========= Theme toggle ========= */
+(function(){
+  const KEY = 'qcm-ovp-theme';
+  const root = document.documentElement;
+  const stored = (()=>{try{return localStorage.getItem(KEY)}catch(e){return null}})();
+  if(stored==='light'||stored==='dark') root.setAttribute('data-theme',stored);
+  document.getElementById('themeToggle').addEventListener('click',()=>{
+    const current = root.getAttribute('data-theme');
+    let next;
+    if(!current){
+      const sysDark = matchMedia('(prefers-color-scheme: dark)').matches;
+      next = sysDark ? 'light' : 'dark';
+    } else {
+      next = current==='dark' ? 'light' : 'dark';
+    }
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem(KEY,next)}catch(e){}
+  });
+})();
+
+/* ========= Question bank =========
+   Each question: {topic, q, answers:[{t:"text", c:true/false}, ...]}
+*/
+const BANK = [
+  // ==== 01 Uniformes ====
+  {topic:"Uniformes", q:"Le port d'une tenue distinctive par l'agent de sécurité privée a pour but principal :", answers:[
+    {t:"De lui conférer l'autorité d'un officier de police judiciaire"},
+    {t:"De le rendre immédiatement identifiable comme agent de sécurité privée", c:true},
+    {t:"De le dispenser de détenir une carte professionnelle"},
+    {t:"De lui permettre d'intervenir librement sur la voie publique"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Uniformes", q:"La tenue de l'agent de sécurité privée doit :", answers:[
+    {t:"Être clairement différente de celle de la police et de la gendarmerie", c:true},
+    {t:"Être identique à celle de la police municipale"},
+    {t:"Reprendre les couleurs officielles de la gendarmerie"},
+    {t:"Comporter obligatoirement un galon de grade"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Uniformes", q:"Quelle mention doit figurer de manière lisible sur le gilet ou la veste de l'agent ?", answers:[
+    {t:"« Police privée »"},
+    {t:"« Agent de sécurité privée »", c:true},
+    {t:"« Sécurité d'État »"},
+    {t:"« Gendarmerie privée »"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Uniformes", q:"Les éléments d'identification portés par l'agent comportent notamment :", answers:[
+    {t:"Le nom de l'entreprise de sécurité et un numéro d'identification individuel", c:true},
+    {t:"Le matricule du commissariat le plus proche"},
+    {t:"Le nom de son ancien service de police ou d'armée"},
+    {t:"Le numéro de téléphone personnel de l'agent"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Uniformes", q:"Quel agent peut être dispensé du port de la tenue professionnelle ?", answers:[
+    {t:"L'agent exerçant en civil, par exemple en vidéoprotection à distance ou en enquête", c:true},
+    {t:"Tout agent titulaire d'une carte professionnelle"},
+    {t:"L'agent affecté au contrôle d'accès d'un magasin"},
+    {t:"L'agent qui travaille de nuit"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Uniformes", q:"Un agent de sécurité privée peut-il faire figurer sur sa tenue ou son badge sa qualité d'ancien policier ou d'ancien militaire ?", answers:[
+    {t:"Oui, c'est un gage de compétence vis-à-vis du client"},
+    {t:"Oui, avec l'accord écrit du client"},
+    {t:"Non, c'est interdit", c:true},
+    {t:"Oui, à condition que la mention soit en petits caractères"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Uniformes", q:"L'emploi du terme « police » dans la dénomination d'une entreprise de sécurité privée est :", answers:[
+    {t:"Autorisé sans condition"},
+    {t:"Autorisé si l'entreprise est autorisée par le CNAPS"},
+    {t:"Autorisé pour les seuls services internes de sécurité"},
+    {t:"Interdit", c:true},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Uniformes", q:"La surveillance de la voie publique par un agent de sécurité privée :", answers:[
+    {t:"Est libre dès lors que l'agent porte sa tenue"},
+    {t:"Nécessite une autorisation préfectorale", c:true},
+    {t:"Relève d'une simple déclaration auprès du maire"},
+    {t:"Est autorisée sur simple demande du client"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Uniformes", q:"Parmi ces missions, laquelle figure dans les exceptions permettant une présence sur la voie publique ?", answers:[
+    {t:"La distribution de tracts publicitaires"},
+    {t:"Le contrôle du stationnement"},
+    {t:"Le transfert de fonds", c:true},
+    {t:"La régulation de la circulation routière"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Uniformes", q:"Le port d'une arme apparente par un agent de sécurité privée :", answers:[
+    {t:"Est libre dès lors que l'agent est en tenue"},
+    {t:"Est obligatoire en zone commerciale"},
+    {t:"Relève du libre choix de l'agent"},
+    {t:"Est interdit sans autorisation explicite", c:true},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+
+  // ==== 02 Services internes, carte pro, CNAPS ====
+  {topic:"CNAPS / Carte pro", q:"Un service interne de sécurité privée est :", answers:[
+    {t:"Une entreprise prestataire extérieure à laquelle la sécurité est sous-traitée"},
+    {t:"Un service de police municipale mis à disposition d'une entreprise"},
+    {t:"Un groupement de plusieurs sociétés de gardiennage"},
+    {t:"Une structure créée au sein d'une entreprise pour assurer sa propre sécurité avec ses salariés", c:true},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"CNAPS / Carte pro", q:"Les services internes de sécurité privée :", answers:[
+    {t:"Échappent aux règles applicables aux entreprises de sécurité privée"},
+    {t:"Sont soumis aux mêmes règles que les entreprises de sécurité privée", c:true},
+    {t:"Peuvent employer des agents dépourvus de carte professionnelle"},
+    {t:"Ne sont soumis à aucun contrôle du CNAPS"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"CNAPS / Carte pro", q:"Quelle formalité s'impose à un service interne de sécurité ?", answers:[
+    {t:"Aucune formalité particulière"},
+    {t:"Le versement d'une caution financière"},
+    {t:"Déclarer son existence auprès du CNAPS", c:true},
+    {t:"Le dépôt d'une marque commerciale"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"CNAPS / Carte pro", q:"Le responsable d'un service interne de sécurité doit :", answers:[
+    {t:"Être titulaire d'une carte professionnelle délivrée par le CNAPS", c:true},
+    {t:"Être obligatoirement un ancien policier"},
+    {t:"Être obligatoirement le dirigeant de l'entreprise"},
+    {t:"Être titulaire du permis de conduire"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"CNAPS / Carte pro", q:"Que signifie le sigle CNAPS ?", answers:[
+    {t:"Commission Nationale des Agents de Protection et de Sécurité"},
+    {t:"Conseil National des Activités Privées de Sécurité", c:true},
+    {t:"Centre National d'Agrément des Professionnels de la Sécurité"},
+    {t:"Comité National d'Accréditation des Prestataires de Sécurité"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"CNAPS / Carte pro", q:"La carte professionnelle d'agent de sécurité privée est :", answers:[
+    {t:"Obligatoire pour exercer la profession", c:true},
+    {t:"Facultative pour les opérateurs de vidéoprotection"},
+    {t:"Délivrée par l'employeur"},
+    {t:"Délivrée par la mairie du lieu d'exercice"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"CNAPS / Carte pro", q:"Quelle est la durée de validité de la carte professionnelle ?", answers:[
+    {t:"1 an"},
+    {t:"5 ans", c:true},
+    {t:"3 ans"},
+    {t:"10 ans"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"CNAPS / Carte pro", q:"Parmi ces conditions, laquelle est exigée pour obtenir la carte professionnelle ?", answers:[
+    {t:"Être âgé d'au moins 16 ans"},
+    {t:"Être âgé d'au moins 21 ans"},
+    {t:"Avoir effectué son service militaire"},
+    {t:"Être âgé d'au moins 18 ans", c:true},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"CNAPS / Carte pro", q:"Parmi ces documents, lequel est demandé à l'appui de la demande de carte professionnelle ?", answers:[
+    {t:"Un extrait de casier judiciaire (bulletin n° 3)", c:true},
+    {t:"Un relevé d'identité bancaire"},
+    {t:"Une attestation d'assurance automobile"},
+    {t:"Un certificat de scolarité"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"CNAPS / Carte pro", q:"En cas de perte ou de vol de sa carte professionnelle, l'agent doit :", answers:[
+    {t:"Attendre l'expiration de la carte pour en redemander une"},
+    {t:"Se contenter d'en présenter une photocopie"},
+    {t:"Le signaler au CNAPS via les téléservices et demander une carte de remplacement", c:true},
+    {t:"Prévenir uniquement son employeur"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+
+  // ==== 03 Livre VI CSI + armes ====
+  {topic:"Livre VI CSI / Peines", q:"Quelle sanction est encourue en cas de non-déclaration d'un service interne auprès du CNAPS ?", answers:[
+    {t:"Un simple avertissement"},
+    {t:"Une amende pouvant aller jusqu'à 30 000 €", c:true},
+    {t:"Une amende de 150 €"},
+    {t:"Aucune sanction n'est prévue"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Livre VI CSI / Peines", q:"L'exercice d'une activité de sécurité privée sans autorisation expose à :", answers:[
+    {t:"Une simple mise en demeure"},
+    {t:"Une amende pouvant atteindre 45 000 € et une interdiction d'exercice", c:true},
+    {t:"Une amende forfaitaire de 750 €"},
+    {t:"Une suspension d'activité de 48 heures"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Livre VI CSI / Peines", q:"Le non-respect d'une interdiction temporaire d'exercice est puni d'une amende de :", answers:[
+    {t:"150 €"},
+    {t:"750 €"},
+    {t:"75 000 €", c:true},
+    {t:"7 500 €"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Livre VI CSI / Peines", q:"Le non-respect des conditions d'armement peut être sanctionné par une amende pouvant atteindre :", answers:[
+    {t:"75 000 €", c:true},
+    {t:"7 500 €"},
+    {t:"15 000 €"},
+    {t:"30 000 €"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Livre VI CSI / Peines", q:"Une fausse déclaration auprès du CNAPS :", answers:[
+    {t:"N'entraîne aucune conséquence"},
+    {t:"Entraîne uniquement un avertissement"},
+    {t:"Peut entraîner une amende jusqu'à 30 000 € et des sanctions pénales", c:true},
+    {t:"Est régularisable sans formalité"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Livre VI CSI / Peines", q:"Un manquement aux obligations de formation continue peut entraîner :", answers:[
+    {t:"Une amende de 500 000 €"},
+    {t:"Une interdiction temporaire d'exercice", c:true},
+    {t:"Une peine de 5 ans d'emprisonnement"},
+    {t:"La radiation définitive et automatique de la profession"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Livre VI CSI / Peines", q:"Le non-respect du port du badge d'identification peut être sanctionné par une amende pouvant atteindre :", answers:[
+    {t:"150 €"},
+    {t:"1 500 €"},
+    {t:"7 500 €", c:true},
+    {t:"15 000 €"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Livre VI CSI / Peines", q:"Le port ou le transport illégal d'une arme de catégorie D par un agent est puni de :", answers:[
+    {t:"1 an d'emprisonnement et 15 000 € d'amende", c:true},
+    {t:"5 ans d'emprisonnement et 75 000 € d'amende"},
+    {t:"10 ans d'emprisonnement et 500 000 € d'amende"},
+    {t:"750 € d'amende sans emprisonnement"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Livre VI CSI / Peines", q:"Pour une personne seule, l'infraction portant sur du matériel de guerre ou une arme de catégorie A ou B est punie de :", answers:[
+    {t:"1 an d'emprisonnement et 15 000 € d'amende"},
+    {t:"2 ans d'emprisonnement et 30 000 € d'amende"},
+    {t:"5 ans d'emprisonnement et 75 000 € d'amende", c:true},
+    {t:"10 ans d'emprisonnement et 500 000 € d'amende"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Livre VI CSI / Peines", q:"Lorsque cette même infraction (catégorie A ou B) est commise par plusieurs personnes, la peine encourue est portée à :", answers:[
+    {t:"2 ans d'emprisonnement et 30 000 € d'amende"},
+    {t:"5 ans d'emprisonnement et 75 000 € d'amende"},
+    {t:"15 ans d'emprisonnement et 1 000 000 € d'amende"},
+    {t:"10 ans d'emprisonnement et 500 000 € d'amende", c:true},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+
+  // ==== 04 Code pénal ====
+  {topic:"Code pénal", q:"Quelle juridiction juge les crimes ?", answers:[
+    {t:"La cour d'assises", c:true},
+    {t:"Le tribunal de police"},
+    {t:"Le tribunal correctionnel"},
+    {t:"La Cour de cassation"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Code pénal", q:"Quelle juridiction juge les contraventions ?", answers:[
+    {t:"Le tribunal correctionnel"},
+    {t:"La cour d'assises"},
+    {t:"Le tribunal de police", c:true},
+    {t:"La cour d'appel"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Code pénal", q:"Quelle juridiction juge les délits ?", answers:[
+    {t:"Le tribunal de police"},
+    {t:"La cour d'assises"},
+    {t:"Le conseil de prud'hommes"},
+    {t:"Le tribunal correctionnel", c:true},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Code pénal", q:"Quel est le rôle de la Cour de cassation ?", answers:[
+    {t:"Rejuger les faits une seconde fois"},
+    {t:"Contrôler l'application du droit par les juridictions", c:true},
+    {t:"Instruire les affaires criminelles"},
+    {t:"Prononcer les peines d'emprisonnement en première instance"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Code pénal", q:"La responsabilité civile a pour objet :", answers:[
+    {t:"De réparer le dommage causé à autrui", c:true},
+    {t:"De punir l'auteur d'une infraction"},
+    {t:"D'interdire l'exercice de la profession"},
+    {t:"De prononcer une peine d'emprisonnement"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Code pénal", q:"Quelles conditions doivent être réunies pour engager la responsabilité civile ?", answers:[
+    {t:"Une intention de nuire, et elle seule"},
+    {t:"Un dommage, un fait ou une négligence, et un lien de causalité direct", c:true},
+    {t:"Une condamnation pénale préalable"},
+    {t:"Un préjudice moral, à l'exclusion de tout autre"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Code pénal", q:"La légitime défense suppose notamment que la riposte soit :", answers:[
+    {t:"Différée dans le temps"},
+    {t:"Proportionnée à l'agression", c:true},
+    {t:"Systématiquement armée"},
+    {t:"Autorisée au préalable par l'employeur"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Code pénal", q:"Un agent qui continue de frapper un individu déjà maîtrisé commet :", answers:[
+    {t:"Un agissement excessif constitutif d'une infraction", c:true},
+    {t:"Un acte de légitime défense"},
+    {t:"Un acte justifié par l'ordre de la loi"},
+    {t:"Une simple faute disciplinaire sans conséquence pénale"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Code pénal", q:"La non-assistance à personne en danger est punie de :", answers:[
+    {t:"1 an d'emprisonnement et 15 000 € d'amende"},
+    {t:"2 ans d'emprisonnement et 30 000 € d'amende"},
+    {t:"3 ans d'emprisonnement et 45 000 € d'amende"},
+    {t:"5 ans d'emprisonnement et 75 000 € d'amende", c:true},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Code pénal", q:"Le fait pour un agent de refuser l'accès à une personne en raison de son origine constitue :", answers:[
+    {t:"Une simple faute professionnelle"},
+    {t:"Une prérogative de l'agent chargé du contrôle d'accès"},
+    {t:"Une discrimination punie de 3 ans d'emprisonnement et 45 000 € d'amende", c:true},
+    {t:"Une contravention de première classe"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+
+  // ==== 05 Responsabilité pénale ====
+  {topic:"Responsabilité pénale", q:"La responsabilité pénale est :", answers:[
+    {t:"L'obligation de réparer financièrement un dommage"},
+    {t:"L'obligation de répondre devant la justice pénale de l'infraction commise", c:true},
+    {t:"Une sanction disciplinaire prononcée par l'employeur"},
+    {t:"Une assurance obligatoire souscrite par l'entreprise"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Responsabilité pénale", q:"Quels sont les trois éléments constitutifs de l'infraction ?", answers:[
+    {t:"Le mobile, le témoin et la preuve"},
+    {t:"L'élément matériel, l'élément légal et l'élément psychologique (moral)", c:true},
+    {t:"La plainte, l'enquête et le jugement"},
+    {t:"L'auteur, la victime et le préjudice"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Responsabilité pénale", q:"L'élément légal de l'infraction signifie que :", answers:[
+    {t:"L'auteur doit être majeur"},
+    {t:"La victime doit obligatoirement porter plainte"},
+    {t:"L'infraction doit être prévue par un texte de loi préexistant", c:true},
+    {t:"Un avocat doit assister l'auteur dès les faits"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Responsabilité pénale", q:"Parmi ces situations, laquelle constitue une cause d'irresponsabilité pénale ?", answers:[
+    {t:"La contrainte irrésistible", c:true},
+    {t:"La complicité"},
+    {t:"La récidive"},
+    {t:"La préméditation"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Responsabilité pénale", q:"Quelles sont les trois causes d'irresponsabilité citées dans le cours ?", answers:[
+    {t:"La force majeure, le trouble psychique (démence) et la contrainte irrésistible", c:true},
+    {t:"La fatigue, le stress et le manque de formation"},
+    {t:"L'ordre du client, l'urgence et l'habitude"},
+    {t:"L'ancienneté, la bonne foi et l'absence de plainte"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Responsabilité pénale", q:"Le préjudice corporel correspond à :", answers:[
+    {t:"Une atteinte aux biens"},
+    {t:"Une atteinte à l'honneur ou aux sentiments"},
+    {t:"Une perte d'exploitation commerciale"},
+    {t:"Une atteinte à l'intégrité physique d'une personne", c:true},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Responsabilité pénale", q:"La destruction d'un matériel appartenant au client constitue un préjudice :", answers:[
+    {t:"Corporel"},
+    {t:"Moral"},
+    {t:"Inexistant, faute de victime physique"},
+    {t:"Matériel", c:true},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Responsabilité pénale", q:"Un propos diffamatoire portant atteinte à l'honneur d'une personne constitue un préjudice :", answers:[
+    {t:"Corporel"},
+    {t:"Matériel"},
+    {t:"Moral", c:true},
+    {t:"Sans conséquence juridique"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Responsabilité pénale", q:"Les infractions sont classées, par ordre décroissant de gravité :", answers:[
+    {t:"Crimes, délits, contraventions", c:true},
+    {t:"Délits, crimes, contraventions"},
+    {t:"Contraventions, délits, crimes"},
+    {t:"Crimes, contraventions, délits"},
+    {t:"Aucune des réponses précédentes"}
+  ]},
+  {topic:"Responsabilité pénale", q:"Un agent enregistre à leur insu une conversation privée entre deux salariés. De quelle infraction s'agit-il ?", answers:[
+    {t:"Un vol"},
+    {t:"Un abus de confiance"},
+    {t:"Une discrimination"},
+    {t:"Un harcèlement moral"},
+    {t:"Aucune des réponses précédentes", c:true}
+  ]}
+];
+
+/* ========= Config ========= */
+const QCM_SIZE = 30;
+const TIME_PER_Q = 45; // seconds
+const FEEDBACK_DELAY_MS = 1300; // auto-advance when answered
+
+/* ========= State ========= */
+let session = null;
+
+/* ========= Utilities ========= */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function $(id){return document.getElementById(id)}
+function show(id){$(id).classList.remove('hidden')}
+function hide(id){$(id).classList.add('hidden')}
+
+/* ========= Session setup ========= */
+function newSession(){
+  const picked = shuffle(BANK).slice(0, Math.min(QCM_SIZE, BANK.length));
+  const questions = picked.map(src=>{
+    const shuffled = shuffle(src.answers);
+    return {
+      topic: src.topic,
+      q: src.q,
+      answers: shuffled,
+      correctIndex: shuffled.findIndex(a=>a.c===true),
+      selectedIndex: null,
+      timedOut: false
+    };
+  });
+  session = { questions, idx:0, timerId:null, remain:TIME_PER_Q, locked:false };
+}
+
+/* ========= Rendering ========= */
+function renderQuestion(){
+  const total = session.questions.length;
+  const i = session.idx;
+  const q = session.questions[i];
+
+  $('qCounter').textContent = `Question ${i+1} / ${total}`;
+  $('progressBar').style.width = `${(i/total)*100}%`;
+  $('qTopic').textContent = q.topic;
+  $('qText').textContent = q.q;
+
+  const ansEl = $('answers');
+  ansEl.innerHTML = '';
+  const letters = ['A','B','C','D','E','F'];
+  q.answers.forEach((a,idx)=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'answer';
+    btn.innerHTML = `<span class="letter">${letters[idx]}</span><span class="text"></span>`;
+    btn.querySelector('.text').textContent = a.t;
+    btn.addEventListener('click', ()=>onAnswer(idx));
+    ansEl.appendChild(btn);
+  });
+
+  $('feedback').className = 'feedback';
+  $('feedback').textContent = '';
+  $('btnNext').classList.add('hidden');
+
+  session.locked = false;
+  startTimer();
+}
+
+function startTimer(){
+  stopTimer();
+  session.remain = TIME_PER_Q;
+  updateTimerUI();
+  session.timerId = setInterval(()=>{
+    session.remain -= 1;
+    updateTimerUI();
+    if(session.remain <= 0){
+      stopTimer();
+      onTimeout();
+    }
+  }, 1000);
+}
+function stopTimer(){
+  if(session.timerId){clearInterval(session.timerId); session.timerId=null}
+}
+function updateTimerUI(){
+  const r = Math.max(0,session.remain);
+  const m = Math.floor(r/60), s = r%60;
+  $('timerText').textContent = `${m}:${String(s).padStart(2,'0')}`;
+  const pct = (r/TIME_PER_Q)*100;
+  const bar = $('timerBar');
+  bar.style.width = `${pct}%`;
+  bar.classList.toggle('warn', r<=15 && r>5);
+  bar.classList.toggle('danger', r<=5);
+}
+
+function onAnswer(idx){
+  if(session.locked) return;
+  session.locked = true;
+  stopTimer();
+  const q = session.questions[session.idx];
+  q.selectedIndex = idx;
+  revealAnswers();
+  const good = idx === q.correctIndex;
+  const fb = $('feedback');
+  fb.classList.add('show', good?'good':'bad');
+  fb.textContent = good
+    ? 'Bonne réponse !'
+    : `Mauvaise réponse. Bonne réponse : ${q.answers[q.correctIndex].t}`;
+  scheduleNext();
+}
+
+function onTimeout(){
+  if(session.locked) return;
+  session.locked = true;
+  const q = session.questions[session.idx];
+  q.timedOut = true;
+  revealAnswers();
+  const fb = $('feedback');
+  fb.classList.add('show','bad');
+  fb.textContent = `Temps écoulé. Bonne réponse : ${q.answers[q.correctIndex].t}`;
+  scheduleNext();
+}
+
+function revealAnswers(){
+  const q = session.questions[session.idx];
+  const nodes = $('answers').querySelectorAll('.answer');
+  nodes.forEach((n,i)=>{
+    n.disabled = true;
+    if(i===q.correctIndex) n.classList.add('correct');
+    if(q.selectedIndex!=null && i===q.selectedIndex && i!==q.correctIndex) n.classList.add('wrong');
+  });
+}
+
+function scheduleNext(){
+  const btn = $('btnNext');
+  const last = session.idx === session.questions.length-1;
+  btn.textContent = last ? 'Voir les résultats' : 'Question suivante';
+  btn.classList.remove('hidden');
+  setTimeout(()=>{ if(session.locked) goNext(); }, FEEDBACK_DELAY_MS);
+}
+
+function goNext(){
+  if(session.idx < session.questions.length-1){
+    session.idx += 1;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+/* ========= Results ========= */
+function showResults(){
+  stopTimer();
+  hide('screen-quiz');
+  show('screen-result');
+
+  const qs = session.questions;
+  const total = qs.length;
+  let good=0, bad=0, skip=0;
+  qs.forEach(q=>{
+    if(q.timedOut || q.selectedIndex==null) skip++;
+    else if(q.selectedIndex === q.correctIndex) good++;
+    else bad++;
+  });
+  const pct = Math.round((good/total)*100);
+  $('scorePct').textContent = `${pct}%`;
+  $('scoreScore').textContent = `${good} / ${total}`;
+  $('statGood').textContent = good;
+  $('statBad').textContent = bad;
+  $('statSkip').textContent = skip;
+
+  // ring circumference ~= 2*pi*52 = 326.7
+  const C = 2*Math.PI*52;
+  const fill = (good/total)*C;
+  $('scoreFill').setAttribute('stroke-dasharray', `${fill} ${C-fill}`);
+  $('scoreFill').setAttribute('stroke', pct>=70 ? 'var(--good)' : pct>=50 ? 'var(--warn)' : 'var(--bad)');
+
+  const list = $('reviewList');
+  list.innerHTML = '';
+  const letters = ['A','B','C','D','E','F'];
+  qs.forEach((q,i)=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'review-item';
+    let tag;
+    if(q.timedOut || q.selectedIndex==null) tag = '<span class="tag skip">Non répondue</span>';
+    else if(q.selectedIndex===q.correctIndex) tag = '<span class="tag good">Correct</span>';
+    else tag = '<span class="tag bad">Faux</span>';
+    const head = document.createElement('div');
+    head.className = 'q';
+    head.innerHTML = `${i+1}. ${escapeHtml(q.q)} ${tag} <div style="font-size:11px;color:var(--muted);font-weight:500;margin-top:4px">${escapeHtml(q.topic)}</div>`;
+    wrap.appendChild(head);
+    const ul = document.createElement('ul');
+    q.answers.forEach((a,ai)=>{
+      const li = document.createElement('li');
+      const isCorrect = ai===q.correctIndex;
+      const isMine = q.selectedIndex===ai;
+      if(isCorrect) li.classList.add('correct');
+      if(isMine) li.classList.add('mychoice');
+      if(isMine && !isCorrect) li.classList.add('wrong');
+      const mark = isCorrect ? '✓' : (isMine ? '✗' : letters[ai]);
+      li.innerHTML = `<span class="mark">${mark}</span><span></span>`;
+      li.querySelector('span:last-child').textContent = a.t + (isMine ? '  (votre réponse)' : '');
+      ul.appendChild(li);
+    });
+    wrap.appendChild(ul);
+    list.appendChild(wrap);
+  });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ========= Wire up ========= */
+$('poolSize').textContent = BANK.length;
+$('btnStart').addEventListener('click', ()=>{
+  newSession();
+  hide('screen-start');
+  show('screen-quiz');
+  renderQuestion();
+});
+$('btnNext').addEventListener('click', goNext);
+$('btnRestart').addEventListener('click', ()=>{
+  hide('screen-result');
+  show('screen-start');
+});
+</script>
+</body>
+</html>
