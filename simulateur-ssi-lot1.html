@@ -5,7 +5,7 @@
 <title>Simulateur SSI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Simulateur de poste de sécurité incendie SSI catégorie A — TLF Formation — Lot 1 : mode libre et exercices notés, établissement type M.">
+<meta name="description" content="Simulateur de poste de sécurité incendie SSI catégorie A — TLF Formation — mode libre et exercices notés — établissements types M (magasin), L (théâtre) et U (clinique).">
 <style>
 /* Poste de sécurité : plan à gauche, façades matérielles à droite, journal en pied.
    Tokens : neutres froids biaisés bleu-acier (ambiance salle de contrôle), sémantique SSI
@@ -322,7 +322,12 @@ footer.collapsed #journal{display:none}
 <div id="app">
 <header>
   <div class="brand">TLF FORMATION <small>Simulateur SSI — catégorie A</small></div>
-  <div class="ctx" id="ctx">Mode libre · Type M · Lot 1</div>
+  <div class="ctx" id="ctx">Mode libre · Type M</div>
+  <select class="sel" id="etabSel" title="Établissement simulé" aria-label="Établissement simulé">
+    <option value="M">Type M — Magasin</option>
+    <option value="L">Type L — Théâtre</option>
+    <option value="U">Type U — Clinique</option>
+  </select>
   <div class="spacer"></div>
   <div class="grp">
     <span class="clock" id="clock" aria-label="Heure simulée">--:--:--</span>
@@ -410,14 +415,14 @@ footer.collapsed #journal{display:none}
 
     <!-- UGA -->
     <div class="facade" id="fUga">
-      <h2>UGA — Unité de gestion d'alarme <small>NF S 61-936 · alarme générale temporisée</small></h2>
+      <h2>UGA — Unité de gestion d'alarme <small id="ugaSub">NF S 61-936 · alarme générale temporisée</small></h2>
       <div class="body">
         <div class="row">
           <div class="leds" style="flex:1 1 260px;min-width:0">
             <div class="led"><i id="l_ar" class="red"></i>Alarme restreinte</div>
             <div class="led"><i id="l_tempo" class="yel"></i>Temporisation <span class="tempo" id="tempoTxt"></span></div>
             <div class="led"><i id="l_ag" class="red"></i>Alarme générale</div>
-            <div class="led"><i id="l_diff" class="red"></i>Diffuseurs sonores</div>
+            <div class="led"><i id="l_diff" class="red"></i><span id="diffLbl">Diffuseurs sonores</span></div>
             <div class="led"><i id="l_ugahs" class="yel"></i>UGA hors service</div>
           </div>
           <div style="flex:0 0 auto;text-align:center">
@@ -521,6 +526,8 @@ footer.collapsed #journal{display:none}
       <option>Remise en service après travaux</option>
       <option>Mainteneur SSI prévenu</option>
       <option>Secours appelés — compte rendu fait</option>
+      <option>Transfert horizontal effectué — patients à l'abri</option>
+      <option>Public évacué — point de rassemblement contrôlé</option>
       <option>Essai des voyants et signaux sonores</option>
       <option>Fin de service — consignes transmises</option>
     </select>
@@ -606,7 +613,8 @@ footer.collapsed #journal{display:none}
 
 /* ---------------- DONNÉES ÉTABLISSEMENT (type M) ---------------- */
 const FONCTIONS = { CF:'Compartimentage', DF:'Désenfumage', AT:'Arrêt installations techniques' };
-const ETAB = {
+const ETABS = {};
+ETABS.M = {
   type:'M', nom:'Magasin « Les Alizés »', ssi:'Catégorie A', alarme:'Alarme générale temporisée',
   niveaux:[ {id:'N0',nom:'Rez-de-chaussée'}, {id:'N1',nom:'Étage 1'} ],
   zd:[
@@ -642,14 +650,14 @@ const ETAB = {
     {id:'5.03',zd:'ZD5',type:'DM',sous:'déclencheur manuel',lib:'Couloir bureaux',x:556,y:440}
   ],
   das:[
-    {id:'D1',zs:'ZS2',fn:'CF',type:'Porte CF',lib:'Porte CF réserve / vente',niveau:'N0',x:530,y:160,attente:'ouverte (ventouse)',securite:'fermée'},
-    {id:'D2',zs:'ZS2',fn:'CF',type:'Clapet CF',lib:'Clapet CF gaine réserve',niveau:'N0',x:700,y:292,attente:'ouvert',securite:'fermé'},
-    {id:'D3',zs:'ZS2',fn:'CF',type:'Porte CF',lib:'Porte CF local technique',niveau:'N0',x:530,y:400,attente:'ouverte (ventouse)',securite:'fermée'},
-    {id:'D4',zs:'ZS1',fn:'DF',type:'Exutoire',lib:'Exutoire toiture ouest',niveau:'N1',x:110,y:62,attente:'fermé',securite:'ouvert'},
-    {id:'D5',zs:'ZS1',fn:'DF',type:'Exutoire',lib:'Exutoire toiture est',niveau:'N1',x:440,y:62,attente:'fermé',securite:'ouvert'},
-    {id:'D6',zs:'ZS1',fn:'DF',type:'Ventilateur',lib:'Ventilateur extraction vente',niveau:'N0',x:640,y:462,attente:'arrêté',securite:'en marche'},
-    {id:'D7',zs:'ZS1',fn:'AT',type:'Arrêt CTA',lib:'Arrêt centrale de traitement d\'air',niveau:'N0',x:576,y:462,attente:'CTA en marche',securite:'CTA arrêtée'},
-    {id:'D8',zs:'ZS3',fn:'CF',type:'Porte CF',lib:'Porte CF bureaux / vente',niveau:'N1',x:530,y:250,attente:'ouverte (ventouse)',securite:'fermée'}
+    {id:'D1',zs:'ZS2',fn:'CF',type:'Porte CF',lib:'Porte CF réserve / vente',niveau:'N0',x:530,y:160,rz:'ZD2',attente:'ouverte (ventouse)',securite:'fermée'},
+    {id:'D2',zs:'ZS2',fn:'CF',type:'Clapet CF',lib:'Clapet CF gaine réserve',niveau:'N0',x:700,y:292,rz:'ZD2',attente:'ouvert',securite:'fermé'},
+    {id:'D3',zs:'ZS2',fn:'CF',type:'Porte CF',lib:'Porte CF local technique',niveau:'N0',x:530,y:400,rz:'ZD3',attente:'ouverte (ventouse)',securite:'fermée'},
+    {id:'D4',zs:'ZS1',fn:'DF',type:'Exutoire',lib:'Exutoire toiture ouest',niveau:'N1',x:110,y:62,rz:'ZD4',attente:'fermé',securite:'ouvert'},
+    {id:'D5',zs:'ZS1',fn:'DF',type:'Exutoire',lib:'Exutoire toiture est',niveau:'N1',x:440,y:62,rz:'ZD4',attente:'fermé',securite:'ouvert'},
+    {id:'D6',zs:'ZS1',fn:'DF',type:'Ventilateur',lib:'Ventilateur extraction vente',niveau:'N0',x:640,y:462,rz:'ZD3',attente:'arrêté',securite:'en marche'},
+    {id:'D7',zs:'ZS1',fn:'AT',type:'Arrêt CTA',lib:'Arrêt centrale de traitement d\'air',niveau:'N0',x:576,y:462,rz:'ZD3',attente:'CTA en marche',securite:'CTA arrêtée'},
+    {id:'D8',zs:'ZS3',fn:'CF',type:'Porte CF',lib:'Porte CF bureaux / vente',niveau:'N1',x:530,y:250,rz:'ZD5',attente:'ouverte (ventouse)',securite:'fermée'}
   ],
   pc:{niveau:'N0',x:745,y:442},
   /* décor : murs [x1,y1,x2,y2], portes (arcs), mobilier [x,y,w,h,label?], issues [x,y,w,h,label] */
@@ -671,7 +679,8 @@ const ETAB = {
         [30,472,60,8,'ENTRÉE'],[14,200,8,56,'SORTIE'],[700,12,56,8,'SORTIE'],
         [782,40,8,60,'QUAI'],[782,430,8,40,'SORTIE']
       ],
-      labels:[]
+      labels:[],
+      escRect:[230,400,60,30],escLabel:'Escalator → R+1',pcRect:[682,362,94,114]
     },
     N1:{
       walls:[
@@ -687,14 +696,16 @@ const ETAB = {
         [620,340,110,36,'Table de réunion']
       ],
       exits:[[30,472,50,8,'ESCALIER'],[782,430,8,40,'SORTIE'],[14,200,8,56,'SORTIE']],
-      labels:[[560,318,'Salle de réunion']]
+      labels:[[560,318,'Salle de réunion']],
+      escRect:[230,400,60,30],escLabel:'Escalator ← RDC'
     }
   },
-  /* itinéraires de ronde (polylignes depuis le PC ou l'escalator) */
+  /* itinéraires de ronde : from = PC, toEsc = chemin vers l'escalier, esc = position escalier par niveau */
   routes:{
-    escalator:{N0:[260,415],N1:[260,415]},
+    esc:{N0:[260,415],N1:[260,415]},
     N0:{
       from:[745,442],
+      toEsc:[[690,424],[601,424],[530,401],[480,390],[300,420]],
       ZD3:[[700,428]],
       ZD2:[[690,424],[601,380],[601,300]],
       ZD1:[[690,424],[601,424],[530,401],[480,390]]
@@ -706,6 +717,188 @@ const ETAB = {
     }
   }
 };
+
+/* ---------------- TYPE L — Théâtre de l'Horizon ---------------- */
+ETABS.L = {
+  type:'L', nom:'Théâtre de l\'Horizon', ssi:'Catégorie A', alarme:'Alarme générale temporisée',
+  niveaux:[ {id:'N0',nom:'Rez-de-chaussée'}, {id:'N1',nom:'Balcon / foyer'} ],
+  zd:[
+    {id:'ZD1',nom:'Hall / billetterie',niveau:'N0',zs:'ZS1',rect:[20,20,220,460]},
+    {id:'ZD2',nom:'Salle',niveau:'N0',zs:'ZS2',rect:[240,20,360,460]},
+    {id:'ZD3',nom:'Scène et coulisses',niveau:'N0',zs:'ZS3',rect:[600,20,180,460]},
+    {id:'ZD4',nom:'Balcon',niveau:'N1',zs:'ZS2',rect:[240,20,360,460]},
+    {id:'ZD5',nom:'Foyer-bar',niveau:'N1',zs:'ZS1',rect:[20,20,220,460]},
+    {id:'ZD6',nom:'Régie / projection',niveau:'N1',zs:'ZS4',rect:[600,20,180,460]}
+  ],
+  zs:[
+    {id:'ZS1',nom:'Hall et foyer',fonctions:['CF']},
+    {id:'ZS2',nom:'Salle et balcon',fonctions:['DF','AT']},
+    {id:'ZS3',nom:'Scène et coulisses',fonctions:['DF','CF']},
+    {id:'ZS4',nom:'Régie et locaux techniques',fonctions:['CF']}
+  ],
+  points:[
+    {id:'1.01',zd:'ZD1',type:'DAI',sous:'optique de fumée',lib:'Hall – banque d\'accueil',x:130,y:86},
+    {id:'1.02',zd:'ZD1',type:'DM',sous:'déclencheur manuel',lib:'Entrée principale',x:166,y:440},
+    {id:'1.03',zd:'ZD1',type:'DAI',sous:'multicapteur',lib:'PC de sécurité',x:80,y:420},
+    {id:'2.01',zd:'ZD2',type:'DAI',sous:'optique de fumée',lib:'Salle – parterre avant',x:420,y:150},
+    {id:'2.02',zd:'ZD2',type:'DAI',sous:'optique de fumée',lib:'Salle – parterre arrière',x:330,y:380},
+    {id:'2.03',zd:'ZD2',type:'DM',sous:'déclencheur manuel',lib:'Issue de secours salle',x:300,y:440},
+    {id:'3.01',zd:'ZD3',type:'DAI',sous:'optique de fumée',lib:'Scène – gril technique',x:690,y:200},
+    {id:'3.02',zd:'ZD3',type:'DAI',sous:'thermovélocimétrique',lib:'Coulisses – stock décors',x:690,y:430},
+    {id:'3.03',zd:'ZD3',type:'DM',sous:'déclencheur manuel',lib:'Côté scène (jardin)',x:616,y:440},
+    {id:'4.01',zd:'ZD4',type:'DAI',sous:'optique de fumée',lib:'Balcon – rangées hautes',x:420,y:100},
+    {id:'4.02',zd:'ZD4',type:'DM',sous:'déclencheur manuel',lib:'Escalier balcon',x:260,y:60},
+    {id:'5.01',zd:'ZD5',type:'DAI',sous:'optique de fumée',lib:'Foyer-bar',x:130,y:150},
+    {id:'5.02',zd:'ZD5',type:'DM',sous:'déclencheur manuel',lib:'Foyer – issue de secours',x:46,y:440},
+    {id:'6.01',zd:'ZD6',type:'DAI',sous:'optique de fumée',lib:'Régie son et lumière',x:690,y:150},
+    {id:'6.02',zd:'ZD6',type:'DAI',sous:'multicapteur',lib:'Local projection',x:690,y:300},
+    {id:'6.03',zd:'ZD6',type:'DM',sous:'déclencheur manuel',lib:'Couloir régie',x:616,y:440}
+  ],
+  das:[
+    {id:'D1',zs:'ZS1',fn:'CF',type:'Porte CF',lib:'Porte CF hall / salle',niveau:'N0',x:240,y:250,rz:'ZD1',attente:'ouverte (ventouse)',securite:'fermée'},
+    {id:'D2',zs:'ZS1',fn:'CF',type:'Porte CF',lib:'Porte CF foyer / balcon',niveau:'N1',x:240,y:250,rz:'ZD5',attente:'ouverte (ventouse)',securite:'fermée'},
+    {id:'D3',zs:'ZS2',fn:'DF',type:'Exutoire',lib:'Exutoire salle côté cour',niveau:'N0',x:320,y:92,rz:'ZD2',attente:'fermé',securite:'ouvert'},
+    {id:'D4',zs:'ZS2',fn:'DF',type:'Exutoire',lib:'Exutoire salle côté jardin',niveau:'N0',x:520,y:92,rz:'ZD2',attente:'fermé',securite:'ouvert'},
+    {id:'D5',zs:'ZS2',fn:'AT',type:'Arrêt CTA',lib:'Arrêt ventilation salle',niveau:'N0',x:560,y:462,rz:'ZD2',attente:'CTA en marche',securite:'CTA arrêtée'},
+    {id:'D6',zs:'ZS3',fn:'DF',type:'Exutoire',lib:'Exutoire de scène',niveau:'N0',x:700,y:88,rz:'ZD3',attente:'fermé',securite:'ouvert'},
+    {id:'D7',zs:'ZS3',fn:'CF',type:'Rideau de fer',lib:'Rideau de fer de scène',niveau:'N0',x:600,y:240,rz:'ZD2',attente:'levé',securite:'abaissé'},
+    {id:'D8',zs:'ZS4',fn:'CF',type:'Porte CF',lib:'Porte CF régie / balcon',niveau:'N1',x:600,y:150,rz:'ZD6',attente:'ouverte (ventouse)',securite:'fermée'}
+  ],
+  pc:{niveau:'N0',x:85,y:430},
+  decor:{
+    N0:{
+      walls:[
+        [240,20,240,238],[240,262,240,480],
+        [600,20,600,196],[600,284,600,416],[600,444,600,480]
+      ],
+      furniture:[
+        [60,120,80,24,'Billetterie'],
+        [270,140,150,12],[440,140,150,12],[270,180,150,12],[440,180,150,12],
+        [270,220,150,12],[440,220,150,12],[270,260,150,12],[440,260,150,12],
+        [270,300,150,12],[440,300,150,12],[270,340,150,12],[440,340,150,12],
+        [610,100,160,280,'Scène'],
+        [610,390,60,16],[700,390,60,16]
+      ],
+      exits:[[150,472,70,8,'ENTRÉE'],[290,472,56,8,'SORTIE'],[460,472,56,8,'SORTIE'],[30,12,56,8,'SORTIE'],[782,400,8,60,'DÉCORS']],
+      labels:[[612,470,'Coulisses']],
+      escRect:[120,280,60,30],escLabel:'Escalier → balcon',pcRect:[30,360,100,100]
+    },
+    N1:{
+      walls:[
+        [240,20,240,238],[240,262,240,480],
+        [600,20,600,138],[600,162,600,480]
+      ],
+      furniture:[
+        [60,120,80,24,'Bar'],
+        [270,120,150,12],[440,120,150,12],[270,160,150,12],[440,160,150,12],
+        [270,200,150,12],[440,200,150,12],[270,240,150,12],[440,240,150,12],
+        [630,120,100,24,'Régie'],[630,330,80,24,'Projection']
+      ],
+      exits:[[30,12,56,8,'SORTIE'],[782,60,8,50,'SORTIE']],
+      labels:[[300,460,'Vide sur salle']],
+      escRect:[120,280,60,30],escLabel:'Escalier ← RDC'
+    }
+  },
+  routes:{
+    esc:{N0:[150,295],N1:[150,295]},
+    N0:{from:[85,430], toEsc:[[130,360]],
+      ZD1:[[110,380]],
+      ZD2:[[150,380],[225,260],[246,250]],
+      ZD3:[[150,380],[225,260],[246,250],[420,330],[590,430],[612,432]]},
+    N1:{from:[150,295],
+      ZD5:[[130,250]],
+      ZD4:[[200,262],[246,250]],
+      ZD6:[[200,262],[246,250],[420,180],[594,152],[612,152]]}
+  }
+};
+
+/* ---------------- TYPE U — Clinique du Val Fleuri (alarme générale sélective) ---------------- */
+ETABS.U = {
+  type:'U', nom:'Clinique du Val Fleuri', ssi:'Catégorie A', alarme:'Alarme générale sélective', ags:true,
+  niveaux:[ {id:'N0',nom:'Rez-de-chaussée'}, {id:'N1',nom:'Étage hébergement'} ],
+  zd:[
+    {id:'ZD1',nom:'Accueil / administration',niveau:'N0',zs:'ZS1',rect:[20,20,240,460]},
+    {id:'ZD2',nom:'Consultations',niveau:'N0',zs:'ZS1',rect:[260,20,260,460]},
+    {id:'ZD3',nom:'Plateau technique / pharmacie',niveau:'N0',zs:'ZS2',rect:[520,20,260,460]},
+    {id:'ZD4',nom:'Hébergement aile A',niveau:'N1',zs:'ZS3',rect:[20,20,380,460]},
+    {id:'ZD5',nom:'Hébergement aile B',niveau:'N1',zs:'ZS4',rect:[400,20,380,460]}
+  ],
+  zs:[
+    {id:'ZS1',nom:'Accueil et consultations',fonctions:['CF']},
+    {id:'ZS2',nom:'Plateau technique',fonctions:['CF','AT']},
+    {id:'ZS3',nom:'Hébergement aile A',fonctions:['CF','DF']},
+    {id:'ZS4',nom:'Hébergement aile B',fonctions:['CF','DF']}
+  ],
+  points:[
+    {id:'1.01',zd:'ZD1',type:'DAI',sous:'optique de fumée',lib:'Accueil – salle d\'attente',x:130,y:150},
+    {id:'1.02',zd:'ZD1',type:'DM',sous:'déclencheur manuel',lib:'Hall d\'entrée',x:60,y:440},
+    {id:'2.01',zd:'ZD2',type:'DAI',sous:'optique de fumée',lib:'Couloir consultations',x:390,y:150},
+    {id:'2.02',zd:'ZD2',type:'DAI',sous:'optique de fumée',lib:'Salle de soins',x:390,y:360},
+    {id:'2.03',zd:'ZD2',type:'DM',sous:'déclencheur manuel',lib:'Couloir consultations',x:276,y:440},
+    {id:'3.01',zd:'ZD3',type:'DAI',sous:'optique de fumée',lib:'Pharmacie à usage intérieur',x:650,y:120},
+    {id:'3.02',zd:'ZD3',type:'DAI',sous:'thermique',lib:'Local technique / TGBT',x:650,y:320},
+    {id:'3.03',zd:'ZD3',type:'DAI',sous:'multicapteur',lib:'PC de sécurité',x:712,y:420},
+    {id:'3.04',zd:'ZD3',type:'DM',sous:'déclencheur manuel',lib:'Couloir plateau technique',x:526,y:440},
+    {id:'4.01',zd:'ZD4',type:'DAI',sous:'optique de fumée',lib:'Chambre A1',x:70,y:84},
+    {id:'4.02',zd:'ZD4',type:'DAI',sous:'optique de fumée',lib:'Couloir aile A',x:250,y:250},
+    {id:'4.03',zd:'ZD4',type:'DM',sous:'déclencheur manuel',lib:'Couloir aile A',x:46,y:440},
+    {id:'5.01',zd:'ZD5',type:'DAI',sous:'optique de fumée',lib:'Chambre B1',x:730,y:84},
+    {id:'5.02',zd:'ZD5',type:'DAI',sous:'optique de fumée',lib:'Couloir aile B',x:550,y:250},
+    {id:'5.03',zd:'ZD5',type:'DM',sous:'déclencheur manuel',lib:'Couloir aile B',x:756,y:440}
+  ],
+  das:[
+    {id:'D1',zs:'ZS1',fn:'CF',type:'Porte CF',lib:'Porte CF accueil / consultations',niveau:'N0',x:260,y:250,rz:'ZD1',attente:'ouverte (ventouse)',securite:'fermée'},
+    {id:'D2',zs:'ZS2',fn:'CF',type:'Porte CF',lib:'Porte CF plateau technique',niveau:'N0',x:520,y:250,rz:'ZD3',attente:'ouverte (ventouse)',securite:'fermée'},
+    {id:'D3',zs:'ZS2',fn:'AT',type:'Arrêt CTA',lib:'Arrêt centrale de traitement d\'air',niveau:'N0',x:560,y:462,rz:'ZD3',attente:'CTA en marche',securite:'CTA arrêtée'},
+    {id:'D4',zs:'ZS4',fn:'CF',type:'Porte CF',lib:'Porte CF de recoupement ailes A/B',niveau:'N1',x:400,y:250,rz:'ZD5',attente:'ouverte (ventouse)',securite:'fermée'},
+    {id:'D5',zs:'ZS3',fn:'DF',type:'Volet DF',lib:'Volet de désenfumage couloir A',niveau:'N1',x:200,y:62,rz:'ZD4',attente:'fermé',securite:'ouvert'},
+    {id:'D6',zs:'ZS4',fn:'DF',type:'Volet DF',lib:'Volet de désenfumage couloir B',niveau:'N1',x:600,y:62,rz:'ZD5',attente:'fermé',securite:'ouvert'},
+    {id:'D7',zs:'ZS3',fn:'CF',type:'Porte CF',lib:'Porte CF escalier aile A',niveau:'N1',x:150,y:430,rz:'ZD4',attente:'ouverte (ventouse)',securite:'fermée'},
+    {id:'D8',zs:'ZS4',fn:'CF',type:'Porte CF',lib:'Porte CF escalier aile B',niveau:'N1',x:650,y:430,rz:'ZD5',attente:'ouverte (ventouse)',securite:'fermée'}
+  ],
+  pc:{niveau:'N0',x:729,y:434},
+  decor:{
+    N0:{
+      walls:[
+        [260,20,260,238],[260,262,260,480],
+        [520,20,520,238],[520,262,520,480]
+      ],
+      furniture:[
+        [60,110,90,24,'Accueil'],
+        [40,200,36,12],[84,200,36,12],[40,224,36,12],[84,224,36,12],
+        [280,60,70,18,'Consult. 1'],[280,100,70,18,'Consult. 2'],[400,60,70,18,'Consult. 3'],
+        [280,330,90,22,'Salle de soins'],
+        [540,80,60,20,'Office'],[640,80,100,16,'Pharmacie'],[630,280,70,24,'Local tech.']
+      ],
+      exits:[[60,472,70,8,'ENTRÉE'],[380,472,56,8,'SORTIE'],[782,100,8,50,'SORTIE'],[30,12,56,8,'AMBULANCES']],
+      labels:[],
+      escRect:[170,280,60,30],escLabel:'Escalier → étage',pcRect:[682,392,94,84]
+    },
+    N1:{
+      walls:[[400,20,400,238],[400,262,400,480]],
+      furniture:[
+        [40,56,60,55,'Ch. A1'],[110,56,60,55],[250,56,60,55],[320,56,60,55],
+        [40,390,60,55],[110,390,60,55],[250,390,60,55,'Ch. A7'],
+        [420,56,60,55],[490,56,60,55],[630,56,60,55],[700,56,60,55,'Ch. B1'],
+        [420,390,60,55],[490,390,60,55,'Ch. B7'],[700,390,60,55]
+      ],
+      exits:[[14,240,8,50,'SORTIE'],[782,240,8,50,'SORTIE']],
+      labels:[[180,266,'Couloir aile A'],[560,266,'Couloir aile B']],
+      escRect:[170,280,60,30],escLabel:'Escalier ← RDC'
+    }
+  },
+  routes:{
+    esc:{N0:[200,295],N1:[200,295]},
+    N0:{from:[729,434], toEsc:[[700,432],[545,300],[522,252],[400,250],[266,250],[230,280]],
+      ZD3:[[700,424]],
+      ZD2:[[700,432],[545,300],[522,252]],
+      ZD1:[[700,432],[545,300],[522,252],[400,250],[266,250]]},
+    N1:{from:[200,295],
+      ZD4:[[220,268]],
+      ZD5:[[260,258],[396,250],[424,252]]}
+  }
+};
+let ETAB = ETABS.M;
 
 /* ---------------- CONSTANTES DE SIMULATION (secondes simulées) ---------------- */
 const CST = { dasTravel:8, dasTimeout:20, agMin:300, battDrainPer10s:0.6, battLow:30 };
@@ -797,12 +990,13 @@ function audioTick(){
   const p=currentPattern();
   if(!p) return;
   if(p==='evac'){ if(Audio_.phase%5===0) beep(554,0.1,0.1); else if(Audio_.phase%5===1) beep(440,0.38,0.1); }
+  else if(p==='ags'){ if(Audio_.phase%5===0||Audio_.phase%5===1) beep(1400,0.07,0.04); }
   else if(p==='ecs'){ if(Audio_.phase%2===0) beep(1900,0.09,0.07); }
   else if(p==='der'){ if(Audio_.phase===0) beep(900,0.12,0.05); }
 }
 function currentPattern(){
   if(S.paused) return null;
-  if(S.uga.diffuseurs) return 'evac';
+  if(S.uga.diffuseurs) return ETAB.ags?'ags':'evac';
   if(S.ecs.buzzer==='feu') return 'ecs';
   if(S.ecs.buzzer==='der') return 'der';
   if(!S.cmsi.acq) return 'der';
@@ -940,7 +1134,7 @@ function setHs(target,on){
 function alarmeGenerale(why){
   if(S.uga.etat==='generale') return;
   S.uga.etat='generale'; S.uga.tempoEnd=0; S.uga.diffuseurs=true; S.uga.agStart=S.t; S.uga.acq=false;
-  log('UGA','ALARME GÉNÉRALE — diffuseurs sonores en fonctionnement ('+why+')','alarme');
+  log('UGA',ETAB.ags?'ALARME GÉNÉRALE SÉLECTIVE — diffusion restreinte au personnel, pas de sirène pour les patients ('+why+')':'ALARME GÉNÉRALE — diffuseurs sonores en fonctionnement ('+why+')','alarme');
   markDirty();
 }
 function evacManuelle(){
@@ -1033,23 +1227,20 @@ function alimEvt(kind){
 }
 
 /* --- Agent : itinéraires, levée de doute, actions sur place --- */
-const DAS_ROUTE_ZONE={D1:'ZD2',D2:'ZD2',D3:'ZD3',D4:'ZD4',D5:'ZD4',D6:'ZD3',D7:'ZD3',D8:'ZD5'};
 function segLen(a,b){ return Math.hypot(b[0]-a[0],b[1]-a[1]); }
 function polyLen(pts){ let L=0; for(let i=1;i<pts.length;i++) L+=segLen(pts[i-1],pts[i]); return L; }
 /* construit l'itinéraire PC → cible : [{lvl,pts:[[x,y],…]},…] */
 function buildRoute(kind,id){
   const tg=kind==='pt'?pt(id):dasD(id);
   const tn=kind==='pt'?zdD(tg.zd).niveau:tg.niveau;
-  const zone=kind==='pt'?tg.zd:DAS_ROUTE_ZONE[tg.id];
+  const zone=kind==='pt'?tg.zd:tg.rz;
   const R=ETAB.routes, pcN=ETAB.pc.niveau;
   const segs=[];
   if(tn===pcN){
-    const pref=R.N0[zone]||[];
-    segs.push({lvl:'N0',pts:[R.N0.from,...pref,[tg.x,tg.y]]});
+    segs.push({lvl:pcN,pts:[R[pcN].from,...(R[pcN][zone]||[]),[tg.x,tg.y]]});
   } else {
-    segs.push({lvl:'N0',pts:[R.N0.from,...R.N0.ZD1,R.escalator.N0]});
-    const pref=R.N1[zone]||[];
-    segs.push({lvl:'N1',pts:[R.escalator.N1,...pref,[tg.x,tg.y]]});
+    segs.push({lvl:pcN,pts:[R[pcN].from,...(R[pcN].toEsc||[]),R.esc[pcN]]});
+    segs.push({lvl:tn,pts:[R.esc[tn],...(R[tn][zone]||[]),[tg.x,tg.y]]});
   }
   return segs;
 }
@@ -1183,7 +1374,7 @@ function validateCode(){
 /* objectifs : on:'log' (évalué à chaque entrée de journal), on:'tick' (sur l'état), on:'end' (au débriefing) */
 const SCENARIOS=[
   {
-    id:'S1', titre:'Alarme intempestive en surface de vente', diff:1, duree:600,
+    id:'M1', type:'M', titre:'Alarme intempestive en surface de vente', diff:1, duree:600,
     brief:'Le magasin est ouvert au public. Un détecteur optique de la surface de vente part en alarme sans raison apparente (poussière de travaux voisins). Traitez l\'alarme dans les règles : acquit, levée de doute, décision, réarmement, consignation.',
     events:[{at:8,run:()=>declencherPoint('1.02','intempestif')}],
     objectifs:[
@@ -1197,7 +1388,7 @@ const SCENARIOS=[
     conseils:'Sur une alarme sans feu constaté, tout se joue pendant la temporisation : acquit immédiat, levée de doute rapide, puis réarmement avant la fin de temporisation pour éviter une évacuation inutile du public. La consignation en main courante est obligatoire.'
   },
   {
-    id:'S2', titre:'Feu réel dans la réserve', diff:2, duree:900,
+    id:'M2', type:'M', titre:'Feu réel dans la réserve', diff:2, duree:900,
     brief:'Un départ de feu se déclare dans la réserve (zone cartons). Appliquez la conduite à tenir complète : acquit, levée de doute, alerte des secours, évacuation, première intervention, vérification du compartimentage.',
     events:[{at:10,run:()=>declencherPoint('2.01','feu')}],
     objectifs:[
@@ -1212,7 +1403,7 @@ const SCENARIOS=[
     conseils:'Feu avéré : l\'alerte au 18 et l\'évacuation priment. N\'arrêtez jamais les diffuseurs avant les 5 minutes réglementaires. La première intervention à l\'extincteur ne se fait que si elle ne vous met pas en danger. Vérifiez sur l\'US que le compartimentage a bien atteint sa position.'
   },
   {
-    id:'S3', titre:'Déclencheur manuel actionné par malveillance', diff:1, duree:900,
+    id:'M3', type:'M', titre:'Déclencheur manuel actionné par malveillance', diff:1, duree:900,
     brief:'Un DM de l\'entrée principale est actionné sans feu (acte de malveillance). L\'alarme générale part immédiatement. Gérez l\'évacuation, la levée de doute, le réarmement du DM sur place puis la remise en service complète du poste.',
     events:[{at:8,run:()=>declencherPoint('1.04','dm')}],
     objectifs:[
@@ -1226,7 +1417,7 @@ const SCENARIOS=[
     conseils:'Sur un DM, l\'alarme générale est immédiate : l\'évacuation est en cours, accompagnez-la. Le DM doit être réarmé sur place avant le réarmement de l\'ECS, sinon l\'alarme repart. L\'alerte au 18 n\'est pas donnée pour un simple acte de malveillance sans feu.'
   },
   {
-    id:'S4', titre:'Détecteur encrassé en dérangement', diff:1, duree:600,
+    id:'M4', type:'M', titre:'Détecteur encrassé en dérangement', diff:1, duree:600,
     brief:'Un détecteur du rayon maison (R+1) passe en dérangement : capteur encrassé. Traitez le dérangement : acquit, vérification sur place, mise hors service du point en attendant le mainteneur, consignation.',
     events:[{at:6,run:()=>{S.pts['4.01'].encrasse=true;derangerPoint('4.01');}}],
     objectifs:[
@@ -1239,7 +1430,7 @@ const SCENARIOS=[
     conseils:'Un dérangement n\'est pas une alarme : pas d\'évacuation, mais un traitement rigoureux. La mise hors service d\'un point se consigne et s\'accompagne de l\'appel au mainteneur ; le voyant jaune « hors service » doit rester allumé jusqu\'à la remise en service.'
   },
   {
-    id:'S5', titre:'Coupure secteur en période d\'ouverture', diff:2, duree:900,
+    id:'M5', type:'M', titre:'Coupure secteur en période d\'ouverture', diff:2, duree:900,
     brief:'Le secteur est coupé dans tout le bâtiment : le SSI bascule sur batteries. Surveillez le poste, consignez l\'événement, et assurez-vous qu\'aucune manœuvre inutile n\'est faite jusqu\'au retour du courant (environ 5 minutes).',
     events:[{at:6,run:()=>alimEvt('coupure')},{at:306,run:()=>alimEvt('retour')}],
     objectifs:[
@@ -1251,7 +1442,7 @@ const SCENARIOS=[
     conseils:'Une coupure secteur est un dérangement d\'alimentation : le poste reste opérationnel sur batteries. Le bon réflexe est la surveillance (autonomie des batteries) et la consignation — pas de réarmement ni de commande d\'évacuation. Utilisez la vitesse de simulation pour accélérer l\'attente.'
   },
   {
-    id:'S6', titre:'Feu en réserve avec DAS bloqué', diff:3, duree:1200,
+    id:'M6', type:'M', titre:'Feu en réserve avec DAS bloqué', diff:3, duree:1200,
     brief:'Un feu se déclare dans la zone cartons de la réserve. La porte coupe-feu D1 est bloquée par des palettes : elle ne se fermera pas sur l\'ordre du CMSI. Conduite complète : alarme, alerte, évacuation, première intervention, et traitement du défaut de position sur place.',
     events:[{at:2,run:()=>{S.das['D1'].bloque=true;}},{at:12,run:()=>declencherPoint('2.02','feu')}],
     objectifs:[
@@ -1259,29 +1450,154 @@ const SCENARIOS=[
       {id:'ldd',lib:'Effectuer la levée de doute sur place',pts:10,on:'log',test:(s,m)=>m.indexOf('Levée de doute effectuée')===0},
       {id:'alerte',lib:'Alerter les sapeurs-pompiers (18) après feu avéré',pts:15,on:'log',test:(s,m)=>m.indexOf('ALERTE')===0&&EXO.flags.feuAvere},
       {id:'ext',lib:'Attaquer le feu à l\'extincteur',pts:10,on:'log',test:(s,m)=>m.indexOf('Feu attaqué à l\'extincteur')===0},
-      {id:'das',lib:'Dégager la porte CF D1 et obtenir sa position de sécurité',pts:20,on:'tick',test:()=>EXO.flags.debloqueD1&&S.das['D1'].pos==='securite'&&!S.das['D1'].bloque},
+      {id:'das',lib:'Dégager la porte CF D1 et obtenir sa position de sécurité',pts:20,on:'tick',test:()=>EXO.flags.debloque['D1']&&S.das['D1'].pos==='securite'&&!S.das['D1'].bloque},
       {id:'cf',lib:'Compartimentage de la réserve confirmé en position de sécurité',pts:15,on:'tick',test:()=>S.us['ZS2/CF'].etat==='securite'},
       {id:'zero',lib:'Terminer sans faute relevée',pts:20,on:'end',test:()=>EXO.fautes.length===0}
     ],
     conseils:'Le défaut de position remonte au CMSI environ 20 s après l\'ordre : surveillez l\'US. Un DAS bloqué se traite sur place (dégager l\'obstacle) ; l\'ordre étant maintenu, l\'organe repart ensuite de lui-même en position de sécurité. Le feu reste prioritaire : alerte et évacuation d\'abord.'
+  },
+  /* ---- Type L — Théâtre ---- */
+  {
+    id:'L1', type:'L', titre:'Feu de scène pendant une représentation', diff:3, duree:1200,
+    brief:'Salle comble, représentation en cours. Un projecteur enflamme une toile de décor : départ de feu au gril technique de la scène. Conduite complète : alarme, évacuation du public, alerte, rideau de fer et désenfumage de scène, première intervention.',
+    events:[{at:10,run:()=>declencherPoint('3.01','feu')}],
+    objectifs:[
+      {id:'acq',lib:'Acquitter le signal sonore en moins de 60 s',pts:10,on:'log',test:(s,m)=>m.indexOf('Acquit du signal sonore ECS (alarme')===0&&EXO.alarmT&&S.t-EXO.alarmT<=60000},
+      {id:'ldd',lib:'Effectuer la levée de doute sur place',pts:10,on:'log',test:(s,m)=>m.indexOf('Levée de doute effectuée')===0},
+      {id:'evac',lib:'Évacuation générale du public déclenchée',pts:10,on:'end',test:()=>EXO.flags.ag},
+      {id:'alerte',lib:'Alerter les sapeurs-pompiers (18) après feu avéré',pts:15,on:'log',test:(s,m)=>m.indexOf('ALERTE')===0&&EXO.flags.feuAvere},
+      {id:'rideau',lib:'Rideau de fer de scène abaissé (position de sécurité)',pts:15,on:'tick',test:()=>S.das['D7'].pos==='securite'},
+      {id:'df',lib:'Exutoire de scène ouvert (désenfumage scène en position)',pts:10,on:'tick',test:()=>S.us['ZS3/DF'].etat==='securite'},
+      {id:'ext',lib:'Attaquer le feu à l\'extincteur',pts:10,on:'log',test:(s,m)=>m.indexOf('Feu attaqué à l\'extincteur')===0},
+      {id:'zero',lib:'Terminer sans faute relevée',pts:20,on:'end',test:()=>EXO.fautes.length===0}
+    ],
+    conseils:'En type L, le rideau de fer et l\'exutoire de scène isolent le feu côté scène pendant que le public évacue par les issues de la salle. L\'alerte au 18 est immédiate dès le feu avéré ; les diffuseurs restent en fonctionnement au moins 5 minutes.'
+  },
+  {
+    id:'L2', type:'L', titre:'Alarme intempestive au balcon (machine à fumée)', diff:2, duree:600,
+    brief:'Pendant le spectacle, la machine à fumée du plateau fait partir en alarme un détecteur du balcon. Le public ne doit pas être évacué inutilement : acquit, levée de doute rapide, réarmement avant la fin de temporisation, consignation.',
+    events:[{at:8,run:()=>declencherPoint('4.01','intempestif')}],
+    objectifs:[
+      {id:'acq',lib:'Acquitter le signal sonore en moins de 60 s',pts:15,on:'log',test:(s,m)=>m.indexOf('Acquit du signal sonore ECS (alarme')===0&&EXO.alarmT&&S.t-EXO.alarmT<=60000},
+      {id:'ldd',lib:'Effectuer la levée de doute au balcon avant la fin de la temporisation',pts:25,on:'log',test:(s,m)=>m.indexOf('Levée de doute effectuée')===0&&!EXO.flags.ag},
+      {id:'rearm',lib:'Réarmer l\'ECS après la levée de doute',pts:20,on:'log',test:(s,m)=>m.indexOf('Réarmement de l\'ECS')===0&&EXO.done.ldd},
+      {id:'noevac',lib:'Éviter l\'évacuation inutile du public (pas d\'alarme générale)',pts:20,on:'end',test:()=>!EXO.flags.ag},
+      {id:'mc',lib:'Consigner la fausse alarme en main courante',pts:10,on:'log',test:(s,m)=>s==='Main courante'&&m.indexOf('Fausse alarme')===0},
+      {id:'zero',lib:'Terminer sans faute relevée',pts:10,on:'end',test:()=>EXO.fautes.length===0}
+    ],
+    conseils:'Les effets de scène (fumée, pyrotechnie) sont la première cause d\'alarme intempestive en type L. La levée de doute doit être très rapide : une évacuation de salle comble pour une fausse alarme est coûteuse et dangereuse. Signalez l\'incident au régisseur et consignez.'
+  },
+  {
+    id:'L3', type:'L', titre:'DM actionné dans le hall à l\'entracte', diff:1, duree:900,
+    brief:'À l\'entracte, un spectateur actionne le DM de l\'entrée principale sans raison. L\'alarme générale part immédiatement : gérez l\'évacuation, la levée de doute, le réarmement du DM sur place puis la remise en veille complète.',
+    events:[{at:8,run:()=>declencherPoint('1.02','dm')}],
+    objectifs:[
+      {id:'acq',lib:'Acquitter le signal sonore en moins de 60 s',pts:15,on:'log',test:(s,m)=>m.indexOf('Acquit du signal sonore ECS (alarme')===0&&EXO.alarmT&&S.t-EXO.alarmT<=60000},
+      {id:'ldd',lib:'Se rendre sur place et constater l\'absence de feu',pts:20,on:'log',test:(s,m)=>m.indexOf('Levée de doute effectuée au point 1.02')===0},
+      {id:'rearmdm',lib:'Réarmer le DM sur place (clé / vitre)',pts:15,on:'log',test:(s,m)=>m.indexOf('DM 1.02 réarmé sur place')===0},
+      {id:'diff5',lib:'Laisser les diffuseurs fonctionner au moins 5 minutes',pts:15,on:'end',test:()=>EXO.flags.diffOff&&!EXO.flags.diffOffEarly},
+      {id:'chain',lib:'Remettre le poste en veille (ECS réarmé, UGA au repos)',pts:20,on:'tick',test:()=>EXO.flags.ag&&EXO.done.rearmdm&&S.uga.etat==='repos'&&activePoints().length===0},
+      {id:'zero',lib:'Terminer sans faute relevée (pas d\'alerte injustifiée)',pts:15,on:'end',test:()=>EXO.fautes.length===0}
+    ],
+    conseils:'Le DM doit être réarmé sur place avant le réarmement de l\'ECS, sinon l\'alarme repart aussitôt. Pas d\'appel au 18 sans feu constaté ; en revanche la consignation en main courante et le compte rendu à la direction s\'imposent.'
+  },
+  {
+    id:'L4', type:'L', titre:'Exutoire de scène bloqué à l\'essai hebdomadaire', diff:2, duree:900,
+    brief:'Essai hebdomadaire des DAS avant l\'ouverture au public. Lancez la commande manuelle du désenfumage de scène depuis l\'UCMC : l\'exutoire, grippé, ne s\'ouvrira pas. Constatez le défaut, traitez-le sur place, puis remettez l\'installation en position d\'attente.',
+    events:[{at:2,run:()=>{S.das['D6'].bloque=true;}}],
+    objectifs:[
+      {id:'cmd',lib:'Lancer l\'essai : commande manuelle UCMC du désenfumage de scène',pts:15,on:'log',test:(s,m)=>m.indexOf('Commande manuelle UCMC — Désenfumage — ZS3')===0},
+      {id:'defaut',lib:'Constater le défaut de position remonté par le CMSI',pts:15,on:'log',test:(s,m)=>m.indexOf('Défaut de position')===0&&m.indexOf('(D6)')>=0},
+      {id:'das',lib:'Dégager l\'exutoire sur place et obtenir sa position de sécurité',pts:25,on:'tick',test:()=>EXO.flags.debloque['D6']&&S.das['D6'].pos==='securite'&&!S.das['D6'].bloque},
+      {id:'rearmdas',lib:'Réarmer l\'exutoire sur place (position d\'attente)',pts:15,on:'log',test:(s,m)=>m.indexOf('Réarmement sur place de D6')===0},
+      {id:'rearmcmsi',lib:'Réarmer le CMSI une fois le DAS en attente',pts:15,on:'log',test:(s,m)=>m.indexOf('Réarmement du CMSI')===0},
+      {id:'zero',lib:'Terminer sans faute relevée',pts:15,on:'end',test:()=>EXO.fautes.length===0}
+    ],
+    conseils:'L\'essai périodique des DAS fait partie des missions du service de sécurité en type L. Le défaut remonte environ 20 s après l\'ordre ; un organe grippé se traite sur place, puis se réarme, et le CMSI ne se réarme qu\'une fois tous les DAS en position d\'attente. Pensez à consigner l\'intervention et à prévenir le mainteneur.'
+  },
+  /* ---- Type U — Clinique ---- */
+  {
+    id:'U1', type:'U', titre:'Feu de nuit en chambre — aile A', diff:3, duree:1200,
+    brief:'3 h du matin, étage d\'hébergement occupé par des patients non autonomes. Un feu se déclare dans la chambre A1. En type U on n\'évacue pas : alarme générale SÉLECTIVE (le personnel est alerté, pas de sirène pour les patients), transfert horizontal derrière la porte de recoupement, alerte immédiate.',
+    events:[{at:10,run:()=>declencherPoint('4.01','feu')}],
+    objectifs:[
+      {id:'acq',lib:'Acquitter le signal sonore en moins de 60 s',pts:10,on:'log',test:(s,m)=>m.indexOf('Acquit du signal sonore ECS (alarme')===0&&EXO.alarmT&&S.t-EXO.alarmT<=60000},
+      {id:'ldd',lib:'Effectuer la levée de doute sur place',pts:10,on:'log',test:(s,m)=>m.indexOf('Levée de doute effectuée')===0},
+      {id:'ags',lib:'Alarme générale sélective déclenchée (personnel alerté)',pts:10,on:'end',test:()=>EXO.flags.ag},
+      {id:'alerte',lib:'Alerter les sapeurs-pompiers (18) après feu avéré',pts:15,on:'log',test:(s,m)=>m.indexOf('ALERTE')===0&&EXO.flags.feuAvere},
+      {id:'recoup',lib:'Porte de recoupement des ailes fermée (UCMC si besoin)',pts:15,on:'tick',test:()=>S.das['D4'].pos==='securite'},
+      {id:'df',lib:'Désenfumage du couloir aile A en position',pts:10,on:'tick',test:()=>S.us['ZS3/DF'].etat==='securite'},
+      {id:'mc',lib:'Consigner le transfert horizontal des patients',pts:15,on:'log',test:(s,m)=>s==='Main courante'&&m.indexOf('Transfert horizontal')===0},
+      {id:'zero',lib:'Terminer sans faute relevée',pts:15,on:'end',test:()=>EXO.fautes.length===0}
+    ],
+    conseils:'En type U, l\'évacuation verticale est remplacée par le transfert horizontal : les patients passent derrière la porte de recoupement, dans l\'aile indemne. L\'alarme générale est sélective pour ne pas paniquer les patients. La porte de recoupement de l\'aile en feu peut être fermée par commande manuelle UCMC sans attendre. Alerte au 18 immédiate : les secours sont indispensables pour l\'évacuation des chambres.'
+  },
+  {
+    id:'U2', type:'U', titre:'Alarme intempestive en pharmacie (aérosol)', diff:1, duree:600,
+    brief:'Un agent d\'entretien utilise un aérosol sous un détecteur de la pharmacie à usage intérieur : alarme feu sans feu. Traitez l\'alarme sans déclencher la diffusion vers le personnel : acquit, levée de doute, réarmement avant la fin de temporisation, consignation.',
+    events:[{at:8,run:()=>declencherPoint('3.01','intempestif')}],
+    objectifs:[
+      {id:'acq',lib:'Acquitter le signal sonore en moins de 60 s',pts:15,on:'log',test:(s,m)=>m.indexOf('Acquit du signal sonore ECS (alarme')===0&&EXO.alarmT&&S.t-EXO.alarmT<=60000},
+      {id:'ldd',lib:'Effectuer la levée de doute sur place avant la fin de la temporisation',pts:25,on:'log',test:(s,m)=>m.indexOf('Levée de doute effectuée')===0&&!EXO.flags.ag},
+      {id:'rearm',lib:'Réarmer l\'ECS après la levée de doute',pts:20,on:'log',test:(s,m)=>m.indexOf('Réarmement de l\'ECS')===0&&EXO.done.ldd},
+      {id:'noevac',lib:'Pas de diffusion AGS inutile vers le personnel',pts:20,on:'end',test:()=>!EXO.flags.ag},
+      {id:'mc',lib:'Consigner la fausse alarme en main courante',pts:10,on:'log',test:(s,m)=>s==='Main courante'&&m.indexOf('Fausse alarme')===0},
+      {id:'zero',lib:'Terminer sans faute relevée',pts:10,on:'end',test:()=>EXO.fautes.length===0}
+    ],
+    conseils:'Même sélective, une alarme générale mobilise tout le personnel soignant de l\'établissement : la levée de doute rapide pendant la temporisation évite de déclencher inutilement la procédure. Identifiez la cause (aérosol) et consignez-la.'
+  },
+  {
+    id:'U3', type:'U', titre:'DM couloir consultations — malveillance', diff:2, duree:900,
+    brief:'En journée, un visiteur actionne le DM du couloir des consultations. La diffusion sélective part immédiatement vers le personnel. Levée de doute, réarmement du DM sur place, arrêt de la diffusion après le délai réglementaire, remise en veille.',
+    events:[{at:8,run:()=>declencherPoint('2.03','dm')}],
+    objectifs:[
+      {id:'acq',lib:'Acquitter le signal sonore en moins de 60 s',pts:15,on:'log',test:(s,m)=>m.indexOf('Acquit du signal sonore ECS (alarme')===0&&EXO.alarmT&&S.t-EXO.alarmT<=60000},
+      {id:'ldd',lib:'Se rendre sur place et constater l\'absence de feu',pts:20,on:'log',test:(s,m)=>m.indexOf('Levée de doute effectuée au point 2.03')===0},
+      {id:'rearmdm',lib:'Réarmer le DM sur place (clé / vitre)',pts:15,on:'log',test:(s,m)=>m.indexOf('DM 2.03 réarmé sur place')===0},
+      {id:'diff5',lib:'Laisser la diffusion AGS active au moins 5 minutes',pts:15,on:'end',test:()=>EXO.flags.diffOff&&!EXO.flags.diffOffEarly},
+      {id:'chain',lib:'Remettre le poste en veille (ECS réarmé, UGA au repos)',pts:20,on:'tick',test:()=>EXO.flags.ag&&EXO.done.rearmdm&&S.uga.etat==='repos'&&activePoints().length===0},
+      {id:'zero',lib:'Terminer sans faute relevée (pas d\'alerte injustifiée)',pts:15,on:'end',test:()=>EXO.fautes.length===0}
+    ],
+    conseils:'Le personnel soignant rejoint son poste de rappel dès la diffusion sélective : informez-le rapidement de la fausse alerte. Le DM se réarme sur place avant le réarmement ECS, et l\'événement se consigne en main courante.'
+  },
+  {
+    id:'U4', type:'U', titre:'Feu couloir aile B — porte de recoupement bloquée', diff:3, duree:1200,
+    brief:'Un chariot de linge bloque la porte de recoupement des ailes. Un feu se déclare dans le couloir de l\'aile B : la porte, commandée par le CMSI, ne se ferme pas — le transfert horizontal est compromis. Traitez l\'alarme ET le défaut de position.',
+    events:[{at:2,run:()=>{S.das['D4'].bloque=true;}},{at:12,run:()=>declencherPoint('5.02','feu')}],
+    objectifs:[
+      {id:'acq',lib:'Acquitter le signal sonore en moins de 60 s',pts:10,on:'log',test:(s,m)=>m.indexOf('Acquit du signal sonore ECS (alarme')===0&&EXO.alarmT&&S.t-EXO.alarmT<=60000},
+      {id:'ldd',lib:'Effectuer la levée de doute sur place',pts:10,on:'log',test:(s,m)=>m.indexOf('Levée de doute effectuée')===0},
+      {id:'alerte',lib:'Alerter les sapeurs-pompiers (18) après feu avéré',pts:15,on:'log',test:(s,m)=>m.indexOf('ALERTE')===0&&EXO.flags.feuAvere},
+      {id:'das',lib:'Dégager la porte de recoupement et obtenir sa fermeture',pts:20,on:'tick',test:()=>EXO.flags.debloque['D4']&&S.das['D4'].pos==='securite'&&!S.das['D4'].bloque},
+      {id:'cf',lib:'Compartimentage de l\'aile B confirmé en position de sécurité',pts:15,on:'tick',test:()=>S.us['ZS4/CF'].etat==='securite'},
+      {id:'ext',lib:'Attaquer le feu à l\'extincteur',pts:10,on:'log',test:(s,m)=>m.indexOf('Feu attaqué à l\'extincteur')===0},
+      {id:'zero',lib:'Terminer sans faute relevée',pts:20,on:'end',test:()=>EXO.fautes.length===0}
+    ],
+    conseils:'La porte de recoupement est l\'élément vital du transfert horizontal : un obstacle (chariot, cale) est une faute d\'exploitation grave en type U. Le défaut remonte au CMSI ~20 s après l\'ordre : dégagez l\'obstacle en priorité, l\'ordre maintenu referme la porte automatiquement.'
   }
 ];
 
 function openExoList(){
-  let h='<h3>Exercices guidés</h3><p class="hint">Chaque exercice réinitialise le poste, déroule un scénario chronométré et se termine par un débriefing noté sur 100. Les fautes relevées retirent 10 points chacune.</p><div class="scList">';
-  SCENARIOS.forEach(sc=>{
-    h+='<div class="scItem" data-id="'+sc.id+'"><div class="t">'+sc.id+' — '+esc(sc.titre)+
-       ' <span class="diff d'+sc.diff+'">'+(sc.diff===1?'Facile':sc.diff===2?'Moyen':'Difficile')+'</span></div>'+
-       '<div class="d">'+esc(sc.brief)+'</div></div>';
+  let h='<h3>Exercices guidés</h3><p class="hint">Chaque exercice bascule sur l\'établissement concerné, réinitialise le poste, déroule un scénario chronométré et se termine par un débriefing noté sur 100. Les fautes relevées retirent 10 points chacune.</p>';
+  ['M','L','U'].forEach(t=>{
+    h+='<p class="hint" style="margin-top:12px"><b>Type '+t+' — '+esc(ETABS[t].nom)+'</b></p><div class="scList">';
+    SCENARIOS.filter(sc=>sc.type===t).forEach(sc=>{
+      h+='<div class="scItem" data-id="'+sc.id+'"><div class="t">'+sc.id+' — '+esc(sc.titre)+
+         ' <span class="diff d'+sc.diff+'">'+(sc.diff===1?'Facile':sc.diff===2?'Moyen':'Difficile')+'</span></div>'+
+         '<div class="d">'+esc(sc.brief)+'</div></div>';
+    });
+    h+='</div>';
   });
-  h+='</div><div class="btns"><button class="btn" id="exoListClose">Fermer</button></div>';
+  h+='<div class="btns"><button class="btn" id="exoListClose">Fermer</button></div>';
   const box=$('mExoBox'); box.innerHTML=h; $('mExo').classList.add('show');
   box.querySelectorAll('.scItem').forEach(d=>d.addEventListener('click',()=>openExoBrief(d.getAttribute('data-id'))));
   $('exoListClose').addEventListener('click',()=>$('mExo').classList.remove('show'));
 }
 function openExoBrief(id){
   const sc=SCENARIOS.find(s=>s.id===id);
-  let h='<h3>'+sc.id+' — '+esc(sc.titre)+'</h3><div class="situ"><b>Situation de départ</b>'+esc(sc.brief)+'</div>'+
+  let h='<h3>'+sc.id+' — '+esc(sc.titre)+'</h3>'+
+    (ETAB.type!==sc.type?'<p class="hint">Cet exercice bascule l\'établissement sur <b>'+esc(ETABS[sc.type].nom)+'</b> (type '+sc.type+').</p>':'')+
+    '<div class="situ"><b>Situation de départ</b>'+esc(sc.brief)+'</div>'+
     '<p class="hint">Objectifs évalués ('+sc.objectifs.reduce((a,o)=>a+o.pts,0)+' points) :</p><table class="objTable">'+
     sc.objectifs.map(o=>'<tr><td>•</td><td>'+esc(o.lib)+'</td><td class="pts">'+o.pts+' pts</td></tr>').join('')+'</table>'+
     '<p class="hint">Durée maximale : '+mmss(sc.duree)+' (temps simulé). Le poste va être réinitialisé.</p>'+
@@ -1292,9 +1608,10 @@ function openExoBrief(id){
 }
 function startExo(id){
   const sc=SCENARIOS.find(s=>s.id===id);
+  if(ETAB.type!==sc.type) switchEtab(sc.type,true);
   resetAll(false);
-  EXO={ sc, start:S.t, alarmT:0, done:{}, doneT:{}, fautes:[], flags:{ag:false,feuAvere:false,diffOff:false,diffOffEarly:false,debloqueD1:false,rearmEcs:false}, pending:sc.events.slice(), finished:false };
-  $('ctx').innerHTML='Exercice <b>'+sc.id+'</b> · Type M · Lot 1';
+  EXO={ sc, start:S.t, alarmT:0, done:{}, doneT:{}, fautes:[], flags:{ag:false,feuAvere:false,diffOff:false,diffOffEarly:false,debloque:{},rearmEcs:false}, pending:sc.events.slice(), finished:false };
+  $('ctx').innerHTML='Exercice <b>'+sc.id+'</b> · Type '+ETAB.type;
   $('exoTitle').textContent=sc.id+' — '+sc.titre;
   $('exoBar').classList.add('show');
   log('Exercice','Début de l\'exercice '+sc.id+' — '+sc.titre,'info');
@@ -1309,7 +1626,7 @@ function exoOnLog(src,msg,cat){
   if(msg.indexOf('Feu attaqué à l\'extincteur')===0) f.feuAvere=true;
   if(msg.indexOf('Arrêt des diffuseurs sonores après')===0) f.diffOff=true;
   if(msg.indexOf('Arrêt des diffuseurs avant les 5 minutes')===0) f.diffOffEarly=true;
-  if(msg.indexOf('Obstacle dégagé sur D1')===0) f.debloqueD1=true;
+  const mDeb=msg.match(/^Obstacle dégagé sur (\S+)/); if(mDeb) f.debloque[mDeb[1]]=true;
   if(msg.indexOf('Réarmement de l\'ECS')===0) f.rearmEcs=true;
   if(cat==='faute') EXO.fautes.push({t:S.t,msg});
   EXO.sc.objectifs.forEach(o=>{
@@ -1357,7 +1674,7 @@ function endExo(reason){
 function exoStop(){
   EXO=null;
   $('exoBar').classList.remove('show');
-  $('ctx').textContent='Mode libre · Type M · Lot 1';
+  updateCtx();
   markDirty();
 }
 function renderExoBar(){
@@ -1390,7 +1707,7 @@ function renderEcs(){
   const ev=S.ecs.events, n=ev.length;
   let l1,l2,l3,l4;
   if(vide){ l1='';l2='';l3='';l4=''; }
-  else if(n===0){ l1='SSI CAT. A  -  TYPE M'; l2='VEILLE  -  '+(S.access>=2?'NIVEAU 2':'NIVEAU 1'); l3=hs?'HORS SERVICE EN COURS':(der?'DERANGEMENT (voir alim.)':'AUCUN EVENEMENT'); l4=fmtD(S.t)+'  '+fmtT(S.t); }
+  else if(n===0){ l1='SSI CAT. A  -  TYPE '+ETAB.type; l2='VEILLE  -  '+(S.access>=2?'NIVEAU 2':'NIVEAU 1'); l3=hs?'HORS SERVICE EN COURS':(der?'DERANGEMENT (voir alim.)':'AUCUN EVENEMENT'); l4=fmtD(S.t)+'  '+fmtT(S.t); }
   else {
     const i=Math.min(S.ecs.cursor,n-1), e=ev[i], p=pt(e.point);
     l1=(e.type==='alarme'?'ALARME FEU   ':'DERANGEMENT  ')+e.zd; l2=e.point+' '+(p.type==='DM'?'DM':'DAI '+p.sous).toUpperCase().slice(0,20); l3=e.lib.slice(0,24); l4=fmtT(e.t)+'   '+(i+1)+'/'+n+(e.acq?'':'  *');
@@ -1499,17 +1816,21 @@ function renderPlan(){
   (dec.exits||[]).forEach(x=>{
     svg.appendChild(el('rect',{x:x[0],y:x[1],width:x[2],height:x[3],class:'exitB'}));
     const horiz=x[2]>=x[3];
-    svg.appendChild(el('text',{x:horiz?x[0]+x[2]/2:x[0]+(x[0]>400?-4:x[2]+4),y:horiz?(x[1]>440?x[1]+x[3]+9:x[1]>260?x[1]-4:x[1]+x[3]+10):x[1]+x[3]/2+3,'text-anchor':horiz?'middle':(x[0]>400?'end':'start'),class:'exitT'},x[4]));
+    svg.appendChild(el('text',{x:horiz?x[0]+x[2]/2:x[0]+(x[0]>400?-4:x[2]+4),y:horiz?(x[1]>440?x[1]+x[3]+9:x[1]>260?x[1]-4:x[1]<=20?x[1]-3:x[1]+x[3]+10):x[1]+x[3]/2+3,'text-anchor':horiz?'middle':(x[0]>400?'end':'start'),class:'exitT'},x[4]));
   });
   (dec.labels||[]).forEach(l=>svg.appendChild(el('text',{x:l[0],y:l[1],class:'zsub'},l[2])));
-  // escalator + escalier
-  svg.appendChild(el('rect',{x:230,y:400,width:60,height:30,class:'stairs'}));
-  for(let i=0;i<6;i++) svg.appendChild(el('line',{x1:230+i*10,y1:400,x2:230+i*10,y2:430,class:'stairs'}));
-  svg.appendChild(el('text',{x:230,y:444,class:'zsub'},lvl==='N0'?'Escalator → R+1':'Escalator ← RDC'));
-  if(lvl==='N0'){
-    svg.appendChild(el('rect',{x:682,y:362,width:94,height:114,class:'pc'}));
-    svg.appendChild(el('text',{x:690,y:378,class:'zlbl'},'PC sécurité'));
-    svg.appendChild(el('text',{x:690,y:390,class:'zsub'},'ECS · CMSI · UGA'));
+  // escalier / escalator
+  if(dec.escRect){
+    const e0=dec.escRect;
+    svg.appendChild(el('rect',{x:e0[0],y:e0[1],width:e0[2],height:e0[3],class:'stairs'}));
+    for(let i=0;i<=e0[2];i+=10) svg.appendChild(el('line',{x1:e0[0]+i,y1:e0[1],x2:e0[0]+i,y2:e0[1]+e0[3],class:'stairs'}));
+    svg.appendChild(el('text',{x:e0[0],y:e0[1]+e0[3]+14,class:'zsub'},dec.escLabel||''));
+  }
+  if(dec.pcRect){
+    const pr=dec.pcRect;
+    svg.appendChild(el('rect',{x:pr[0],y:pr[1],width:pr[2],height:pr[3],class:'pc'}));
+    svg.appendChild(el('text',{x:pr[0]+8,y:pr[1]+16,class:'zlbl'},'PC sécurité'));
+    svg.appendChild(el('text',{x:pr[0]+8,y:pr[1]+28,class:'zsub'},'ECS · CMSI · UGA'));
   }
   // itinéraire de l'agent
   const a=S.agent;
@@ -1616,6 +1937,7 @@ function fillFormaSelects(){
   $('fDas').innerHTML=ETAB.das.map(d=>'<option value="'+d.id+'">'+d.id+' — '+esc(d.lib)+'</option>').join('');
   $('levelSel').innerHTML=ETAB.niveaux.map(n=>'<option value="'+n.id+'">'+n.nom+'</option>').join('');
   $('hsTarget').innerHTML=ETAB.zd.map(z=>'<option value="'+z.id+'">Zone '+z.id+' — '+esc(z.nom)+'</option>').join('')+ETAB.points.map(p=>'<option value="'+p.id+'">Point '+p.id+' — '+esc(p.lib)+'</option>').join('');
+  $('noteCpl').innerHTML='<option value="">—</option><option>RAS</option>'+ETAB.zd.map(z=>'<option>Zone '+esc(z.nom.toLowerCase())+'</option>').join('')+'<option>À suivre par l\'équipe suivante</option>';
 }
 
 /* --- Boucle --- */
@@ -1639,6 +1961,24 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
+/* --- Changement d'établissement --- */
+function applyEtabLabels(){
+  $('ugaSub').textContent='NF S 61-936 · '+(ETAB.ags?'alarme générale sélective':'alarme générale temporisée');
+  $('diffLbl').textContent=ETAB.ags?'Diffusion AGS (personnel)':'Diffuseurs sonores';
+}
+function updateCtx(){ $('ctx').textContent='Mode libre · Type '+ETAB.type; }
+function switchEtab(t,forExo){
+  if(ETAB===ETABS[t]) return;
+  ETAB=ETABS[t];
+  $('etabSel').value=t;
+  fillFormaSelects(); applyEtabLabels();
+  if(!forExo){
+    if(EXO) exoStop();
+    resetAll(false); updateCtx();
+    toast('Établissement : '+ETAB.nom+' (type '+ETAB.type+')');
+  }
+}
+
 /* --- Réinitialisation --- */
 function resetAll(keepJournal){
   const j=keepJournal?S.journal:[];
@@ -1646,7 +1986,7 @@ function resetAll(keepJournal){
   S=initialState(); S.journal=j; S.speed=sp;
   selected=null; $('pop').style.display='none';
   $('levelSel').value=S.level;
-  log('Simulation','Poste réinitialisé — '+ETAB.nom+' (type M, SSI cat. A)','info');
+  log('Simulation','Poste réinitialisé — '+ETAB.nom+' (type '+ETAB.type+', SSI cat. A)','info');
   markDirty(); renderAll();
 }
 
@@ -1661,6 +2001,7 @@ function bind(){
   $('soundBtn').addEventListener('click',()=>{Audio_.on=!Audio_.on;audioInit();renderHeader();});
   $('themeBtn').addEventListener('click',()=>{themeIdx=(themeIdx+1)%THEMES.length;applyTheme();});
   $('formaBtn').addEventListener('click',()=>askCode(3,null));
+  $('etabSel').addEventListener('change',()=>switchEtab($('etabSel').value));
   $('formaClose').addEventListener('click',()=>$('forma').classList.remove('show'));
   $('exoBtn').addEventListener('click',()=>{ if(EXO&&!EXO.finished){ toast('Un exercice est déjà en cours'); return; } openExoList(); });
   $('exoEnd').addEventListener('click',()=>{ if(EXO) endExo('arrêt demandé'); });
@@ -1732,7 +2073,8 @@ function bind(){
 initTheme();
 S=initialState();
 bind();
-log('Simulation','Ouverture du poste — '+ETAB.nom+' (type M, SSI catégorie A, '+ETAB.alarme.toLowerCase()+') — mode libre','info');
+applyEtabLabels(); updateCtx();
+log('Simulation','Ouverture du poste — '+ETAB.nom+' (type '+ETAB.type+', SSI catégorie A, '+ETAB.alarme.toLowerCase()+') — mode libre','info');
 log('Simulation','Niveau d\'accès 1. Code niveau 2 pour l\'exploitation ; exercices guidés : bouton 🎓 ; panneau formateur : Ctrl+Maj+F ou bouton ⋯','info');
 renderAll();
 requestAnimationFrame(loop);
