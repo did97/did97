@@ -5,6 +5,8 @@
 <title>Simulateur SSI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#e7eaef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14181d" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Simulateur de poste de sécurité incendie SSI catégorie A — TLF Formation — mode libre et exercices notés — établissements types M (magasin), L (théâtre) et U (clinique).">
 <style>
 /* Poste de sécurité : plan à gauche, façades matérielles à droite, journal en pied.
@@ -60,6 +62,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+html{touch-action:manipulation}
 html,body{margin:0;height:100%}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -82,16 +85,13 @@ header .clock{font-variant-numeric:tabular-nums;font-size:16px;font-weight:600;m
 header .grp{display:flex;align-items:center;gap:6px}
 .btn{background:var(--btn);border:1px solid var(--line);border-radius:5px;padding:4px 10px;
   color:var(--btn-txt);line-height:1.25;transition:background .12s,border-color .12s}
-.btn:hover{background:var(--btn-h)}
 .btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .btn:active{transform:translateY(1px)}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
 .btn.red{background:var(--btn-red);color:#fff;border-color:transparent;font-weight:600}
-.btn.red:hover{background:var(--btn-red-h)}
 .btn.sm{padding:2px 7px;font-size:12px}
 .btn.lock::before{content:"🔒 ";font-size:11px}
 .btn.primary{background:var(--accent);border-color:transparent;color:#fff;font-weight:600}
-.btn.primary:hover{filter:brightness(1.08)}
 .badge{display:inline-block;padding:2px 8px;border-radius:10px;background:var(--btn);color:var(--txt);font-size:12px}
 .badge.l2{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .badge.exo{background:var(--accent);color:#fff;font-weight:600}
@@ -229,9 +229,9 @@ footer.collapsed #journal{display:none}
 #pop .btns{margin-top:4px}
 #pop .btn{width:100%;text-align:left}
 .modalBg{position:fixed;inset:0;background:rgba(10,14,18,.5);display:none;align-items:center;justify-content:center;z-index:50;
-  padding:16px max(16px,env(safe-area-inset-left,0px)) 16px max(16px,env(safe-area-inset-right,0px))}
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .modalBg.show{display:flex}
-.modal{background:var(--panel2);border-radius:9px;min-width:min(340px,100%);max-width:620px;max-height:calc(100vh - 48px);
+.modal{background:var(--panel2);border-radius:9px;min-width:min(340px,100%);max-width:620px;max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);
   overflow:auto;box-shadow:var(--modal-shadow);padding:16px;color:var(--txt)}
 .modal h3{margin:0 0 8px;font-size:15px}
 .modal p{margin:6px 0}
@@ -250,7 +250,6 @@ footer.collapsed #journal{display:none}
 /* ===== scénarios ===== */
 .scList{display:flex;flex-direction:column;gap:8px;margin:10px 0}
 .scItem{border:1px solid var(--line2);border-radius:8px;padding:10px 12px;background:var(--panel);cursor:pointer;transition:border-color .12s}
-.scItem:hover{border-color:var(--accent)}
 .scItem .t{font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .scItem .d{color:var(--muted);font-size:12px;margin-top:3px}
 .diff{font-size:10.5px;padding:1px 7px;border-radius:9px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
@@ -286,20 +285,53 @@ footer.collapsed #journal{display:none}
   padding:8px 14px;border-radius:7px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:60;max-width:72%;text-align:center}
 .toast.show{opacity:.95}
 
+/* ===== tactile & zones système (iPhone / iPad / Mac) ===== */
+header{padding-top:max(6px,env(safe-area-inset-top,0px))}
+main{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+#exoBar{padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+footer{padding-bottom:env(safe-area-inset-bottom,0px)}
+footer .bar{padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+#forma{padding-right:env(safe-area-inset-right,0px)}
+#forma h3{padding-top:max(10px,env(safe-area-inset-top,0px))}
+#forma .scroll{padding-bottom:env(safe-area-inset-bottom,0px)}
+header,.btn,.keypad button,.led,.lg,#plan,.scItem,.ucmc .cmd{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+@media (hover:hover){
+  .btn:hover{background:var(--btn-h)}
+  .btn.red:hover{background:var(--btn-red-h)}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .scItem:hover{border-color:var(--accent)}
+}
+@media (pointer:coarse){
+  select,select.sel,.form select{font-size:16px}
+  .btn{min-height:44px;padding:9px 14px}
+  .btn.sm{min-height:40px;padding:8px 12px;font-size:13px}
+  .keypad button{height:52px}
+  #agentBar a{display:inline-block;padding:10px 2px}
+  #pop .btn{min-height:44px}
+}
+
 /* ===== responsive ===== */
 @media (max-width: 980px){
-  #app{height:auto;min-height:100vh}
+  #app{height:auto;min-height:100vh;min-height:100dvh}
   main{flex-direction:column}
   #planSec{flex:0 0 auto;border-right:0;border-bottom:1px solid var(--line)}
-  #planWrap{height:min(62vw,420px)}
+  #planWrap{height:min(88vw,420px);height:min(88vw,420px,70dvh)}
   footer{flex:0 0 auto;height:auto;max-height:200px}
   #journal{max-height:160px}
+  .toast{bottom:calc(12px + env(safe-area-inset-bottom,0px))}
   header .ctx{flex-basis:100%;order:9}
 }
 @media (max-width: 480px){
   header{gap:8px}
   header .brand small{display:none}
+  header .clock{font-size:13px;min-width:54px}
+  header .grp{gap:4px}
+  #etabSel{max-width:44vw}
   .keypad{grid-template-columns:repeat(3,56px)}
+  table.us td.leds4{white-space:normal}
+  table.us .led{display:flex;margin:1px 0}
+  #journal td.t{width:48px}
+  #journal td.s{width:58px;white-space:normal}
 }
 
 /* ===== impression ===== */
@@ -324,9 +356,9 @@ footer.collapsed #journal{display:none}
   <div class="brand">TLF FORMATION <small>Simulateur SSI — catégorie A</small></div>
   <div class="ctx" id="ctx">Mode libre · Type M</div>
   <select class="sel" id="etabSel" title="Établissement simulé" aria-label="Établissement simulé">
-    <option value="M">Type M — Magasin</option>
-    <option value="L">Type L — Théâtre</option>
-    <option value="U">Type U — Clinique</option>
+    <option value="M">M — Magasin</option>
+    <option value="L">L — Théâtre</option>
+    <option value="U">U — Clinique</option>
   </select>
   <div class="spacer"></div>
   <div class="grp">
@@ -968,7 +1000,7 @@ function initTheme(){
 /* ---------------- AUDIO (Web Audio, synthèse) ---------------- */
 const Audio_={ ctx:null, on:true, phase:0, last:0 };
 function audioInit(){
-  if(Audio_.ctx) return;
+  if(Audio_.ctx){ if(Audio_.ctx.state!=='running'){ try{Audio_.ctx.resume();}catch(e){} } return; }
   const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
   Audio_.ctx=new AC();
 }
@@ -1735,14 +1767,15 @@ function renderCmsi(){
     const u=S.us[z.id+'/'+f], list=ETAB.das.filter(d=>d.zs===z.id&&d.fn===f);
     const def=list.some(d=>S.das[d.id].defaut);
     const sec=u.etat==='securite'||u.etat==='commande'||u.etat==='defaut';
-    h+='<tr><td title="'+esc(z.nom)+'"><b>'+z.id+'</b></td><td>'+FONCTIONS[f]+'</td><td class="leds4">'+
+    h+='<tr><td data-lib="'+esc(z.id+' — '+z.nom)+'"><b>'+z.id+'</b></td><td>'+FONCTIONS[f]+'</td><td class="leds4">'+
       '<span class="led"><i class="red'+(sec?' on':'')+(u.etat==='commande'?' blink':'')+'"></i>Sécurité</span>'+
       '<span class="led"><i class="yel'+(def?' on':'')+(def&&!u.acq?' blink':'')+'"></i>Défaut pos.</span>'+
       '<span class="led"><i class="yel'+(S.alim.aesDef?' on':'')+'"></i>Dérangement</span>'+
       '<span class="led"><i class="yel"></i>HS</span></td><td>'+
-      list.map(d=>{const s=S.das[d.id];return '<span title="'+esc(d.lib)+'" style="margin-right:6px">'+d.id+' <span style="color:'+(s.defaut?'var(--warn)':s.pos==='securite'?'var(--err)':'var(--muted)')+'">'+(s.defaut?'défaut':s.pos==='securite'?'sécurité':(s.ordre?'en cours':'attente'))+'</span></span>';}).join('')+'</td></tr>';
+      list.map(d=>{const s=S.das[d.id];return '<span title="'+esc(d.lib)+'" data-lib="'+esc(d.id+' — '+d.lib)+'" style="margin-right:6px;cursor:pointer">'+d.id+' <span style="color:'+(s.defaut?'var(--warn)':s.pos==='securite'?'var(--err)':'var(--muted)')+'">'+(s.defaut?'défaut':s.pos==='securite'?'sécurité':(s.ordre?'en cours':'attente'))+'</span></span>';}).join('')+'</td></tr>';
   }));
   T.innerHTML=h;
+  T.querySelectorAll('[data-lib]').forEach(c=>c.addEventListener('click',()=>toast(c.getAttribute('data-lib'))));
   const any=Object.keys(S.us).some(k=>S.us[k].etat!=='attente');
   $('cmsiHint').textContent=any?'Réarmement possible une fois tous les DAS remis en position d\'attente sur place et l\'ECS réarmé.':'Toutes les fonctions en position d\'attente.';
   $('bCmsiAcq').disabled=S.cmsi.acq&&!Object.keys(S.us).some(k=>!S.us[k].acq);
@@ -1842,6 +1875,7 @@ function renderPlan(){
   // DAS
   ETAB.das.filter(d=>d.niveau===lvl).forEach(d=>{
     const st=S.das[d.id], g=el('g',{class:'das'+(st.defaut?' def':st.pos==='securite'?' sec':st.ordre?' ord':'')+(selected===('das:'+d.id)?' sel':'')});
+    g.appendChild(el('rect',{x:d.x-28,y:d.y-26,width:56,height:52,fill:'transparent'}));
     g.appendChild(el('rect',{x:d.x-16,y:d.y-10,width:32,height:20,rx:3,class:'box'}));
     g.appendChild(el('text',{x:d.x,y:d.y+3,'text-anchor':'middle'},d.id));
     dasGlyph(g,d);
@@ -1853,6 +1887,7 @@ function renderPlan(){
   ETAB.points.filter(p=>zdD(p.zd).niveau===lvl).forEach(p=>{
     const st=S.pts[p.id], cls='pt'+(st.hs||S.zd[p.zd].hs?' hs':st.etat==='alarme'?' al':st.etat==='derangement'?' de':'')+(selected===('pt:'+p.id)?' sel':'');
     const g=el('g',{class:cls});
+    g.appendChild(el('circle',{cx:p.x,cy:p.y,r:26,fill:'transparent'}));
     if(p.type==='DAI'){ g.appendChild(el('circle',{cx:p.x,cy:p.y,r:9,class:'sym'})); g.appendChild(el('circle',{cx:p.x,cy:p.y,r:2.5,class:'dot'})); }
     else g.appendChild(el('rect',{x:p.x-8,y:p.y-8,width:16,height:16,class:'sym'}));
     g.appendChild(el('text',{x:p.x,y:p.y+22,'text-anchor':'middle'},p.id));
@@ -1889,17 +1924,26 @@ function showPop(kind,id,ev){
     if(!st.bloque) h+='<button class="btn" data-a="bloque">Simuler : DAS bloqué</button>';
     h+='</div>';
   }
+  h='<button class="btn sm" data-a="close" aria-label="Fermer" style="position:absolute;top:6px;right:6px;min-height:0;padding:2px 8px">✕</button>'+h;
   P.innerHTML=h;
   const wrap=$('planWrap').getBoundingClientRect();
-  let x=ev.clientX-wrap.left+10, y=ev.clientY-wrap.top+10;
   P.style.display='block';
-  if(x+P.offsetWidth>wrap.width-10) x=Math.max(4,ev.clientX-wrap.left-P.offsetWidth-10);
-  if(y+P.offsetHeight>wrap.height-10) y=Math.max(4,wrap.height-P.offsetHeight-10);
+  const coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
+  let x,y;
+  if(coarse){ x=ev.clientX-wrap.left-P.offsetWidth/2; y=ev.clientY-wrap.top-P.offsetHeight-18; }
+  else {
+    x=ev.clientX-wrap.left+10; y=ev.clientY-wrap.top+10;
+    if(x+P.offsetWidth>wrap.width-10) x=ev.clientX-wrap.left-P.offsetWidth-10;
+    if(y+P.offsetHeight>wrap.height-10) y=wrap.height-P.offsetHeight-10;
+  }
+  x=Math.max(4,Math.min(x,wrap.width-P.offsetWidth-4));
+  y=Math.max(4,Math.min(y,wrap.height-P.offsetHeight-4));
   P.style.left=x+'px'; P.style.top=y+'px';
   P.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>popAction(kind,id,b.getAttribute('data-a'))));
 }
 function hidePop(){ $('pop').style.display='none'; if(selected){ selected=null; renderPlan(); } }
 function popAction(kind,id,a){
+  if(a==='close'){ hidePop(); return; }
   if(a==='ldd'){ allerSurPlace(kind,id); return; }
   hidePop();
   if(kind==='pt'){
@@ -1993,8 +2037,8 @@ function resetAll(keepJournal){
 /* --- Événements UI --- */
 function bind(){
   fillFormaSelects();
-  document.body.addEventListener('click',audioInit,{once:true});
-  document.body.addEventListener('touchstart',audioInit,{once:true});
+  document.body.addEventListener('click',audioInit);
+  document.body.addEventListener('touchend',audioInit,{once:true});
   $('speed').addEventListener('change',()=>{S.speed=parseInt($('speed').value,10);log('Simulation','Vitesse ×'+S.speed,'info');});
   $('pauseBtn').addEventListener('click',()=>{S.paused=!S.paused;log('Simulation',S.paused?'Pause':'Reprise','info');renderHeader();});
   $('accessBtn').addEventListener('click',()=>{ if(S.access>=2){S.access=1;log('Agent','Retour au niveau 1','action');markDirty();} else askCode(2,null); });
@@ -2067,6 +2111,8 @@ function bind(){
   $('fClear').addEventListener('click',()=>{ S.journal=[]; renderJournal(); });
   // fermer certaines modales par clic sur le fond
   ['mHs','mNote','mExo'].forEach(id=>$(id).addEventListener('click',e=>{ if(e.target.id===id) $(id).classList.remove('show'); }));
+  $('mDebrief').addEventListener('click',e=>{ if(e.target.id==='mDebrief'){ $('mDebrief').classList.remove('show'); exoStop(); } });
+  document.addEventListener('pointerdown',e=>{ const P=$('pop'); if(P.style.display==='block' && !P.contains(e.target) && !(e.target.closest&&e.target.closest('#plan'))) hidePop(); });
 }
 
 /* --- Démarrage --- */
