@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Simulateur O.V.P. — Opérateur en vidéoprotection</title>
+<style>
+:root{
+  --bg:#ededeb; --panel:#ffffff; --ink:#262626; --ink2:#616469; --line:#d3d5d9; --line2:#e9eaec;
+  --screen:#2a2d31; --bezel:#3c3f44; --screen-h:#4a4d52;
+  --accent:#2f3a47; --accent-ink:#ffffff; --alert:#a8413d; --ok:#4c7a58; --warn:#8a6d1f;
+  --font:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:"SF Mono",Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--font)}
+button,input,select,textarea{font:inherit;color:inherit}
+textarea{resize:vertical}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em}
+p{margin:0}
+a{color:inherit}
+[hidden]{display:none !important}
+:focus-visible{outline:2px solid #1f6feb;outline-offset:1px}
+
+#app{display:grid;grid-template-columns:118px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);min-height:100vh}
+
+/* ---------- En-tête ---------- */
+header.top{grid-column:1/-1;display:flex;align-items:center;gap:22px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{width:60px;height:60px;border:1px dashed var(--line);border-radius:6px;background:#fafafa;display:flex;align-items:center;justify-content:center;padding:3px;cursor:pointer;flex:0 0 auto;color:var(--ink2);font-size:11px}
+.logo img{max-width:100%;max-height:100%;display:block}
+.brand .org{font-size:12px;letter-spacing:.08em;color:var(--ink2)}
+.brand h1{font-size:22px;line-height:1.1}
+.brand .sub{font-size:12px;color:var(--ink2);margin-top:2px}
+.controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;flex:1 1 auto}
+.controls .field{min-width:150px}
+.controls .run{display:flex;gap:6px;align-items:flex-end;padding-bottom:1px}
+.clock{margin-left:auto;text-align:right;min-width:150px}
+.clock .time{font:600 26px/1 var(--mono);letter-spacing:.02em}
+.clock .date{font-size:12px;color:var(--ink2);margin-top:3px}
+.status{display:inline-block;margin-top:5px;font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid var(--line);color:var(--ink2);background:#f6f6f7}
+.status.on{border-color:var(--ok);color:var(--ok)}
+.status.pause{border-color:var(--warn);color:var(--warn)}
+.status.end{border-color:var(--ink);color:var(--ink)}
+
+/* ---------- Rail latéral ---------- */
+nav.rail{position:sticky;top:0;align-self:start;display:flex;flex-direction:column;gap:8px;padding:12px 10px;border-right:1px solid var(--line);background:var(--bg);max-height:100vh;overflow:auto}
+.rail button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px 8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;font-size:11.5px;line-height:1.15;cursor:pointer;text-align:center}
+.rail button:hover{border-color:var(--accent)}
+.rail svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.rail .sp{flex:1 1 auto}
+
+/* ---------- Grille principale ---------- */
+main.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;padding:12px;align-content:start}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;min-width:0}
+.sec-h{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.sec-h h2{font-size:15px;flex:0 0 auto}
+.sec-h .tools{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.sec-b{padding:10px 12px;display:flex;flex-direction:column;gap:10px;flex:1 1 auto;min-width:0}
+.screen{background:#35383d;border-color:#26282c;color:#ececec}
+.screen .sec-h{border-color:var(--screen-h)}
+.screen select,.screen input{background:#24262a;color:#eee;border-color:#55585e}
+.num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;font-size:12px;font-weight:600;flex:0 0 auto}
+.hint{font-size:12px;color:var(--ink2)}
+.screen .hint{color:#b8bbc0}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--alert);color:#fff;font-size:11px;font-weight:600}
+.badge:empty{display:none}
+
+#secCam{grid-column:span 5}
+#secComms{grid-column:span 3}
+#secPlan{grid-column:span 4}
+#secMC{grid-column:span 8}
+#secCR{grid-column:span 4}
+#secMail{grid-column:span 4}
+#secNotes{grid-column:span 4}
+#secAnnex{grid-column:span 4}
+#secInv{grid-column:span 12}
+
+/* ---------- Formulaires ---------- */
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2);min-width:0}
+.field>input,.field>select,.field>textarea{font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:4px;padding:6px 8px;min-width:0;width:100%}
+.field>textarea{min-height:64px;line-height:1.4}
+.screen .field{color:#c7cacf}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.row>.field{flex:1 1 140px}
+.row>.field.w2{flex:2 1 240px}
+.row>.field.xs{flex:0 1 110px}
+.btn{appearance:none;-webkit-appearance:none;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:4px;padding:7px 12px;cursor:pointer;line-height:1.2;white-space:nowrap}
+.btn:hover{filter:brightness(1.12)}
+.btn:disabled{opacity:.45;cursor:default;filter:none}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--accent);filter:none}
+.screen .btn-ghost{color:#eee;border-color:#6a6d73}
+.btn-sm{padding:4px 8px;font-size:12px}
+.btn-danger{border-color:var(--alert);color:var(--alert);background:transparent}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:12px;color:var(--ink2);border-left:3px solid var(--line);padding:4px 10px}
+.empty{color:var(--ink2);font-size:13px;padding:8px 0;font-style:italic}
+.screen .empty{color:#aeb1b6}
+
+/* ---------- Écran 1 : moniteur ---------- */
+.monitor{position:relative;background:var(--screen);border:6px solid var(--bezel);border-radius:6px;aspect-ratio:16/9;overflow:hidden}
+.monitor .view{position:absolute;inset:0;transform-origin:50% 50%;transition:transform .25s ease}
+.monitor .view svg,.monitor .view img{width:100%;height:100%;display:block;object-fit:cover}
+.monitor .osd{position:absolute;inset:0;pointer-events:none;color:#fff;font:12px/1.25 var(--mono);text-shadow:0 1px 2px rgba(0,0,0,.9)}
+.osd .tl{position:absolute;left:10px;top:8px}
+.osd .tr{position:absolute;right:10px;top:8px;text-align:right}
+.osd .bl{position:absolute;left:10px;bottom:8px;display:flex;align-items:center;gap:6px}
+.osd .br{position:absolute;right:10px;bottom:8px;text-align:right}
+.osd .rec{width:9px;height:9px;border-radius:50%;background:var(--alert);display:inline-block;animation:blink 1.4s steps(1) infinite}
+.osd .alarm{display:inline-block;margin-top:4px;padding:1px 6px;border:1px solid #fff;border-radius:3px;font-weight:700}
+.monitor .nosignal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#888;font:14px var(--mono)}
+.camrow{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.camrow .field{flex:1 1 220px}
+.ptz{display:grid;grid-template-columns:repeat(3,30px);grid-auto-rows:30px;gap:3px}
+.ptz button{border:1px solid #6a6d73;background:#24262a;color:#eee;border-radius:4px;cursor:pointer;font-size:14px;line-height:1;padding:0}
+.ptz button:hover{background:#3a3d42}
+.ptz .wide{grid-column:span 3;font-size:12px}
+.thumbs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.thumb{flex:0 0 118px;position:relative;aspect-ratio:16/9;background:#1e2024;border:2px solid #55585e;border-radius:3px;padding:0;cursor:pointer;overflow:hidden}
+.thumb svg,.thumb img{width:100%;height:100%;display:block;object-fit:cover}
+.thumb .lab{position:absolute;left:4px;top:3px;color:#fff;font:600 10px var(--mono);text-shadow:0 1px 2px #000}
+.thumb.active{border-color:#fff}
+.thumb.alert{border-color:var(--alert);animation:pulseb 1.2s infinite}
+
+/* ---------- Écran 2 : plan ---------- */
+.planbox{position:relative;background:#e4e6e9;border:6px solid var(--bezel);border-radius:6px;aspect-ratio:16/9;overflow:hidden}
+.planbox svg,.planbox img{position:absolute;inset:0;width:100%;height:100%;display:block}
+.planbox img{object-fit:fill}
+.planbox.placing{cursor:crosshair}
+.marker{position:absolute;transform:translate(-50%,-50%);width:36px;height:22px;border-radius:11px;background:#fff;color:#222;border:1.5px solid #222;font:600 10.5px var(--mono);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;letter-spacing:.02em}
+.marker:hover{background:#f0f0f0}
+.marker.active{background:#222;color:#fff}
+.marker.alert{box-shadow:0 0 0 3px rgba(168,65,61,.65);animation:pulse 1.2s infinite}
+.indicatifs{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12px;color:#d8dade}
+.indicatifs b{font-family:var(--mono);font-weight:600;color:#fff}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:#c7cacf;align-items:center}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:5px;border:1px solid #222;background:#fff;vertical-align:middle;margin-right:4px}
+.legend i.dae{background:var(--ok);border-color:var(--ok);border-radius:2px}
+
+/* ---------- Radio / téléphone ---------- */
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{padding:6px 10px;border:1px solid var(--line);background:#f6f6f7;border-radius:4px;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.log{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto;padding-right:2px}
+.msg{border:1px solid var(--line);border-radius:6px;padding:6px 9px;font-size:13px;display:flex;flex-direction:column;gap:3px}
+.msg .meta{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink2);flex-wrap:wrap}
+.msg .meta b{color:var(--ink);font-family:var(--mono);font-weight:600}
+.msg .meta .ch{font-size:10.5px;padding:1px 5px;border:1px solid var(--line);border-radius:3px;text-transform:none}
+.msg.in{border-left:3px solid var(--accent)}
+.msg.out{border-left:3px solid #a6a9ae;background:#fafafa}
+.msg.todo{background:#f0f1f3}
+.msg .tag{margin-left:auto;font-size:11px;color:var(--alert);font-weight:600}
+.msg .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.lnk{background:none;border:none;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font-size:12px}
+
+/* ---------- Registres ---------- */
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.register{width:100%;border-collapse:collapse;font-size:13px}
+.register th{text-align:left;font-weight:600;background:#f3f4f5;border-bottom:1px solid var(--line);padding:6px 8px;white-space:nowrap}
+.register td{border-bottom:1px solid var(--line2);padding:6px 8px;vertical-align:top}
+.register td.n{color:var(--ink2);width:34px;font-family:var(--mono);font-size:12px}
+.register td.t{font-family:var(--mono);font-size:12px;white-space:nowrap}
+.register td.pre{white-space:pre-wrap}
+.register select,.register input{width:100%;border:1px solid var(--line);border-radius:4px;padding:4px 6px;background:#fff}
+
+/* ---------- Messagerie ---------- */
+.maillist{display:flex;flex-direction:column;max-height:200px;overflow:auto;border:1px solid var(--line);border-radius:4px}
+.mailitem{display:grid;grid-template-columns:1fr auto;gap:0 8px;padding:7px 10px;border-bottom:1px solid var(--line2);cursor:pointer;text-align:left;background:none;border-left:none;border-right:none;border-top:none;width:100%}
+.mailitem:last-child{border-bottom:none}
+.mailitem:hover{background:#f6f6f7}
+.mailitem.unread .obj{font-weight:600}
+.mailitem.unread .obj::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--alert);margin-right:6px;vertical-align:middle}
+.mailitem .from{font-size:12px;color:var(--ink2);grid-column:1/-1}
+.mailitem .when{font-family:var(--mono);font-size:11px;color:var(--ink2)}
+.mailitem.sel{background:#eef0f2}
+.mailread{border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:13px;background:#fcfcfc}
+.mailread .h{font-size:12px;color:var(--ink2);margin-bottom:6px;display:flex;flex-direction:column;gap:2px}
+.mailread .body{white-space:pre-wrap}
+
+/* ---------- Notes & annexes ---------- */
+.cards{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow:auto}
+.card{border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px}
+.card h4{font-size:13px;margin-bottom:3px}
+.card .when{font-size:11px;color:var(--ink2);font-family:var(--mono)}
+.card .body{white-space:pre-wrap;margin-top:4px}
+.card.perm{border-left:3px solid var(--accent)}
+.card.sess{border-left:3px solid var(--warn)}
+details.ax{border:1px solid var(--line);border-radius:6px;padding:0 10px;font-size:13px}
+details.ax summary{padding:8px 0;cursor:pointer;font-weight:600;list-style:none;position:relative;padding-right:20px}
+details.ax summary::-webkit-details-marker{display:none}
+details.ax summary::after{content:"+";position:absolute;right:2px;top:6px;color:var(--ink2);font-weight:400}
+details.ax[open] summary::after{content:"–"}
+details.ax .c{padding:0 0 10px;border-top:1px solid var(--line2);padding-top:8px}
+details.ax ul,details.ax ol{margin:4px 0 6px;padding-left:20px}
+details.ax li{margin:2px 0}
+details.ax table{border-collapse:collapse;width:100%;font-size:12.5px}
+details.ax td,details.ax th{border:1px solid var(--line2);padding:3px 6px;text-align:left;vertical-align:top}
+.phon{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:2px 10px;font-size:12.5px}
+.phon b{font-family:var(--mono);font-weight:600}
+
+/* ---------- Toasts ---------- */
+#toasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:50;max-width:min(340px,calc(100vw - 32px))}
+.toast{background:#2a2d31;color:#fff;padding:9px 12px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.28);font-size:13px;border-left:4px solid #9aa0a6}
+.toast.alert{border-left-color:var(--alert)}
+.toast.ok{border-left-color:var(--ok)}
+.toast .k{font-size:11px;color:#c5c8cd;display:block}
+
+/* ---------- Fenêtres ---------- */
+.modal{position:fixed;inset:0;background:rgba(20,22,25,.55);display:flex;align-items:center;justify-content:center;padding:14px;z-index:100}
+.dialog{background:#fff;border-radius:8px;width:min(980px,100%);max-height:94vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.dialog.sm{width:min(520px,100%)}
+.dialog-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dialog-h h3{font-size:16px}
+.dialog-b{padding:14px 16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.dialog .tabs{padding:10px 16px 0;border-bottom:1px solid var(--line)}
+.dialog .tabs .tab{border-radius:4px 4px 0 0;border-bottom:none;margin-bottom:-1px}
+.dialog .tabs .tab.active{background:#fff;color:var(--ink);border-color:var(--line)}
+.x{background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--ink2);padding:2px 6px}
+.evlist{display:flex;flex-direction:column;gap:4px}
+.ev{display:grid;grid-template-columns:52px 70px 1fr auto;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--line2);border-radius:4px;font-size:13px}
+.ev .t{font-family:var(--mono);font-size:12px}
+.ev .ty{font-size:11px;padding:2px 6px;border-radius:3px;background:#eef0f2;text-align:center}
+.ev.done{background:#f7f7f8;color:var(--ink2)}
+.ev.done .ty{background:#e3e5e8}
+.ev .st{font-size:12px;color:var(--ok);font-weight:600}
+.ev .cam{font-family:var(--mono);font-weight:600}
+.chk{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--line2);font-size:13px}
+.chk input{margin-top:3px;flex:0 0 auto}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.metric{border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.metric .v{font:600 18px/1.2 var(--mono)}
+.metric .k{font-size:12px;color:var(--ink2)}
+.code{display:flex;gap:8px;align-items:flex-end;max-width:320px}
+.pwd{letter-spacing:.3em;font-family:var(--mono)}
+.thumbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.thumbgrid .it{border:1px solid var(--line);border-radius:4px;padding:6px;font-size:12px;display:flex;flex-direction:column;gap:4px}
+.thumbgrid .it .pv{aspect-ratio:16/9;background:#222;border-radius:3px;overflow:hidden}
+.thumbgrid .it .pv img,.thumbgrid .it .pv svg{width:100%;height:100%;display:block;object-fit:cover}
+.jlog{font:12px/1.5 var(--mono);white-space:pre-wrap;background:#f6f6f7;border:1px solid var(--line);border-radius:4px;padding:8px;max-height:220px;overflow:auto}
+
+@keyframes blink{0%,60%{opacity:1}61%,100%{opacity:.15}}
+@keyframes pulse{0%{box-shadow:0 0 0 2px rgba(168,65,61,.9)}100%{box-shadow:0 0 0 9px rgba(168,65,61,0)}}
+@keyframes pulseb{0%,100%{border-color:var(--alert)}50%{border-color:#fff}}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+
+/* ---------- Adaptation ---------- */
+@media (max-width:1280px){
+  #secCam{grid-column:span 7}#secPlan{grid-column:span 5}#secComms{grid-column:span 12}
+  #secMC{grid-column:span 12}#secCR{grid-column:span 12}
+  #secMail{grid-column:span 6}#secNotes{grid-column:span 6}#secAnnex{grid-column:span 12}
+}
+@media (max-width:880px){
+  #app{grid-template-columns:minmax(0,1fr)}
+  nav.rail{position:static;flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--line);max-height:none;padding:8px 12px}
+  .rail button{flex:1 1 90px}
+  .rail .sp{display:none}
+  main.grid{grid-template-columns:minmax(0,1fr)}
+  #secCam,#secPlan,#secComms,#secMC,#secCR,#secMail,#secNotes,#secAnnex,#secInv{grid-column:span 1}
+  .clock{margin-left:0;text-align:left}
+  .ev{grid-template-columns:52px 1fr auto}
+  .ev .ty{display:none}
+}
+
+/* ---------- Impression ---------- */
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:14mm}
+  body{background:#fff;color:#000;font-size:12px}
+  #app,#toasts,.modal{display:none !important}
+  #printArea{display:block}
+  .pdoc{page-break-after:always}
+  .pdoc:last-child{page-break-after:auto}
+  .phead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1.5px solid #000;padding-bottom:8px;margin-bottom:12px}
+  .phead img{max-height:48px;max-width:160px}
+  .phead .o{font-size:11px;letter-spacing:.08em}
+  .phead h2{font-size:17px;margin:2px 0}
+  .phead .m{font-size:11px}
+  .pmeta{display:grid;grid-template-columns:1fr 1fr;gap:2px 16px;font-size:11.5px;margin-bottom:10px}
+  .ptab{width:100%;border-collapse:collapse;font-size:11px}
+  .ptab th,.ptab td{border:1px solid #000;padding:4px 5px;vertical-align:top;text-align:left}
+  .ptab th{background:#eee}
+  .ptab td.pre{white-space:pre-wrap}
+  .ptab tr{page-break-inside:avoid}
+  .pblock{margin:8px 0}
+  .pblock h3{font-size:12.5px;margin:10px 0 3px;border-bottom:1px solid #000}
+  .pblock .v{white-space:pre-wrap;min-height:14px}
+  .psig{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:22px;font-size:11px}
+  .psig div{border-top:1px solid #000;padding-top:4px;min-height:60px}
+  .pfoot{margin-top:14px;font-size:10px;color:#333;border-top:1px solid #999;padding-top:4px}
+  .pchk{list-style:none;padding:0;margin:4px 0}
+  .pchk li{padding:3px 0;border-bottom:1px solid #ccc}
+  .pchk li::before{content:"☐ ";font-size:13px}
+  .pchk li.on::before{content:"☑ "}
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+<header class="top">
+  <div class="brand">
+    <button class="logo" id="logoBtn" type="button" title="Logo (chargement dans le panneau Formateur)"><img id="logoImg" alt="Logo" hidden><span id="logoTxt">Logo</span></button>
+    <div class="brand-txt">
+      <div class="org">TLF FORMATION</div>
+      <h1>Simulateur O.V.P.</h1>
+      <div class="sub">Opérateur en vidéoprotection — PC vidéo de Bellevue-les-Anses (commune fictive, 12 caméras)</div>
+    </div>
+  </div>
+  <div class="controls">
+    <label class="field">Scénario<select id="selScenario"></select></label>
+    <label class="field">Déroulé<select id="selMode"><option value="auto">Automatique (chronomètre)</option><option value="manuel">Formateur (injection manuelle)</option></select></label>
+    <label class="field xs">Vitesse<select id="selSpeed"><option value="1">Temps réel</option><option value="2">×2</option><option value="4">×4</option></select></label>
+    <label class="field">Opérateur<input id="inOperateur" placeholder="Nom du stagiaire" autocomplete="off"></label>
+    <div class="run">
+      <button class="btn" id="btnStart" type="button">Démarrer l’exercice</button>
+      <button class="btn btn-ghost" id="btnPause" type="button" disabled>Pause</button>
+      <button class="btn btn-ghost" id="btnEnd" type="button" disabled>Terminer</button>
+    </div>
+  </div>
+  <div class="clock">
+    <div class="time" id="clockTime">--:--:--</div>
+    <div class="date" id="clockDate">—</div>
+    <span class="status" id="status">En attente</span>
+  </div>
+</header>
+
+<nav class="rail" aria-label="Actions">
+  <button id="btnPrint" type="button"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>Impression</button>
+  <button id="btnSave" type="button"><svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5zM8 3v5h7V3M8 21v-7h8v7"/></svg>Sauvegarde</button>
+  <button id="btnLoad" type="button"><svg viewBox="0 0 24 24"><path d="M3 7a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM12 11v6M9 14l3-3 3 3"/></svg>Charger</button>
+  <input type="file" id="loadFile" accept="application/json,.json" hidden>
+  <button id="btnTrainer" type="button"><svg viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5zM12 15v3"/></svg>Formateur</button>
+  <button id="btnNew" type="button"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4"/></svg>Nouvelle session</button>
+  <div class="sp"></div>
+  <button id="btnSound" type="button"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg><span id="soundLbl">Son : activé</span></button>
+</nav>
+
+<main class="grid">
+
+  <!-- Écran 1 -->
+  <section class="sec screen" id="secCam">
+    <div class="sec-h"><span class="num">1</span><h2>Vue caméra</h2>
+      <div class="tools"><span class="hint" id="camQuartier"></span></div>
+    </div>
+    <div class="sec-b">
+      <div class="camrow">
+        <label class="field">Caméra<select id="selCam"></select></label>
+        <div class="ptz" aria-label="Commandes PTZ">
+          <button type="button" data-ptz="zin" title="Zoom avant">+</button>
+          <button type="button" data-ptz="up" title="Haut">▲</button>
+          <button type="button" data-ptz="zout" title="Zoom arrière">−</button>
+          <button type="button" data-ptz="left" title="Gauche">◀</button>
+          <button type="button" data-ptz="home" title="Position initiale">⌂</button>
+          <button type="button" data-ptz="right" title="Droite">▶</button>
+          <button type="button" class="wide" data-ptz="down" title="Bas">▼</button>
+        </div>
+      </div>
+      <div class="monitor" id="monitor">
+        <div class="view" id="camView"></div>
+        <div class="osd">
+          <div class="tl" id="osdTL"></div>
+          <div class="tr" id="osdTR"></div>
+          <div class="bl"><span class="rec"></span><span>REC</span><span id="osdAlarm"></span></div>
+          <div class="br" id="osdBR"></div>
+        </div>
+      </div>
+      <div class="thumbs" id="thumbs" aria-label="Mur d’images"></div>
+    </div>
+  </section>
+
+  <!-- Radio / téléphone -->
+  <section class="sec" id="secComms">
+    <div class="sec-h"><h2>Radio / Téléphone</h2><div class="tools"><span class="badge" id="commsBadge"></span></div></div>
+    <div class="sec-b">
+      <div class="tabs" id="commTabs">
+        <button class="tab active" type="button" data-ch="radio">Radio</button>
+        <button class="tab" type="button" data-ch="tel">Téléphone</button>
+      </div>
+      <div class="log" id="commsList"></div>
+      <div class="row">
+        <label class="field w2">Correspondant<select id="selContact"></select></label>
+        <label class="field w2">Phrase type<select id="selPhrase"></select></label>
+      </div>
+      <label class="field">Message<textarea id="inMsg" placeholder="Rédigez votre transmission…"></textarea></label>
+      <div class="actions">
+        <button class="btn" id="btnSend" type="button">Émettre</button>
+        <button class="btn btn-ghost btn-sm" id="btnMsgClear" type="button">Effacer</button>
+        <span class="hint">Chaque transmission est horodatée dans le journal des communications.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Écran 2 -->
+  <section class="sec screen" id="secPlan">
+    <div class="sec-h"><span class="num">2</span><h2>Plan des quartiers</h2>
+      <div class="tools"><button class="btn btn-ghost btn-sm" id="btnPlace" type="button" hidden>Placer les caméras</button></div>
+    </div>
+    <div class="sec-b">
+      <div class="planbox" id="planBox">
+        <div id="planImg"></div>
+        <div id="planMarkers"></div>
+      </div>
+      <div class="legend"><span><i></i>Caméra</span><span><i class="dae"></i>Défibrillateur (DAE)</span><span id="planHint" class="hint">Touchez une caméra pour l’afficher sur l’écran 1.</span></div>
+      <div class="indicatifs" id="indicatifs"></div>
+    </div>
+  </section>
+
+  <!-- Main courante -->
+  <section class="sec" id="secMC">
+    <div class="sec-h"><h2>Main courante</h2>
+      <div class="tools"><button class="btn btn-ghost btn-sm" type="button" data-print="mc">Imprimer</button></div>
+    </div>
+    <div class="sec-b">
+      <div class="row">
+        <label class="field xs">Date<input id="mcDate" type="date"></label>
+        <label class="field xs">Heure<input id="mcHeure" type="time" step="1"></label>
+        <label class="field">Caméra<select id="mcCam"></select></label>
+        <label class="field">Nature des faits<select id="mcNature"></select></label>
+      </div>
+      <div class="row">
+        <label class="field w2">Faits constatés<textarea id="mcFaits" placeholder="Qui, quoi, où, quand, comment — faits uniquement, sans interprétation."></textarea></label>
+        <label class="field w2">Mesures prises<textarea id="mcMesures" placeholder="Personnes informées, moyens engagés, suivi caméra, préservation des images…"></textarea></label>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnMcAdd" type="button">Enregistrer la ligne</button>
+        <span class="note">Une main courante ne se rature pas et ne se modifie pas après enregistrement : en cas d’erreur, ajoutez une ligne rectificative.</span>
+      </div>
+      <div class="tablewrap">
+        <table class="register" id="mcTable">
+          <thead><tr><th>N°</th><th>Date</th><th>Heure</th><th>Caméra</th><th>Faits constatés</th><th>Mesures prises</th><th>Opérateur</th></tr></thead>
+          <tbody id="mcBody"></tbody>
+        </table>
+        <div class="empty" id="mcEmpty">Aucune ligne. La première ligne attendue est généralement la prise de poste.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Compte rendu -->
+  <section class="sec" id="secCR">
+    <div class="sec-h"><h2>Compte rendu</h2>
+      <div class="tools"><button class="btn btn-ghost btn-sm" type="button" data-print="cr">Imprimer</button></div>
+    </div>
+    <div class="sec-b">
+      <div class="row">
+        <label class="field xs">Date<input id="crDate" type="date" data-cr="date"></label>
+        <label class="field xs">Heure<input id="crHeure" type="time" data-cr="heure"></label>
+      </div>
+      <label class="field">Destinataire<select id="crDest" data-cr="dest"></select></label>
+      <label class="field">Objet<input id="crObjet" data-cr="objet" placeholder="Ex. : vol à l’arraché place du marché, le …"></label>
+      <label class="field">Faits (chronologie)<textarea id="crFaits" data-cr="faits" placeholder="Relatez les faits dans l’ordre, horodatés, avec les caméras utilisées."></textarea></label>
+      <label class="field">Mesures prises<textarea id="crMesures" data-cr="mesures"></textarea></label>
+      <label class="field">Suites à donner / observations<textarea id="crSuites" data-cr="suites"></textarea></label>
+      <div class="actions">
+        <button class="btn btn-ghost btn-sm" id="btnCrFromMc" type="button">Pré-remplir depuis la main courante</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Messagerie -->
+  <section class="sec" id="secMail">
+    <div class="sec-h"><h2>Messagerie électronique</h2><div class="tools"><span class="badge" id="mailBadge"></span></div></div>
+    <div class="sec-b">
+      <div class="tabs" id="mailTabs">
+        <button class="tab active" type="button" data-box="recu">Reçus</button>
+        <button class="tab" type="button" data-box="envoye">Envoyés</button>
+      </div>
+      <div class="maillist" id="mailList"></div>
+      <div class="mailread" id="mailRead" hidden></div>
+      <div class="row">
+        <label class="field">À<select id="mailTo"></select></label>
+        <label class="field w2">Objet<input id="mailObj"></label>
+      </div>
+      <label class="field">Message<textarea id="mailBody"></textarea></label>
+      <div class="actions"><button class="btn" id="btnMailSend" type="button">Envoyer</button><button class="btn btn-ghost btn-sm" id="btnMailClear" type="button">Effacer</button></div>
+    </div>
+  </section>
+
+  <!-- Notes de service -->
+  <section class="sec" id="secNotes">
+    <div class="sec-h"><h2>Notes de service</h2></div>
+    <div class="sec-b"><div class="cards" id="notesList"></div></div>
+  </section>
+
+  <!-- Annexes -->
+  <section class="sec" id="secAnnex">
+    <div class="sec-h"><h2>Annexes</h2></div>
+    <div class="sec-b">
+
+      <details class="ax"><summary>Mémo réglementaire (extraits simplifiés)</summary><div class="c">
+        <p class="hint">Rappels pédagogiques. Les références sont à vérifier dans leur version en vigueur sur Légifrance.</p>
+        <table>
+          <tr><th>Référence</th><th>Point à retenir</th></tr>
+          <tr><td>CSI, livre II, titre V (art. L. 251-1 à L. 255-1)</td><td>Cadre de la vidéoprotection sur la voie publique et dans les lieux ouverts au public.</td></tr>
+          <tr><td>CSI, art. L. 251-2</td><td>Finalités autorisées : protection des bâtiments publics et de leurs abords, régulation des flux de transport, constatation des infractions routières, prévention des atteintes aux personnes et aux biens dans les lieux exposés, prévention du terrorisme, secours aux personnes, prévention et constatation des dépôts sauvages d’ordures et déchets…</td></tr>
+          <tr><td>CSI, art. L. 251-3</td><td>Information claire et permanente du public sur l’existence du système et sur l’autorité ou la personne responsable.</td></tr>
+          <tr><td>CSI, art. L. 252-1</td><td>Installation soumise à autorisation préfectorale, après avis de la commission départementale de vidéoprotection.</td></tr>
+          <tr><td>CSI, art. L. 252-5</td><td>Conservation des enregistrements limitée au délai fixé par l’autorisation : un mois au maximum (sauf enquête de flagrance, enquête préliminaire ou information judiciaire).</td></tr>
+          <tr><td>CSI, art. L. 253-5</td><td>Droit d’accès de toute personne intéressée aux enregistrements qui la concernent, ou de vérification de leur destruction.</td></tr>
+          <tr><td>CSI, art. L. 254-1</td><td>Sanctions pénales (jusqu’à 3 ans d’emprisonnement et 45 000 € d’amende) : enregistrements sans autorisation, non-destruction, falsification, accès de personnes non habilitées, utilisation des images à d’autres fins.</td></tr>
+          <tr><td>CSI, art. L. 612-20</td><td>Agents privés de sécurité (dont l’opérateur en vidéoprotection) : conditions d’exercice et carte professionnelle délivrée par le CNAPS.</td></tr>
+          <tr><td>Code pénal, art. 226-1 ; Code civil, art. 9</td><td>Respect de la vie privée : captation ou enregistrement de l’image d’une personne dans un lieu privé sans consentement = délit (1 an et 45 000 €).</td></tr>
+          <tr><td>Code de procédure pénale, art. 60-1, 77-1-1, 99-3</td><td>Remise d’images aux enquêteurs uniquement sur réquisition écrite d’un OPJ (ou sur décision du juge). Tracer toute remise.</td></tr>
+          <tr><td>Code pénal, art. 223-6</td><td>Non-assistance à personne en danger (5 ans et 75 000 €) : alerter les secours sans délai.</td></tr>
+          <tr><td>Loi n° 78-17 du 6 janvier 1978 ; RGPD (UE 2016/679)</td><td>Protection des données personnelles pour les traitements associés (extractions, exports, registres).</td></tr>
+        </table>
+      </div></details>
+
+      <details class="ax"><summary>Règles de la main courante et du compte rendu</summary><div class="c">
+        <ul>
+          <li>Chronologique et horodatée (date, heure, caméra), rédigée au fil de l’eau.</li>
+          <li>Ni rature, ni blanc, ni suppression : une erreur se corrige par une ligne rectificative.</li>
+          <li>Faits uniquement : ce que l’on voit et ce que l’on fait. Pas de jugement de valeur (« ivre », « louche »), pas d’interprétation.</li>
+          <li>Identification de l’opérateur sur chaque ligne ; prise et fin de poste consignées.</li>
+          <li>Compte rendu : trame Qui – Quoi – Où – Quand – Comment – Combien – Pourquoi ; faits, mesures prises, suites à donner ; style neutre, phrases courtes, au passé.</li>
+        </ul>
+      </div></details>
+
+      <details class="ax"><summary>Procédure radio et alphabet phonétique</summary><div class="c">
+        <ul>
+          <li>Appel : « <b>indicatif appelé</b> de <b>indicatif appelant</b> » puis « à vous ». Réponse : « <b>indicatif appelant</b> de <b>indicatif appelé</b>, j’écoute ».</li>
+          <li>Messages courts, débit lent, voix posée. « Reçu » pour accuser réception, « répétez » si besoin, « terminé » pour clore.</li>
+          <li>Épeler les immatriculations et noms en alphabet phonétique ; énoncer les chiffres un par un.</li>
+          <li>Pas de nom de victime ou d’auteur en clair sur la radio ; pas de commentaire personnel.</li>
+        </ul>
+        <div class="phon">
+          <span><b>A</b> Alpha</span><span><b>B</b> Bravo</span><span><b>C</b> Charlie</span><span><b>D</b> Delta</span><span><b>E</b> Echo</span><span><b>F</b> Foxtrot</span><span><b>G</b> Golf</span><span><b>H</b> Hotel</span><span><b>I</b> India</span><span><b>J</b> Juliett</span><span><b>K</b> Kilo</span><span><b>L</b> Lima</span><span><b>M</b> Mike</span><span><b>N</b> November</span><span><b>O</b> Oscar</span><span><b>P</b> Papa</span><span><b>Q</b> Quebec</span><span><b>R</b> Romeo</span><span><b>S</b> Sierra</span><span><b>T</b> Tango</span><span><b>U</b> Uniform</span><span><b>V</b> Victor</span><span><b>W</b> Whiskey</span><span><b>X</b> X-ray</span><span><b>Y</b> Yankee</span><span><b>Z</b> Zulu</span>
+        </div>
+      </div></details>
+
+      <details class="ax"><summary>Signalement d’une personne ou d’un véhicule</summary><div class="c">
+        <p><b>Personne</b> : sexe, âge apparent, taille, corpulence, cheveux (couleur, longueur), pilosité, tenue de haut en bas (couvre-chef, haut, bas, chaussures), objets portés (sac, casque…), signes particuliers (lunettes, tatouage, démarche), attitude, direction et moyen de fuite, heure et caméra.</p>
+        <p style="margin-top:6px"><b>Véhicule</b> : type (citadine, utilitaire, deux-roues…), marque et modèle si possible, couleur, immatriculation même partielle (épelée), nombre d’occupants, dommages ou signes distinctifs, direction prise, heure et caméra.</p>
+      </div></details>
+
+      <details class="ax"><summary>Numéros d’urgence</summary><div class="c">
+        <table>
+          <tr><td>15</td><td>SAMU – urgences médicales</td></tr>
+          <tr><td>17</td><td>Police nationale / gendarmerie</td></tr>
+          <tr><td>18</td><td>Sapeurs-pompiers</td></tr>
+          <tr><td>112</td><td>Numéro d’urgence européen (tous services)</td></tr>
+          <tr><td>114</td><td>Urgences par SMS pour les personnes sourdes ou malentendantes</td></tr>
+          <tr><td>196</td><td>Secours en mer (CROSS)</td></tr>
+        </table>
+        <p class="hint" style="margin-top:6px">Message d’alerte : qui appelle, où exactement (commune, voie, repère, caméra), quoi, combien de victimes et état apparent, dangers persistants, puis répondre aux questions et ne raccrocher que sur consigne.</p>
+      </div></details>
+
+      <details class="ax"><summary>Conduite à tenir : objet ou colis abandonné</summary><div class="c">
+        <ul>
+          <li>Ne pas toucher, ne pas déplacer ; faire éloigner le public par l’agent présent sur place.</li>
+          <li>Alerter sans délai le responsable et la police (17) ; garder la visu permanente sur l’objet et sur la personne qui l’a déposé.</li>
+          <li>Décrire précisément l’objet (taille, couleur, forme) et la personne (signalement complet).</li>
+          <li>Consigner heure, caméra, actions et interlocuteurs ; préserver les images pour la réquisition.</li>
+        </ul>
+      </div></details>
+
+    </div>
+  </section>
+
+  <!-- Inventaire -->
+  <section class="sec" id="secInv">
+    <div class="sec-h"><h2>Inventaire du PC vidéo (prise de poste)</h2>
+      <div class="tools">
+        <button class="btn btn-ghost btn-sm" id="btnInvOk" type="button">Tout marquer « présent – fonctionne »</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-print="inv">Imprimer</button>
+      </div>
+    </div>
+    <div class="sec-b">
+      <div class="tablewrap">
+        <table class="register" id="invTable">
+          <thead><tr><th>N°</th><th>Équipement / document</th><th>Catégorie</th><th style="min-width:190px">État</th><th style="min-width:200px">Observations</th></tr></thead>
+          <tbody id="invBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+
+<!-- Fenêtre d’impression -->
+<div class="modal" id="printModal" hidden>
+  <div class="dialog sm" role="dialog" aria-labelledby="printTitle">
+    <div class="dialog-h"><h3 id="printTitle">Impression</h3><button class="x" type="button" data-close="printModal" aria-label="Fermer">×</button></div>
+    <div class="dialog-b">
+      <label class="field">Document à imprimer<select id="printKind">
+        <option value="mc">Main courante</option>
+        <option value="cr">Compte rendu</option>
+        <option value="comms">Journal des communications</option>
+        <option value="mails">Messagerie (reçus et envoyés)</option>
+        <option value="inv">Inventaire du PC vidéo</option>
+        <option value="debrief">Fiche de débriefing (formateur)</option>
+        <option value="all">Dossier complet de l’exercice</option>
+      </select></label>
+      <p class="hint">Le document s’ouvre dans la boîte de dialogue d’impression du navigateur (choisir « Enregistrer au format PDF » pour un fichier).</p>
+      <div class="actions"><button class="btn" id="btnDoPrint" type="button">Imprimer</button><button class="btn btn-ghost" type="button" data-close="printModal">Annuler</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Fenêtre formateur -->
+<div class="modal" id="trainerModal" hidden>
+  <div class="dialog" role="dialog" aria-labelledby="trTitle">
+    <div class="dialog-h"><h3 id="trTitle">Panneau formateur</h3>
+      <div class="actions"><button class="btn btn-ghost btn-sm" id="btnLock" type="button" hidden>Verrouiller</button><button class="x" type="button" data-close="trainerModal" aria-label="Fermer">×</button></div>
+    </div>
+    <div id="trLock" class="dialog-b">
+      <p>Saisissez le code formateur pour accéder au déroulé du scénario, aux injections et au débriefing.</p>
+      <div class="code"><label class="field">Code<input id="trCode" class="pwd" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label><button class="btn" id="btnUnlock" type="button">Déverrouiller</button></div>
+      <p class="hint" id="trErr"></p>
+    </div>
+    <div id="trPanel" hidden>
+      <div class="tabs" id="trTabs">
+        <button class="tab active" type="button" data-tab="trScen">Scénario</button>
+        <button class="tab" type="button" data-tab="trInj">Injection libre</button>
+        <button class="tab" type="button" data-tab="trDeb">Débriefing</button>
+        <button class="tab" type="button" data-tab="trSet">Paramètres</button>
+      </div>
+      <div class="dialog-b" id="trScen">
+        <div id="trScenInfo"></div>
+        <div class="evlist" id="trEvents"></div>
+        <h4>Journal horodaté de la session</h4>
+        <div class="jlog" id="trJournal"></div>
+      </div>
+      <div class="dialog-b" id="trInj" hidden>
+        <div class="row">
+          <label class="field">Type<select id="injType"><option value="radio">Appel radio</option><option value="tel">Appel téléphonique</option><option value="mail">Courriel</option><option value="cam">Événement caméra</option><option value="note">Note de service</option><option value="info">Information contextuelle</option></select></label>
+          <label class="field" id="injFromWrap">Correspondant<select id="injFrom"></select></label>
+          <label class="field" id="injCamWrap" hidden>Caméra<select id="injCam"></select></label>
+          <label class="field" id="injPresetWrap" hidden>Situation à afficher<select id="injPreset"></select></label>
+        </div>
+        <label class="field" id="injObjWrap" hidden>Objet / titre<input id="injObj"></label>
+        <label class="field">Texte<textarea id="injText" placeholder="Texte de l’appel, du courriel ou de la note (pour un événement caméra : résumé pour le journal formateur)."></textarea></label>
+        <div class="actions"><button class="btn" id="btnInject" type="button">Injecter maintenant</button><span class="hint">L’injection est horodatée à l’heure simulée en cours.</span></div>
+      </div>
+      <div class="dialog-b" id="trDeb" hidden>
+        <div class="metrics" id="trMetrics"></div>
+        <h4>Attendus du scénario</h4>
+        <div id="trChecks"></div>
+        <h4>Corrigé indicatif (main courante)</h4>
+        <div id="trCorrige"></div>
+        <label class="field">Commentaire du formateur<textarea id="trComment" placeholder="Points forts, axes de progrès…"></textarea></label>
+        <div class="actions"><button class="btn" type="button" data-print="debrief">Imprimer la fiche de débriefing</button></div>
+      </div>
+      <div class="dialog-b" id="trSet" hidden>
+        <h4>Affichage et sons</h4>
+        <div class="row">
+          <label class="field">Alarmes vidéo visibles par le stagiaire<select id="setAlerts"><option value="1">Oui (marqueur et notification)</option><option value="0">Non (le stagiaire doit balayer les caméras)</option></select></label>
+          <label class="field">Son des appels<select id="setSound"><option value="1">Activé</option><option value="0">Coupé</option></select></label>
+        </div>
+        <h4>Logo de l’en-tête</h4>
+        <div class="actions"><input type="file" id="logoFile" accept="image/*" hidden><button class="btn btn-ghost btn-sm" id="btnLogoLoad" type="button">Charger un logo</button><button class="btn btn-ghost btn-sm" id="btnLogoDel" type="button">Retirer le logo</button></div>
+        <h4>Plan des quartiers</h4>
+        <div class="actions"><input type="file" id="planFile" accept="image/*" hidden><button class="btn btn-ghost btn-sm" id="btnPlanLoad" type="button">Charger mon plan (image)</button><button class="btn btn-ghost btn-sm" id="btnPlanDel" type="button">Revenir au plan intégré</button><span class="hint">Avec un plan personnalisé, le bouton « Placer les caméras » apparaît sur l’écran 2 : sélectionnez une caméra puis touchez le plan.</span></div>
+        <h4>Images des caméras</h4>
+        <div class="row">
+          <label class="field">Caméra<select id="setCam"></select></label>
+          <div class="actions"><input type="file" id="camFile" accept="image/*" hidden><button class="btn btn-ghost btn-sm" id="btnCamLoad" type="button">Charger une photo</button><button class="btn btn-ghost btn-sm" id="btnCamDel" type="button">Revenir au schéma</button></div>
+        </div>
+        <div class="thumbgrid" id="setCamGrid"></div>
+        <h4>Notes de service permanentes</h4>
+        <div id="setNotes"></div>
+        <div class="row">
+          <label class="field">Titre<input id="setNoteTitle"></label>
+          <label class="field w2">Texte<textarea id="setNoteText"></textarea></label>
+        </div>
+        <div class="actions"><button class="btn btn-ghost btn-sm" id="btnNoteAdd" type="button">Ajouter la note</button></div>
+        <h4>Données locales</h4>
+        <div class="actions"><button class="btn btn-danger btn-sm" id="btnWipe" type="button">Effacer toutes les données enregistrées dans ce navigateur</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+/* ===================== DONNÉES DU SIMULATEUR ===================== */
+var CODE_FORMATEUR = '1234';
+var COMMUNE = 'Bellevue-les-Anses';
+
+var CAMERAS = [
+  {id:'C01', nom:'Mairie – parvis', quartier:'Centre-bourg', x:52, y:36, scene:'parvis'},
+  {id:'C02', nom:'Place du marché', quartier:'Centre-bourg', x:44, y:46, scene:'marche'},
+  {id:'C03', nom:'Rue de la République', quartier:'Centre-bourg', x:58, y:50, scene:'rue'},
+  {id:'C04', nom:'Gare routière', quartier:'Gare routière', x:36, y:58, scene:'gare'},
+  {id:'C05', nom:'Front de mer – quai', quartier:'Front de mer', x:50, y:79, scene:'quai'},
+  {id:'C06', nom:'Front de mer – bars', quartier:'Front de mer', x:63, y:77, scene:'bars'},
+  {id:'C07', nom:'Rond-point de la zone commerciale', quartier:'Zone commerciale', x:80, y:30, scene:'rondpoint'},
+  {id:'C08', nom:'Parking du centre commercial', quartier:'Zone commerciale', x:86, y:42, scene:'parking'},
+  {id:'C09', nom:'Cité des Flamboyants – entrée', quartier:'Cité des Flamboyants', x:18, y:30, scene:'cite'},
+  {id:'C10', nom:'Cité des Flamboyants – point de collecte', quartier:'Cité des Flamboyants', x:14, y:42, scene:'collecte'},
+  {id:'C11', nom:'Stade municipal', quartier:'Stade / Lycée', x:72, y:60, scene:'stade'},
+  {id:'C12', nom:'Lycée – arrêt de bus', quartier:'Stade / Lycée', x:80, y:70, scene:'lycee'}
+];
+var DAE = [{x:54, y:33, nom:'Hall de la mairie'}, {x:74, y:57, nom:'Stade municipal'}, {x:88, y:39, nom:'Centre commercial'}];
+
+var RADIO = [
+  {id:'PM 1', nom:'Patrouille de police municipale n° 1', ack:'Vidéo de PM 1 : reçu, on prend en compte. Terminé.'},
+  {id:'PM 2', nom:'Patrouille de police municipale n° 2', ack:'Vidéo de PM 2 : bien reçu, on se dirige. Terminé.'},
+  {id:'PM CHEF', nom:'Chef de service de la police municipale', ack:'Vidéo de PM CHEF : bien reçu, tenez-moi informé et consignez tout. Terminé.'},
+  {id:'ASVP 1', nom:'Agent de surveillance de la voie publique', ack:'Vidéo d’ASVP 1 : reçu, je me rends sur place. Terminé.'},
+  {id:'TECH 1', nom:'Services techniques (voirie, propreté)', ack:'Vidéo de TECH 1 : c’est noté. Terminé.'},
+  {id:'AGENT CC', nom:'Agent de sécurité du centre commercial', ack:'Vidéo d’AGENT CC : reçu, je regarde de mon côté. Terminé.'}
+];
+var TEL = [
+  {id:'17', nom:'Police nationale – CIC (17)', ack:'CIC : bien noté, un équipage est engagé. Rappelez-nous pour tout élément nouveau.'},
+  {id:'18', nom:'Sapeurs-pompiers – CTA (18)', ack:'CTA : c’est enregistré, un engin est engagé. Rappelez si l’état de la victime évolue.'},
+  {id:'15', nom:'SAMU – Centre 15', ack:'SAMU : bien reçu, moyens engagés. Restez disponible et surveillez l’évolution.'},
+  {id:'112', nom:'Numéro d’urgence européen (112)', ack:'Centre 112 : votre appel est transféré au service compétent.'},
+  {id:'STANDARD', nom:'Standard de la mairie', ack:'Standard : c’est noté, je transmets.'},
+  {id:'RESP CSU', nom:'Responsable du PC vidéo', ack:'Responsable : merci. Consignez tout en main courante et faites-moi un compte rendu écrit.'},
+  {id:'ASTREINTE', nom:'Élu d’astreinte', ack:'Élu d’astreinte : entendu, tenez-moi informé de l’évolution.'},
+  {id:'GARE', nom:'Accueil de la gare routière', ack:'Accueil gare : d’accord, j’applique vos consignes.'},
+  {id:'PC CC', nom:'PC sécurité du centre commercial', ack:'PC sécurité : bien reçu, nous regardons de notre côté.'}
+];
+var MAIL_CONTACTS = [
+  {id:'RESP CSU', nom:'Responsable du PC vidéo', adr:'pcvideo@bellevue-les-anses.fr'},
+  {id:'PM CHEF', nom:'Chef de service de la police municipale', adr:'police.municipale@bellevue-les-anses.fr'},
+  {id:'STANDARD', nom:'Standard de la mairie', adr:'accueil@bellevue-les-anses.fr'},
+  {id:'TECH', nom:'Services techniques', adr:'services.techniques@bellevue-les-anses.fr'},
+  {id:'DGS', nom:'Direction générale des services', adr:'dgs@bellevue-les-anses.fr'},
+  {id:'AUTRE', nom:'Autre destinataire', adr:''}
+];
+var CR_DEST = ['Responsable du PC vidéo', 'Chef de service de la police municipale', 'Direction générale des services', 'Maire / élu d’astreinte', 'Autre'];
+
+var PHRASES_RADIO = [
+  {l:'— choisir une phrase type —', t:''},
+  {l:'Accusé de réception', t:'{X} de Vidéo : reçu, à vous.'},
+  {l:'Prise en compte', t:'{X} de Vidéo : bien reçu, je prends en compte. Terminé.'},
+  {l:'Signalement d’un fait', t:'{X} de Vidéo : je vous signale [faits] à [lieu], caméra [n°], en cours. À vous.'},
+  {l:'Signalement d’une personne', t:'{X} de Vidéo : signalement : [sexe], [taille], [corpulence], [tenue de haut en bas], [objet porté], se dirige vers [direction]. À vous.'},
+  {l:'Signalement d’un véhicule', t:'{X} de Vidéo : véhicule [type] [couleur], immatriculation [épelée], [nombre] occupant(s), direction [lieu]. À vous.'},
+  {l:'Demande d’intervention', t:'{X} de Vidéo : demande d’intervention à [lieu], caméra [n°], pour [motif]. Urgent. À vous.'},
+  {l:'Maintien de la visu', t:'{X} de Vidéo : je conserve la visu et je vous tiens informé. Terminé.'}
+];
+var PHRASES_TEL = [
+  {l:'— choisir une phrase type —', t:''},
+  {l:'Alerte des secours / police', t:'Bonjour, opérateur vidéo du PC de ' + COMMUNE + '. Je vous signale [faits] à [lieu exact, repère]. [Nombre] personne(s) impliquée(s), [état apparent de la victime]. Je garde la visu ; je reste joignable au PC vidéo.'},
+  {l:'Réponse à une demande d’information', t:'Je ne suis pas autorisé à communiquer ces informations. Je transmets votre demande à mon responsable, qui vous recontactera.'},
+  {l:'Demande d’images', t:'Les enregistrements ne peuvent être remis que sur réquisition judiciaire écrite ou sur demande écrite de la direction. Je préserve les images et j’en informe mon responsable.'},
+  {l:'Consignes objet abandonné', t:'Ne touchez pas et n’ouvrez pas l’objet. Faites éloigner les personnes présentes, calmement, et restez à distance. La police est prévenue et arrive. Je garde la visu.'},
+  {l:'Point de situation', t:'Point de situation à [heure] : [situation actuelle], moyens présents : [liste]. Je vous rappelle si évolution.'}
+];
+
+var NATURES = ['— nature —','Prise de poste','Fin de poste','Appel radio reçu','Appel téléphonique reçu','Transmission radio','Appel téléphonique émis','Courriel reçu / envoyé','Vol / vol à l’arraché','Rixe / agression','Accident de la circulation','Dépôt sauvage','Objet / colis abandonné','Individu au comportement suspect','Personne en difficulté / malaise','Rassemblement','Incident technique','Visite au PC vidéo','Ligne rectificative','Autre'];
+
+var INVENTORY = [
+  {n:'Mur d’images (écrans de visualisation)', c:'Visualisation'},
+  {n:'Poste opérateur (unité centrale, clavier, souris)', c:'Visualisation'},
+  {n:'Pupitre / joystick de commande PTZ', c:'Visualisation'},
+  {n:'Enregistreur (NVR) – espace disque et durée de conservation', c:'Enregistrement'},
+  {n:'Onduleur (alimentation secourue)', c:'Énergie'},
+  {n:'Poste radio fixe (base) – indicatif VIDÉO', c:'Communication'},
+  {n:'Radios portatives et chargeurs', c:'Communication'},
+  {n:'Téléphone fixe et liste des numéros d’urgence', c:'Communication'},
+  {n:'Main courante (registre)', c:'Documents'},
+  {n:'Registre des enregistrements et des extractions', c:'Documents'},
+  {n:'Classeur des consignes et notes de service', c:'Documents'},
+  {n:'Plan d’implantation des caméras', c:'Documents'},
+  {n:'Formulaires de réquisition / fiches de remise d’images', c:'Documents'},
+  {n:'Supports d’extraction vierges (clés USB, DVD) et scellés', c:'Enregistrement'},
+  {n:'Extincteur et trousse de secours du local', c:'Sécurité du local'},
+  {n:'Contrôle d’accès du local (porte, badge, registre des visiteurs)', c:'Sécurité du local'},
+  {n:'Éclairage et climatisation du local', c:'Local'}
+];
+var INV_ETATS = ['Non vérifié','Présent – fonctionne','Présent – défaut','Absent'];
+
+var NOTES_DEFAUT = [
+  {id:'n1', titre:'Consignes permanentes du PC vidéo', texte:'Toute visualisation ciblée, toute transmission et toute mesure prise sont consignées dans la main courante avec l’heure et la caméra.\nAucune image n’est extraite, copiée ou transmise sans réquisition judiciaire écrite ou demande écrite de la direction.\nLe local est réservé aux personnes habilitées ; tout visiteur est inscrit au registre.'},
+  {id:'n2', titre:'Prise et fin de poste', texte:'Vérifier l’inventaire du PC, l’état du mur d’images et de l’enregistreur, la radio et le téléphone.\nConsigner la prise de poste et la fin de poste en main courante.\nRendre compte au responsable de tout dysfonctionnement.'},
+  {id:'n3', titre:'Communications', texte:'Radio : indicatif « VIDÉO », messages brefs et factuels, aucune donnée nominative en clair.\nTéléphone : en cas d’urgence vitale, appeler directement le 15, le 17 ou le 18, puis informer la police municipale et le responsable.'}
+];
+
+/* Situations prédéfinies pour l’injection libre (événement caméra) */
+var PRESETS = [
+  {id:'ras', l:'Rien à signaler (scène calme, jour)', amb:'jour', actors:[]},
+  {id:'nuit', l:'Scène calme, mode nuit', amb:'nuit', actors:[]},
+  {id:'ind1', l:'Individu seul (homme, casquette noire, sac à dos)', amb:'jour', actors:[{k:'p',x:820,y:720,top:'#444',bot:'#555',hat:'casquette',hatc:'#111',item:'sacados',pose:'debout',lab:'A'}]},
+  {id:'ind2', l:'Deux individus en discussion', amb:'jour', actors:[{k:'p',x:740,y:720,top:'#eee',bot:'#333',hair:'court',pose:'debout',dir:'d',lab:'A'},{k:'p',x:860,y:720,top:'#3b5b8a',bot:'#777',hat:'casquette',hatc:'#eee',pose:'debout',dir:'g',lab:'B'}]},
+  {id:'groupe', l:'Groupe de cinq personnes', amb:'jour', actors:[{k:'p',x:600,y:700,top:'#999',bot:'#333'},{k:'p',x:700,y:730,top:'#eee',bot:'#555',hat:'casquette',hatc:'#111'},{k:'p',x:800,y:710,top:'#a33',bot:'#222'},{k:'p',x:900,y:740,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long'},{k:'p',x:980,y:700,top:'#222',bot:'#666'}]},
+  {id:'rixe', l:'Altercation entre deux personnes', amb:'jour', actors:[{k:'p',x:760,y:730,top:'#a33',bot:'#222',hat:'capuche',hatc:'#222',item:'bouteille',dir:'d',lab:'A'},{k:'p',x:860,y:730,top:'#eee',bot:'#222',dir:'g',lab:'B'},{k:'p',x:1000,y:720,top:'#999',bot:'#444',dir:'g'}]},
+  {id:'sol', l:'Personne au sol, deux personnes autour', amb:'jour', actors:[{k:'p',x:800,y:760,top:'#3b5b8a',bot:'#ccb',pose:'sol',lab:'V'},{k:'p',x:700,y:740,top:'#eee',bot:'#444',pose:'penche',dir:'d'},{k:'p',x:920,y:720,top:'#999',bot:'#333',item:'tel',dir:'g'}]},
+  {id:'veh', l:'Citadine grise stationnée, moteur tournant', amb:'jour', actors:[{k:'v',kind:'citadine',x:900,y:780,color:'#8e9196',plate:'GH-402-ZT',dir:'g',lab:'véhicule'}]},
+  {id:'util', l:'Utilitaire blanc en mouvement', amb:'jour', actors:[{k:'v',kind:'utilitaire',x:1000,y:790,color:'#f2f2f2',plate:'FY-2··-ZT',dir:'d',lab:'utilitaire'}]},
+  {id:'sac', l:'Sac à dos abandonné', amb:'jour', actors:[{k:'o',kind:'sac',x:780,y:740,lab:'sac'}]},
+  {id:'depot', l:'Dépôt sauvage (gravats, électroménager)', amb:'jour', actors:[{k:'o',kind:'depot',x:700,y:770}]},
+  {id:'secours', l:'Secours sur place (VSAV et agents)', amb:'jour', actors:[{k:'v',kind:'vsav',x:400,y:800,color:'#e8e8e8',dir:'d',lab:'VSAV'},{k:'p',x:760,y:740,top:'#eee',bot:'#333',pose:'sol',lab:'V'},{k:'p',x:700,y:720,top:'#c8702a',bot:'#333',item:'gilet',pose:'penche',dir:'d'},{k:'p',x:860,y:720,top:'#c8702a',bot:'#333',item:'gilet',dir:'g'}]}
+];
+
+/* ===================== SCÉNARIOS ===================== */
+var SCENARIOS = [
+{
+  id:'vol', titre:'Vol à l’arraché sur le marché', heure:'10:10', amb:'jour',
+  contexte:'Samedi matin, marché hebdomadaire place du marché (C02), forte affluence. Patrouille PM 1 en pédestre dans le centre-bourg, PM 2 au repos, PM CHEF joignable par radio.',
+  events:[
+    {t:0, type:'info', texte:'Prise de poste 10 h 10. Marché en cours place du marché (C02), affluence importante.'},
+    {t:35, type:'radio', de:'PM 1', texte:'Vidéo de PM 1 : nous sommes en patrouille pédestre rue de la République, rien à signaler pour le moment, à vous.'},
+    {t:80, type:'cam', cam:'C02', resume:'Individu A (homme, env. 1,80 m, casquette noire, t-shirt blanc, short gris) s’approche par l’arrière d’une femme portant un sac à main noir.', scene:{amb:'jour', actors:[{k:'p',x:700,y:710,top:'#9fb7d4',bot:'#777',sex:'F',hair:'long',item:'sac',dir:'g'},{k:'p',x:880,y:700,top:'#f4f4f4',bot:'#8a8a8a',hat:'casquette',hatc:'#111',pose:'marche',dir:'g',lab:'A'}]}},
+    {t:115, type:'cam', cam:'C02', resume:'Vol à l’arraché : A s’empare du sac et s’enfuit en courant vers l’ouest (sortie de la place, direction gare routière). Victime au sol, aidée par des passants.', scene:{amb:'jour', actors:[{k:'p',x:720,y:740,top:'#9fb7d4',bot:'#777',sex:'F',hair:'long',pose:'assis'},{k:'p',x:840,y:720,top:'#ddd',bot:'#444',pose:'penche',dir:'g'},{k:'p',x:400,y:690,top:'#f4f4f4',bot:'#8a8a8a',hat:'casquette',hatc:'#111',item:'sac',pose:'marche',dir:'g',lab:'A'}]}},
+    {t:120, type:'tel', de:'STANDARD', texte:'Standard de la mairie : j’ai un commerçant du marché en ligne. Une dame vient de se faire arracher son sac sur la place, l’auteur est parti en courant vers la gare routière. Vous voyez quelque chose ?'},
+    {t:165, type:'cam', cam:'C04', resume:'A arrive à la gare routière, casquette retirée (cheveux ras), sac noir sous le bras, se dirige vers le quai n° 3.', scene:{amb:'jour', actors:[{k:'p',x:640,y:720,top:'#f4f4f4',bot:'#8a8a8a',hair:'ras',item:'sac',pose:'marche',dir:'g',lab:'A'}]}},
+    {t:230, type:'radio', de:'PM 1', texte:'Vidéo de PM 1 : on nous signale un vol à l’arraché sur le marché. Vous avez une visu sur l’auteur ? À vous.'},
+    {t:285, type:'cam', cam:'C04', resume:'A monte dans le bus de la ligne 12 (direction zone commerciale), départ imminent.', scene:{amb:'jour', actors:[{k:'v',kind:'bus',x:1050,y:790,color:'#d9dbdf',dir:'g',lab:'Ligne 12'},{k:'p',x:700,y:745,top:'#f4f4f4',bot:'#8a8a8a',hair:'ras',item:'sac',pose:'marche',dir:'d',lab:'A'}]}},
+    {t:320, type:'cam', cam:'C04', resume:'Le bus ligne 12 quitte la gare routière (10 h 15 environ) vers la zone commerciale, A à bord.', scene:{amb:'jour', actors:[{k:'v',kind:'bus',x:1420,y:790,color:'#d9dbdf',dir:'d',lab:'Ligne 12'}]}},
+    {t:350, type:'mail', de:'RESP CSU', objet:'Vol à l’arraché – place du marché', texte:'Bonjour,\n\nMerci de me transmettre avant la fin de votre vacation un compte rendu écrit sur le vol signalé ce matin place du marché : chronologie horodatée, caméras utilisées, personnes informées.\nVeillez à la préservation des enregistrements des caméras concernées.\n\nLe responsable du PC vidéo'},
+    {t:400, type:'radio', de:'PM CHEF', texte:'Vidéo de PM CHEF : la victime est prise en charge, la police nationale se déplace. Préservez les images de C02 et C04 entre 10 h 05 et 10 h 30 pour la réquisition, et transmettez-moi le signalement complet de l’auteur. À vous.'},
+    {t:470, type:'cam', cam:'C07', resume:'Le bus ligne 12 franchit le rond-point de la zone commerciale.', scene:{amb:'jour', actors:[{k:'v',kind:'bus',x:700,y:800,color:'#d9dbdf',dir:'d',lab:'Ligne 12'}]}}
+  ],
+  attendus:[
+    'Répond aux appels radio avec la procédure (indicatifs, « reçu », « terminé »).',
+    'Détecte le vol sur C02 et alerte immédiatement PM 1 / PM CHEF (ou le 17), sans attendre l’appel du standard.',
+    'Donne un signalement complet et factuel de l’auteur (sexe, taille, tenue de haut en bas, objet emporté, direction de fuite).',
+    'Assure le suivi caméra C02 → C04 et signale la montée dans le bus ligne 12 avec l’heure et la direction.',
+    'Renseigne la main courante au fil de l’eau (horodatage, caméra, faits, mesures).',
+    'Préserve les enregistrements C02/C04 sans extraire ni transmettre d’images hors réquisition.',
+    'Répond au standard sans divulguer d’éléments d’enquête et oriente vers la police.',
+    'Rédige un compte rendu écrit structuré au responsable du PC vidéo.'
+  ],
+  corrige:[
+    {t:0, cam:'—', faits:'Prise de poste. Vérification du mur d’images et de l’inventaire : RAS. Marché en cours place du marché.', mesures:'—'},
+    {t:80, cam:'C02', faits:'Individu (H, env. 1,80 m, casquette noire, t-shirt blanc, short gris) s’approche d’une femme portant un sac à main noir.', mesures:'Surveillance renforcée C02.'},
+    {t:115, cam:'C02', faits:'Vol à l’arraché : l’individu s’empare du sac et s’enfuit en courant vers l’ouest (direction gare routière). Victime au sol, aidée par des passants.', mesures:'Alerte radio PM 1 et PM CHEF avec signalement complet. Suivi caméra engagé.'},
+    {t:165, cam:'C04', faits:'Individu retrouvé gare routière, casquette retirée (cheveux ras), sac noir sous le bras, se dirige vers le quai 3.', mesures:'Information transmise à PM 1.'},
+    {t:320, cam:'C04', faits:'L’individu monte dans le bus ligne 12 direction zone commerciale ; départ 10 h 15.', mesures:'PM CHEF informé (ligne, heure, direction). Préservation des enregistrements C02 et C04 (10 h 05 – 10 h 30).'},
+    {t:400, cam:'—', faits:'Demande du responsable et de PM CHEF : signalement transmis, compte rendu écrit à rédiger.', mesures:'Compte rendu rédigé et transmis en fin de vacation.'}
+  ]
+},
+{
+  id:'rixe', titre:'Rixe à la sortie des bars du front de mer', heure:'01:35', amb:'nuit',
+  contexte:'Nuit du samedi au dimanche. Forte affluence devant les bars du front de mer (C06). Patrouille PM 2 de service jusqu’à 3 h, PM CHEF d’astreinte. Caméras en mode nuit.',
+  events:[
+    {t:0, type:'info', texte:'Prise de poste 1 h 35. Fin de soirée, sortie des bars du front de mer (C06).'},
+    {t:30, type:'cam', cam:'C06', resume:'Groupe de cinq à six personnes devant le bar du quai, discussion animée, gestes vifs.', scene:{amb:'nuit', actors:[{k:'p',x:640,y:720,top:'#999',bot:'#333',dir:'d'},{k:'p',x:740,y:735,top:'#a33',bot:'#222',hat:'capuche',hatc:'#222',dir:'d'},{k:'p',x:840,y:725,top:'#eee',bot:'#222',dir:'g'},{k:'p',x:930,y:745,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long',dir:'g'},{k:'p',x:1010,y:715,top:'#222',bot:'#666',hat:'casquette',hatc:'#eee',dir:'g'}]}},
+    {t:70, type:'radio', de:'PM 2', texte:'Vidéo de PM 2 : nous sommes au rond-point de la zone commerciale sur un contrôle de véhicule, à vous.'},
+    {t:110, type:'cam', cam:'C06', resume:'Altercation : B (sweat rouge à capuche, pantalon noir, bouteille en main) et C (chemise blanche, pantalon noir) se poussent ; un tiers s’interpose.', scene:{amb:'nuit', actors:[{k:'p',x:760,y:735,top:'#a33',bot:'#222',hat:'capuche',hatc:'#222',item:'bouteille',dir:'d',lab:'B'},{k:'p',x:850,y:735,top:'#eee',bot:'#222',dir:'g',lab:'C'},{k:'p',x:940,y:725,top:'#999',bot:'#333',dir:'g'},{k:'p',x:600,y:720,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long',dir:'d'},{k:'p',x:1040,y:715,top:'#222',bot:'#666',hat:'casquette',hatc:'#eee',dir:'g',lab:'D'}]}},
+    {t:140, type:'cam', cam:'C06', resume:'Coups échangés. C est au sol et ne se relève pas, trois personnes autour. B s’éloigne vers l’ouest (quai, C05) avec D (casquette blanche, t-shirt noir).', scene:{amb:'nuit', actors:[{k:'p',x:840,y:765,top:'#eee',bot:'#222',pose:'sol',lab:'C'},{k:'p',x:740,y:740,top:'#999',bot:'#333',pose:'penche',dir:'d'},{k:'p',x:950,y:725,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long',item:'tel',dir:'g'},{k:'p',x:380,y:700,top:'#a33',bot:'#222',hat:'capuche',hatc:'#222',pose:'marche',dir:'g',lab:'B'},{k:'p',x:470,y:710,top:'#222',bot:'#666',hat:'casquette',hatc:'#eee',pose:'marche',dir:'g',lab:'D'}]}},
+    {t:190, type:'tel', de:'17', texte:'CIC police nationale : nous recevons plusieurs appels pour une bagarre sur le front de mer. Vous avez une visu ? Combien de personnes impliquées, des armes, des blessés ? Précisez-nous le lieu exact.'},
+    {t:245, type:'cam', cam:'C05', resume:'B et D rejoignent une citadine blanche 3 portes stationnée sur le quai (immatriculation partielle lisible : EF-5··-ZT).', scene:{amb:'nuit', actors:[{k:'v',kind:'citadine',x:1080,y:775,color:'#f0f0f0',plate:'EF-5··-ZT',dir:'d',lab:'citadine'},{k:'p',x:940,y:730,top:'#a33',bot:'#222',hat:'capuche',hatc:'#222',pose:'marche',dir:'d',lab:'B'},{k:'p',x:860,y:720,top:'#222',bot:'#666',hat:'casquette',hatc:'#eee',pose:'marche',dir:'d',lab:'D'}]}},
+    {t:290, type:'cam', cam:'C05', resume:'La citadine blanche quitte le quai vers l’est (direction stade / lycée) vers 1 h 40, deux occupants.', scene:{amb:'nuit', actors:[{k:'v',kind:'citadine',x:1460,y:775,color:'#f0f0f0',plate:'EF-5··-ZT',dir:'d',lab:'citadine'}]}},
+    {t:320, type:'cam', cam:'C06', resume:'C toujours au sol, une personne agenouillée près de lui ; le groupe se disperse.', scene:{amb:'nuit', actors:[{k:'p',x:840,y:765,top:'#eee',bot:'#222',pose:'sol',lab:'C'},{k:'p',x:740,y:740,top:'#999',bot:'#333',pose:'penche',dir:'d'},{k:'p',x:1200,y:700,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long',pose:'marche',dir:'d'}]}},
+    {t:350, type:'radio', de:'PM 2', texte:'Vidéo de PM 2 : on se rend sur le front de mer, quatre minutes. Les secours sont-ils demandés ? Tenez-nous informés. À vous.'},
+    {t:420, type:'cam', cam:'C06', resume:'Arrivée de PM 2 puis d’un VSAV des sapeurs-pompiers ; prise en charge de C.', scene:{amb:'nuit', actors:[{k:'v',kind:'vsav',x:380,y:800,color:'#e8e8e8',dir:'d',lab:'VSAV'},{k:'p',x:840,y:765,top:'#eee',bot:'#222',pose:'sol',lab:'C'},{k:'p',x:740,y:740,top:'#c8702a',bot:'#333',item:'gilet',pose:'penche',dir:'d'},{k:'p',x:940,y:725,top:'#c8702a',bot:'#333',item:'gilet',dir:'g'}]}},
+    {t:450, type:'mail', de:'RESP CSU', objet:'Rixe front de mer – consignes', texte:'Rappel : en cas de blessé au sol, le déclenchement des secours (18 ou 15) est à demander sans attendre si le CIC ne le confirme pas.\nPréservez les images C06 et C05 et rédigez un compte rendu détaillé avant la fin de la vacation.\n\nLe responsable du PC vidéo'}
+  ],
+  attendus:[
+    'Alerte le 17 ou PM 2 dès les premiers coups, sans attendre l’appel du CIC.',
+    'Demande les secours (18/15) pour la personne au sol et décrit son état apparent sans diagnostic (bouge / ne bouge pas, entourée).',
+    'Répond au CIC de façon précise et factuelle : lieu exact, nombre de personnes, objet tenu (bouteille), blessé.',
+    'Signalement des auteurs B et D (tenues, direction) et du véhicule (citadine blanche 3 portes, immatriculation partielle, direction est).',
+    'Suivi caméra C06 → C05, puis retour sur la victime.',
+    'Aucun qualificatif subjectif (« ivres », « voyous ») dans la main courante.',
+    'Préservation des enregistrements et compte rendu écrit.'
+  ],
+  corrige:[
+    {t:0, cam:'—', faits:'Prise de poste. Mur d’images en mode nuit, RAS. Affluence devant les bars du front de mer.', mesures:'—'},
+    {t:110, cam:'C06', faits:'Altercation devant le bar du quai entre B (sweat rouge à capuche, pantalon noir, bouteille en main) et C (chemise blanche, pantalon noir) ; un tiers s’interpose.', mesures:'Appel 17 (CIC) : signalement, demande d’équipage. PM 2 informée par radio.'},
+    {t:140, cam:'C06', faits:'Coups portés. C au sol, ne se relève pas, trois personnes autour. B et D (casquette blanche, t-shirt noir) s’éloignent vers l’ouest (quai).', mesures:'Demande de secours au 18 pour blessé au sol. Suivi caméra C05.'},
+    {t:290, cam:'C05', faits:'B et D montent dans une citadine blanche 3 portes (EF-5··-ZT) ; départ vers l’est à 1 h 40.', mesures:'CIC et PM 2 informés (véhicule, direction, heure). Préservation des images C06 et C05.'},
+    {t:420, cam:'C06', faits:'Arrivée de PM 2 puis du VSAV ; prise en charge du blessé.', mesures:'Compte rendu écrit au responsable.'}
+  ]
+},
+{
+  id:'accident', titre:'Accident de la circulation au rond-point de la zone commerciale', heure:'17:30', amb:'pluie',
+  contexte:'Vendredi, heure de pointe, chaussée humide après une averse. PM 1 en patrouille véhicule dans le centre-bourg ; TECH 1 (services techniques) en intervention en zone commerciale.',
+  events:[
+    {t:0, type:'info', texte:'Prise de poste 17 h 30. Trafic dense, chaussée humide.'},
+    {t:40, type:'cam', cam:'C07', resume:'Collision entre un scooter et un utilitaire blanc au rond-point. Conducteur du scooter au sol (casque), l’utilitaire s’arrête 20 m plus loin, feux de détresse.', scene:{amb:'pluie', actors:[{k:'v',kind:'scooter',x:760,y:790,color:'#555',dir:'d',pose:'sol'},{k:'p',x:860,y:770,top:'#444',bot:'#333',hat:'casque',hatc:'#ccc',pose:'sol',lab:'V'},{k:'v',kind:'utilitaire',x:1180,y:760,color:'#f2f2f2',plate:'FY-2··-ZT',dir:'d',lab:'utilitaire'}]}},
+    {t:65, type:'radio', de:'TECH 1', texte:'Vidéo de TECH 1 : on a un accrochage au rond-point de la zone commerciale, un scooter au sol, ça bouchonne. Vous voyez ? À vous.'},
+    {t:110, type:'cam', cam:'C07', resume:'L’utilitaire blanc redémarre et quitte le rond-point vers le centre commercial (sud-est) sans s’arrêter auprès du blessé. Deux passants portent assistance.', scene:{amb:'pluie', actors:[{k:'v',kind:'scooter',x:760,y:790,color:'#555',dir:'d',pose:'sol'},{k:'p',x:860,y:770,top:'#444',bot:'#333',hat:'casque',hatc:'#ccc',pose:'sol',lab:'V'},{k:'p',x:760,y:745,top:'#eee',bot:'#444',pose:'penche',dir:'d'},{k:'p',x:980,y:730,top:'#999',bot:'#333',item:'tel',dir:'g'},{k:'v',kind:'utilitaire',x:1480,y:745,color:'#f2f2f2',plate:'FY-2··-ZT',dir:'d',lab:'utilitaire'}]}},
+    {t:150, type:'cam', cam:'C08', resume:'L’utilitaire blanc (sans marquage, immatriculation partielle FY-2··-ZT) entre sur le parking du centre commercial et se gare en bout d’allée.', scene:{amb:'pluie', actors:[{k:'v',kind:'utilitaire',x:1000,y:770,color:'#f2f2f2',plate:'FY-2··-ZT',dir:'g',lab:'utilitaire'}]}},
+    {t:190, type:'tel', de:'18', texte:'CTA des sapeurs-pompiers : nous sommes engagés pour un accident au rond-point de la zone commerciale. Précisez-nous la position exacte, le nombre de véhicules et l’état de la victime : est-elle consciente, bouge-t-elle ?'},
+    {t:250, type:'radio', de:'PM 1', texte:'Vidéo de PM 1 : on arrive sur l’accident, le second véhicule n’est plus sur place. Vous avez une direction, une immatriculation ? À vous.'},
+    {t:300, type:'cam', cam:'C08', resume:'Le conducteur (homme, 40 ans environ, gilet orange, pantalon gris, casquette grise) descend et se dirige vers l’entrée du centre commercial.', scene:{amb:'pluie', actors:[{k:'v',kind:'utilitaire',x:1000,y:770,color:'#f2f2f2',plate:'FY-2··-ZT',dir:'g',lab:'utilitaire'},{k:'p',x:700,y:725,top:'#777',bot:'#8a8a8a',hat:'casquette',hatc:'#999',item:'gilet',pose:'marche',dir:'g',lab:'A'}]}},
+    {t:340, type:'cam', cam:'C07', resume:'Arrivée du VSAV et de la patrouille PM 1 ; mise en sécurité du blessé, circulation déviée.', scene:{amb:'pluie', actors:[{k:'v',kind:'vsav',x:420,y:800,color:'#e8e8e8',dir:'d',lab:'VSAV'},{k:'v',kind:'scooter',x:760,y:790,color:'#555',dir:'d',pose:'sol'},{k:'p',x:860,y:770,top:'#444',bot:'#333',hat:'casque',hatc:'#ccc',pose:'sol',lab:'V'},{k:'p',x:760,y:745,top:'#c8702a',bot:'#333',item:'gilet',pose:'penche',dir:'d'},{k:'p',x:1000,y:730,top:'#c8702a',bot:'#333',item:'gilet',dir:'g'},{k:'o',kind:'cone',x:1150,y:800},{k:'o',kind:'cone',x:600,y:810}]}},
+    {t:380, type:'mail', de:'STANDARD', objet:'Demande d’images – journaliste', texte:'Bonjour,\n\nUn journaliste de la radio locale souhaite obtenir les images de l’accident du rond-point pour son édition de ce soir. Pouvez-vous lui envoyer un extrait par mail à l’adresse qu’il nous a laissée ?\n\nMerci, le standard'},
+    {t:420, type:'radio', de:'PM CHEF', texte:'Vidéo de PM CHEF : si vous avez la plaque et la position du véhicule, transmettez-les au 17. Préservez les images C07 et C08, la police nationale fera une réquisition. Compte rendu attendu. Terminé.'}
+  ],
+  attendus:[
+    'Alerte immédiatement les secours (18/15) et PM 1 avec la position exacte (rond-point zone commerciale, C07) et l’état apparent de la victime.',
+    'Décrit la situation au CTA sans diagnostic : nombre de véhicules, victime au sol, bouge / ne bouge pas, dangers (circulation).',
+    'Repère le départ de l’utilitaire (délit de fuite) et le suit C07 → C08 ; relève immatriculation partielle, couleur, type, direction.',
+    'Transmet la localisation du véhicule et le signalement du conducteur à PM 1 et au 17.',
+    'Refuse la transmission d’images au journaliste (images réservées aux autorités sur réquisition) et en informe le responsable.',
+    'Main courante horodatée et compte rendu écrit.'
+  ],
+  corrige:[
+    {t:0, cam:'—', faits:'Prise de poste. Trafic dense, chaussée humide. RAS.', mesures:'—'},
+    {t:40, cam:'C07', faits:'Collision scooter / utilitaire blanc au rond-point de la zone commerciale. Conducteur du scooter au sol, casqué, ne se relève pas. Utilitaire arrêté 20 m plus loin.', mesures:'Appel 18 : position exacte, 2 véhicules, 1 victime au sol. PM 1 informée par radio.'},
+    {t:110, cam:'C07', faits:'L’utilitaire redémarre et quitte le rond-point vers le sud-est sans porter assistance. Deux passants auprès de la victime.', mesures:'Suivi caméra C08. PM 1 et 17 informés du départ du véhicule.'},
+    {t:150, cam:'C08', faits:'Utilitaire blanc sans marquage, FY-2··-ZT (partielle), stationné en bout d’allée du parking du centre commercial.', mesures:'Position et immatriculation transmises à PM 1 et au 17. Préservation des images C07 et C08.'},
+    {t:300, cam:'C08', faits:'Conducteur (H, 40 ans env., gilet orange, pantalon gris, casquette grise) entre dans le centre commercial.', mesures:'Signalement transmis à PM 1 et au 17 ; AGENT CC informé.'},
+    {t:380, cam:'—', faits:'Demande d’images par un journaliste via le standard.', mesures:'Refus : images réservées aux autorités sur réquisition. Responsable informé. Compte rendu rédigé.'}
+  ]
+},
+{
+  id:'depot', titre:'Dépôt sauvage au point de collecte des Flamboyants', heure:'06:15', amb:'jour',
+  contexte:'Prise de poste à 6 h 15. Note de service du jour : recrudescence de dépôts sauvages au point de collecte de la cité des Flamboyants (C10), surveillance renforcée demandée. ASVP 1 prend son service à 6 h 30.',
+  events:[
+    {t:0, type:'note', titre:'Surveillance du point de collecte des Flamboyants', texte:'Suite à plusieurs dépôts sauvages constatés cette semaine devant les bacs de la cité des Flamboyants, les opérateurs assureront une surveillance renforcée de C10 et C09 entre 5 h et 8 h. Tout dépôt est consigné (heure, véhicule, auteurs) et signalé sans délai à la police municipale. Le chef de service de la police municipale.'},
+    {t:25, type:'cam', cam:'C10', resume:'Un fourgon benne bleu (ridelles, plateau chargé) arrive et se gare le long des bacs. Immatriculation lisible : DK-738-ZT.', scene:{amb:'jour', actors:[{k:'v',kind:'fourgon',x:900,y:775,color:'#3b5b8a',plate:'DK-738-ZT',dir:'g',lab:'fourgon'}]}},
+    {t:55, type:'cam', cam:'C10', resume:'Deux hommes (E : casquette grise, t-shirt gris, jean ; F : t-shirt blanc, pantalon noir, 1,70 m environ) déchargent gravats, planches et un réfrigérateur devant les bacs.', scene:{amb:'jour', actors:[{k:'v',kind:'fourgon',x:900,y:775,color:'#3b5b8a',plate:'DK-738-ZT',dir:'g',lab:'fourgon'},{k:'p',x:640,y:745,top:'#8a8a8a',bot:'#3b5b8a',hat:'casquette',hatc:'#999',pose:'penche',dir:'g',lab:'E'},{k:'p',x:740,y:730,top:'#f4f4f4',bot:'#222',dir:'g',lab:'F'},{k:'o',kind:'depot',x:560,y:770}]}},
+    {t:95, type:'radio', de:'ASVP 1', texte:'Vidéo d’ASVP 1 : je prends mon service, je suis côté centre-bourg, à vous.'},
+    {t:140, type:'cam', cam:'C10', resume:'Le fourgon repart vers l’entrée de la cité (C09), plateau vide, deux occupants. Dépôt laissé sur place.', scene:{amb:'jour', actors:[{k:'v',kind:'fourgon',x:1380,y:770,color:'#3b5b8a',plate:'DK-738-ZT',dir:'d',lab:'fourgon'},{k:'o',kind:'depot',x:560,y:770}]}},
+    {t:170, type:'cam', cam:'C09', resume:'Le fourgon bleu DK-738-ZT sort de la cité des Flamboyants et prend la route nationale vers l’ouest.', scene:{amb:'jour', actors:[{k:'v',kind:'fourgon',x:760,y:780,color:'#3b5b8a',plate:'DK-738-ZT',dir:'g',lab:'fourgon'}]}},
+    {t:230, type:'tel', de:'STANDARD', texte:'Standard de la mairie : j’ai un habitant des Flamboyants très énervé, il dit qu’on a encore tout jeté devant les bacs et il veut le numéro de la plaque du camion pour « aller régler ça lui-même ». Vous pouvez lui donner ?'},
+    {t:290, type:'radio', de:'PM CHEF', texte:'Vidéo de PM CHEF : pour le dépôt sauvage des Flamboyants, préservez les images C10 et C09 et faites-moi un compte rendu avec le véhicule et les auteurs, on va verbaliser et signaler au parquet. À vous.'},
+    {t:340, type:'mail', de:'RESP CSU', objet:'Dépôt sauvage – Flamboyants', texte:'Merci de joindre à votre compte rendu les horaires exacts de début et de fin du dépôt, les caméras utilisées et la description du véhicule et des personnes.\nRappel : aucune image ne sort du PC sans réquisition ou demande écrite de la direction.\n\nLe responsable du PC vidéo'},
+    {t:380, type:'radio', de:'TECH 1', texte:'Vidéo de TECH 1 : on est appelés pour nettoyer le point de collecte des Flamboyants. On peut y aller, ou vous avez besoin que ça reste en l’état ? À vous.'}
+  ],
+  attendus:[
+    'Constate, horodate et décrit le dépôt (nature des déchets), le véhicule (type, couleur, immatriculation épelée) et les deux auteurs.',
+    'Informe ASVP 1 et PM CHEF sans délai ; suit le véhicule C10 → C09 et donne sa direction.',
+    'Refuse de communiquer l’immatriculation au particulier et oriente le standard vers la police municipale.',
+    'Demande à TECH 1 d’attendre la constatation par la police municipale avant nettoyage (ou en réfère à PM CHEF).',
+    'Préserve les enregistrements ; compte rendu écrit complet (horaires, caméras, descriptions).'
+  ],
+  corrige:[
+    {t:0, cam:'—', faits:'Prise de poste. Note de service : surveillance renforcée du point de collecte des Flamboyants (C10, C09).', mesures:'Surveillance ciblée engagée.'},
+    {t:25, cam:'C10', faits:'Fourgon benne bleu, plateau chargé, immatriculé DK-738-ZT (Delta Kilo – 7 3 8 – Zulu Tango), se gare le long des bacs.', mesures:'Surveillance renforcée.'},
+    {t:55, cam:'C10', faits:'Deux hommes (E : casquette grise, t-shirt gris, jean ; F : t-shirt blanc, pantalon noir, 1,70 m env.) déchargent gravats, planches et un réfrigérateur devant les bacs.', mesures:'PM CHEF informé par radio (dépôt en cours, véhicule, auteurs).'},
+    {t:170, cam:'C09', faits:'Le fourgon DK-738-ZT quitte la cité et prend la route nationale vers l’ouest, deux occupants.', mesures:'ASVP 1 informé. Préservation des images C10 et C09 (6 h 15 – 6 h 20).'},
+    {t:230, cam:'—', faits:'Demande d’un particulier (via standard) d’obtenir l’immatriculation du véhicule.', mesures:'Refus ; standard orienté vers la police municipale.'},
+    {t:380, cam:'—', faits:'TECH 1 demande à nettoyer le point de collecte.', mesures:'Demande d’attendre la constatation par la PM ; PM CHEF consulté. Compte rendu rédigé.'}
+  ]
+},
+{
+  id:'colis', titre:'Sac abandonné à la gare routière (posture Vigipirate)', heure:'12:00', amb:'jour',
+  contexte:'Posture Vigipirate « sécurité renforcée – risque attentat ». PM 1 en poste fixe devant la mairie (C01). Accueil de la gare routière joignable par téléphone.',
+  events:[
+    {t:0, type:'info', texte:'Prise de poste 12 h. Posture Vigipirate « sécurité renforcée – risque attentat ».'},
+    {t:35, type:'cam', cam:'C04', resume:'Individu G (homme, 1,75 m environ, veste noire malgré la chaleur, casquette noire, sac à dos noir volumineux) s’arrête près d’un banc du quai 2 et regarde autour de lui.', scene:{amb:'jour', actors:[{k:'p',x:760,y:720,top:'#222',bot:'#555',hat:'casquette',hatc:'#111',item:'sacados',dir:'d',lab:'G'}]}},
+    {t:80, type:'cam', cam:'C04', resume:'G pose le sac à dos au pied du banc et s’éloigne vers la rue de la République (est), sans le sac.', scene:{amb:'jour', actors:[{k:'o',kind:'sac',x:760,y:742,lab:'sac'},{k:'p',x:1180,y:700,top:'#222',bot:'#555',hat:'casquette',hatc:'#111',pose:'marche',dir:'d',lab:'G'}]}},
+    {t:115, type:'radio', de:'PM 1', texte:'Vidéo de PM 1 : nous sommes en poste fixe devant la mairie, rien à signaler, à vous.'},
+    {t:145, type:'cam', cam:'C03', resume:'G remonte la rue de la République d’un pas rapide, téléphone à la main.', scene:{amb:'jour', actors:[{k:'p',x:800,y:730,top:'#222',bot:'#555',hat:'casquette',hatc:'#111',item:'tel',pose:'marche',dir:'d',lab:'G'}]}},
+    {t:190, type:'tel', de:'GARE', texte:'Accueil de la gare routière : bonjour, il y a un sac à dos noir abandonné près du banc du quai 2, personne ne le réclame. Qu’est-ce que je fais ? Je l’ouvre pour voir ?'},
+    {t:250, type:'cam', cam:'C04', resume:'Deux usagers et un enfant s’approchent du sac, l’un se penche dessus.', scene:{amb:'jour', actors:[{k:'o',kind:'sac',x:760,y:742,lab:'sac'},{k:'p',x:680,y:735,top:'#999',bot:'#444',pose:'penche',dir:'d'},{k:'p',x:860,y:725,top:'#3b5b8a',bot:'#777',sex:'F',hair:'long',dir:'g'},{k:'p',x:900,y:735,s:0.6,top:'#eee',bot:'#555',dir:'g'}]}},
+    {t:300, type:'radio', de:'PM CHEF', texte:'Vidéo de PM CHEF : la police nationale est prévenue, PM 1 se rend sur la gare routière pour établir un périmètre. Gardez la visu sur le sac et sur l’individu, et donnez-moi son signalement complet. À vous.'},
+    {t:360, type:'cam', cam:'C03', resume:'G revient en courant vers la gare routière.', scene:{amb:'jour', actors:[{k:'p',x:700,y:735,top:'#222',bot:'#555',hat:'casquette',hatc:'#111',pose:'marche',dir:'g',lab:'G'}]}},
+    {t:390, type:'cam', cam:'C04', resume:'G récupère son sac en présence de PM 1 : il l’avait oublié en allant au distributeur. Levée de doute par PM 1.', scene:{amb:'jour', actors:[{k:'p',x:760,y:730,top:'#222',bot:'#555',hat:'casquette',hatc:'#111',item:'sacados',dir:'g',lab:'G'},{k:'p',x:660,y:725,top:'#c8702a',bot:'#333',item:'gilet',dir:'d'},{k:'p',x:880,y:720,top:'#c8702a',bot:'#333',item:'gilet',dir:'g'}]}},
+    {t:430, type:'mail', de:'RESP CSU', objet:'Objet abandonné – gare routière', texte:'Même en cas de levée de doute, tout objet abandonné est traité comme suspect jusqu’à vérification.\nMerci de consigner la chronologie complète (dépôt, alerte, consignes données, périmètre, levée de doute) et de rédiger un compte rendu.\n\nLe responsable du PC vidéo'}
+  ],
+  attendus:[
+    'Traite le sac comme suspect dès son abandon : alerte PM 1 / PM CHEF (ou 17) sans attendre l’appel de l’accueil.',
+    'Donne à l’accueil des consignes claires : ne pas toucher, ne pas ouvrir, éloigner les usagers, attendre la police.',
+    'Signalement complet de G et suivi caméra C04 → C03 → C04.',
+    'Garde la visu permanente sur l’objet et signale les personnes qui s’en approchent.',
+    'Main courante complète jusqu’à la levée de doute ; compte rendu.'
+  ],
+  corrige:[
+    {t:0, cam:'—', faits:'Prise de poste. Posture Vigipirate « sécurité renforcée – risque attentat ». RAS.', mesures:'—'},
+    {t:35, cam:'C04', faits:'Individu (H, 1,75 m env., veste noire, casquette noire, sac à dos noir volumineux) s’arrête près du banc du quai 2, regarde autour de lui.', mesures:'Surveillance renforcée.'},
+    {t:80, cam:'C04', faits:'L’individu dépose le sac à dos au pied du banc et s’éloigne vers l’est (rue de la République) sans le sac.', mesures:'Alerte radio PM 1 et PM CHEF : objet abandonné, signalement de l’individu. Suivi caméra C03.'},
+    {t:190, cam:'C04', faits:'Appel de l’accueil de la gare : sac signalé, demande de conduite à tenir.', mesures:'Consignes : ne pas toucher ni ouvrir, éloigner les usagers, attendre PM 1. Visu maintenue sur le sac.'},
+    {t:250, cam:'C04', faits:'Deux usagers et un enfant s’approchent du sac.', mesures:'Accueil rappelé pour faire éloigner les personnes. PM CHEF informé.'},
+    {t:390, cam:'C04', faits:'L’individu revient et récupère le sac en présence de PM 1 ; levée de doute.', mesures:'PM CHEF informé. Préservation des images C04 et C03. Compte rendu rédigé.'}
+  ]
+},
+{
+  id:'malaise', titre:'Personne en détresse à l’arrêt de bus du lycée', heure:'15:05', amb:'jour',
+  contexte:'Sortie des cours à 15 h 15, forte affluence à l’arrêt de bus du lycée (C12). PM 2 en contrôle au stade (C11). Défibrillateurs (DAE) : hall de la mairie, stade municipal, centre commercial.',
+  events:[
+    {t:0, type:'info', texte:'Prise de poste 15 h 05. Sortie des cours imminente, affluence attendue à l’arrêt de bus du lycée (C12).'},
+    {t:40, type:'cam', cam:'C12', resume:'Un homme âgé (70 ans environ, chemise bleu clair, pantalon beige, canne) titube puis s’assoit sur le trottoir, à l’arrêt de bus.', scene:{amb:'jour', actors:[{k:'p',x:760,y:745,top:'#9fb7d4',bot:'#d8cdb0',hair:'blanc',item:'canne',pose:'assis',lab:'V'},{k:'p',x:900,y:720,s:0.9,top:'#eee',bot:'#3b5b8a',dir:'g'},{k:'p',x:1000,y:735,s:0.9,top:'#a33',bot:'#333',item:'sacados',dir:'g'}]}},
+    {t:75, type:'cam', cam:'C12', resume:'L’homme s’allonge sur le trottoir et ne bouge plus. Un lycéen se penche sur lui, un autre filme avec son téléphone ; une dizaine de jeunes autour.', scene:{amb:'jour', actors:[{k:'p',x:780,y:770,top:'#9fb7d4',bot:'#d8cdb0',hair:'blanc',pose:'sol',lab:'V'},{k:'p',x:680,y:745,s:0.9,top:'#eee',bot:'#3b5b8a',pose:'penche',dir:'d'},{k:'p',x:900,y:735,s:0.9,top:'#a33',bot:'#333',item:'tel',dir:'g'},{k:'p',x:1000,y:720,s:0.85,top:'#999',bot:'#444',dir:'g'},{k:'p',x:1080,y:740,s:0.9,top:'#3b5b8a',bot:'#222',sex:'F',hair:'long',dir:'g'},{k:'p',x:560,y:720,s:0.85,top:'#222',bot:'#777',dir:'d'},{k:'p',x:1160,y:715,s:0.85,top:'#eee',bot:'#555',item:'sacados',dir:'g'}]}},
+    {t:95, type:'radio', de:'PM 2', texte:'Vidéo de PM 2 : on termine un contrôle au stade, disponibles dans cinq minutes, à vous.'},
+    {t:145, type:'tel', de:'15', texte:'SAMU – Centre 15 : nous avons un jeune en ligne pour un homme inconscient à l’arrêt de bus du lycée. Vous confirmez ? Est-ce qu’il respire, est-ce qu’il bouge ? Y a-t-il un défibrillateur à proximité ?'},
+    {t:200, type:'cam', cam:'C12', resume:'Deux lycéens mettent l’homme sur le côté ; le groupe reste à distance, un jeune reste au téléphone.', scene:{amb:'jour', actors:[{k:'p',x:780,y:770,top:'#9fb7d4',bot:'#d8cdb0',hair:'blanc',pose:'sol',lab:'V'},{k:'p',x:680,y:745,s:0.9,top:'#eee',bot:'#3b5b8a',pose:'penche',dir:'d'},{k:'p',x:880,y:745,s:0.9,top:'#999',bot:'#444',pose:'penche',dir:'g'},{k:'p',x:1000,y:730,s:0.9,top:'#a33',bot:'#333',item:'tel',dir:'g'},{k:'p',x:1120,y:720,s:0.85,top:'#3b5b8a',bot:'#222',sex:'F',hair:'long',dir:'g'},{k:'p',x:520,y:715,s:0.85,top:'#222',bot:'#777',dir:'d'}]}},
+    {t:240, type:'radio', de:'PM 2', texte:'Vidéo de PM 2 : on arrive sur l’arrêt de bus du lycée, à vous.'},
+    {t:290, type:'cam', cam:'C12', resume:'Arrivée de PM 2 puis du VSAV ; prise en charge de la victime, les lycéens sont écartés.', scene:{amb:'jour', actors:[{k:'v',kind:'vsav',x:380,y:800,color:'#e8e8e8',dir:'d',lab:'VSAV'},{k:'p',x:780,y:770,top:'#9fb7d4',bot:'#d8cdb0',hair:'blanc',pose:'sol',lab:'V'},{k:'p',x:680,y:745,top:'#c8702a',bot:'#333',item:'gilet',pose:'penche',dir:'d'},{k:'p',x:900,y:735,top:'#c8702a',bot:'#333',item:'gilet',dir:'g'},{k:'p',x:1200,y:715,s:0.85,top:'#3b5b8a',bot:'#222',sex:'F',hair:'long',dir:'g'},{k:'p',x:1280,y:730,s:0.85,top:'#a33',bot:'#333',item:'tel',dir:'g'}]}},
+    {t:350, type:'mail', de:'RESP CSU', objet:'Intervention devant le lycée', texte:'Merci de me faire un compte rendu de l’intervention devant le lycée.\nDes élèves ont filmé la scène : rappel que nos images ne sont ni diffusées ni commentées à l’extérieur, et que toute demande passe par la direction.\n\nLe responsable du PC vidéo'}
+  ],
+  attendus:[
+    'Alerte les secours (15/18) dès la chute, sans attendre l’appel du SAMU ; informe PM 2.',
+    'Renseigne le 15 avec des éléments factuels : position exacte, victime allongée, bouge / ne bouge pas, personnes présentes ; sans diagnostic.',
+    'Indique le DAE le plus proche (stade municipal, C11) et oriente PM 2 pour l’apporter.',
+    'Guide les secours : accès à l’arrêt de bus, affluence, nécessité d’écarter les lycéens.',
+    'Main courante horodatée ; compte rendu ; aucune extraction d’images hors demande officielle.'
+  ],
+  corrige:[
+    {t:0, cam:'—', faits:'Prise de poste. Sortie des cours à 15 h 15. RAS.', mesures:'—'},
+    {t:40, cam:'C12', faits:'Homme âgé (70 ans env., chemise bleu clair, pantalon beige, canne) titube et s’assoit sur le trottoir de l’arrêt de bus du lycée.', mesures:'Surveillance renforcée C12.'},
+    {t:75, cam:'C12', faits:'L’homme s’allonge et ne bouge plus ; lycéens autour, l’un se penche, un autre filme.', mesures:'Appel 15 : position exacte, homme allongé immobile, entouré. PM 2 informée par radio ; DAE le plus proche : stade (C11).'},
+    {t:145, cam:'C12', faits:'Appel du SAMU pour confirmation.', mesures:'Éléments factuels transmis (position, état apparent, DAE au stade). PM 2 orientée pour apporter le DAE.'},
+    {t:290, cam:'C12', faits:'Arrivée de PM 2 puis du VSAV ; prise en charge de la victime, public écarté.', mesures:'Compte rendu rédigé. Aucune image extraite.'}
+  ]
+}
+];
+
+/* ===================== RENDU DES SCÈNES (SVG) ===================== */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function r1(n){ return Math.round(n*10)/10; }
+function rect(x,y,w,h,f,rx,extra){ return '<rect x="'+r1(x)+'" y="'+r1(y)+'" width="'+r1(w)+'" height="'+r1(h)+'" fill="'+f+'"'+(rx?' rx="'+r1(rx)+'"':'')+(extra||'')+'/>'; }
+function circle(cx,cy,r,f,op){ return '<circle cx="'+r1(cx)+'" cy="'+r1(cy)+'" r="'+r1(r)+'" fill="'+f+'"'+(op!=null?' opacity="'+op+'"':'')+'/>'; }
+function ellipse(cx,cy,rx,ry,f,op){ return '<ellipse cx="'+r1(cx)+'" cy="'+r1(cy)+'" rx="'+r1(rx)+'" ry="'+r1(ry)+'" fill="'+f+'"'+(op!=null?' opacity="'+op+'"':'')+'/>'; }
+function poly(pts,f,extra){ return '<polygon points="'+pts.map(function(p){return r1(p[0])+','+r1(p[1]);}).join(' ')+'" fill="'+f+'"'+(extra||'')+'/>'; }
+function line(x1,y1,x2,y2,st,w,op){ return '<line x1="'+r1(x1)+'" y1="'+r1(y1)+'" x2="'+r1(x2)+'" y2="'+r1(y2)+'" stroke="'+st+'" stroke-width="'+(w||2)+'" stroke-linecap="round"'+(op!=null?' opacity="'+op+'"':'')+'/>'; }
+function txt(x,y,s,size,f,anchor,weight,extra){ return '<text x="'+r1(x)+'" y="'+r1(y)+'" font-size="'+size+'" fill="'+f+'" text-anchor="'+(anchor||'middle')+'" font-family="-apple-system,Helvetica,Arial,sans-serif"'+(weight?' font-weight="'+weight+'"':'')+(extra||'')+'>'+esc(s)+'</text>'; }
+function srand(i){ var x=Math.sin(i*127.1+311.7)*43758.5453; return x-Math.floor(x); }
+
+var ROAD='#6b7076', WALK='#9fa4a9', CURB='#55595e', INK='#3a3d42';
+
+function skyLayer(night,rain){ return rect(0,0,1600,430, night?'#1e2531':(rain?'#9aa0a6':'#c4c8cd')); }
+function groundLayer(o){ o=o||{}; var s='';
+  s+=rect(0,420,1600,480,ROAD);
+  s+=rect(0,420,1600,60,WALK); s+=rect(0,478,1600,4,CURB);
+  s+=rect(0,800,1600,100,WALK); s+=rect(0,798,1600,4,CURB);
+  if(o.dash){ for(var x=20;x<1600;x+=120) s+=rect(x,636,60,6,'#d7d9dc'); }
+  if(o.zebra){ for(var z=0;z<10;z++) s+=rect(o.zebra+z*40,490,22,300,'#d7d9dc'); }
+  return s; }
+function facade(x,w,h,color,night,o){ o=o||{}; var s=''; var top=420-h;
+  s+=rect(x-4,top-8,w+8,8,'#4b4f54'); s+=rect(x,top,w,h,color);
+  var row=0; for(var y=top+22;y<420-34;y+=38,row++){ var col=0; for(var wx=x+16;wx<x+w-26;wx+=46,col++){ var lit=night && ((row*7+col*13+Math.round(x))%3===0); s+=rect(wx,y,22,24,lit?'#e9d9a0':(night?'#2a2f36':'#dfe3e7'),2); } }
+  if(o.door){ s+=rect(x+w/2-18,420-56,36,56,'#4b4f54',3); }
+  if(o.awning){ s+=poly([[x,420-90],[x+w,420-90],[x+w-10,420-62],[x+10,420-62]],o.awning); }
+  if(o.sign){ s+=rect(x+w/2-70,420-120,140,26,'#2f3338',3); s+=txt(x+w/2,420-101,o.sign,18,'#f2f2f2','middle',600); }
+  return s; }
+function lamp(x,night){ var s=rect(x-3,250,6,170,INK)+rect(x-16,244,32,8,INK);
+  if(night){ s+=circle(x,252,90,'#f5e6b8',0.10)+circle(x,252,40,'#f5e6b8',0.18)+ellipse(x,470,160,26,'#f5e6b8',0.08); }
+  return s; }
+function tree(x,y,sc){ sc=sc||1; var s=rect(x-6*sc,y-70*sc,12*sc,70*sc,'#5a4a3a');
+  s+=circle(x-22*sc,y-82*sc,30*sc,'#6f8468')+circle(x+20*sc,y-90*sc,34*sc,'#7a9070')+circle(x,y-112*sc,36*sc,'#86997b'); return s; }
+function ambient(list){ return list.map(function(p){ return drawActor(p); }).join(''); }
+function busShelter(x){ var s=rect(x-100,290,200,10,INK)+rect(x-96,300,192,112,'#dde1e5',0,' opacity="0.85"')+rect(x-100,300,6,120,INK)+rect(x+94,300,6,120,INK)+rect(x-70,380,140,8,'#5a5d61')+rect(x-66,388,6,32,'#5a5d61')+rect(x+60,388,6,32,'#5a5d61');
+  s+=rect(x+120,270,6,150,INK)+rect(x+104,262,40,26,'#2f3338',3)+txt(x+124,281,'BUS',14,'#fff','middle',700); return s; }
+function bins(x){ var s=''; for(var i=0;i<3;i++){ var bx=x+i*84; s+=rect(bx,336,72,84,'#5f6a7a',4)+rect(bx-3,330,78,10,'#45505f',3)+rect(bx+6,352,60,4,'#7c8797')+circle(bx+14,420,7,'#333')+circle(bx+58,420,7,'#333'); }
+  s+=rect(x+40,250,6,86,INK)+rect(x-10,230,160,28,'#2f3338',3)+txt(x+70,250,'Point de collecte',14,'#fff','middle',600); return s; }
+function sea(night){ var s=rect(0,300,1600,120,night?'#2b3a48':'#6a7f90'); for(var i=0;i<14;i++){ var y=312+i*8; s+=line(0,y,1600,y,night?'#34475a':'#7d93a5',1.2,0.6); } s+=rect(0,418,1600,10,'#7d8187'); for(var b=120;b<1600;b+=260){ s+=rect(b-7,398,14,22,'#4a4d52',3); } return s; }
+function fence(x1,x2,y){ var s=rect(x1,y-70,x2-x1,4,'#6a6e73')+rect(x1,y-30,x2-x1,4,'#6a6e73'); for(var x=x1;x<=x2;x+=30){ s+=rect(x-2,y-80,4,80,'#6a6e73'); } return s; }
+
+var BACKGROUNDS = {
+  parvis:function(n){ return facade(430,740,230,'#e4e2dd',n,{door:true,sign:'MAIRIE'})+rect(430,414,740,6,'#c9c7c2')+rect(410,408,780,6,'#c9c7c2')+rect(1180,150,6,270,INK)+rect(1186,150,60,38,'#3b5b8a')+rect(1246,150,60,38,'#f2f2f2')+rect(1306,150,60,38,'#a8413d')+facade(60,300,160,'#d6d8da',n)+facade(1250,300,140,'#cfd2d5',n)+tree(380,420,0.9)+tree(1230,420,0.9)+lamp(600,n)+lamp(1020,n)+groundLayer({zebra:700})+ambient([{k:'p',x:300,y:690,top:'#999',bot:'#444',dir:'d'},{k:'p',x:1320,y:760,top:'#ccc',bot:'#333',sex:'F',hair:'long',dir:'g'}]); },
+  marche:function(n){ var s=facade(40,520,170,'#d9d7d2',n,{awning:'#9fb0c0'})+facade(600,420,210,'#e0ddd6',n,{awning:'#b3a08c'})+facade(1060,500,150,'#d4d6d8',n,{awning:'#9fb0c0'})+lamp(560,n)+lamp(1040,n)+groundLayer({});
+    for(var i=0;i<5;i++){ var x=200+i*300; s+=poly([[x-80,300],[x+80,300],[x+95,350],[x-95,350]],i%2?'#d8d8d8':'#b9c7d3')+rect(x-85,350,170,14,'#8a6f55')+rect(x-78,364,8,56,'#6b5744')+rect(x+70,364,8,56,'#6b5744')+rect(x-60,330,40,20,'#c8a24a',2)+rect(x-10,332,50,18,'#7c9a5a',2)+rect(x+45,328,28,22,'#b55',2); }
+    return s+ambient([{k:'p',x:260,y:560,top:'#999',bot:'#444',dir:'d'},{k:'p',x:1100,y:580,top:'#ddd',bot:'#555',sex:'F',hair:'long',item:'sac',dir:'g'},{k:'p',x:1400,y:690,top:'#777',bot:'#333',dir:'g'},{k:'p',x:180,y:720,top:'#bbb',bot:'#555',sex:'F',hair:'long',dir:'d'}]); },
+  rue:function(n){ var s=''; var cols=['#e3e1dc','#d8dadd','#e6e0d4','#d2d5d8','#e1dfda']; for(var i=0;i<5;i++){ s+=facade(i*330-20,310,150+((i*37)%70),cols[i],n,{awning:i%2?'#9fb0c0':'#b3a08c',door:true}); } s+=lamp(300,n)+lamp(800,n)+lamp(1300,n)+groundLayer({dash:true,zebra:1240});
+    return s+ambient([{k:'p',x:420,y:560,top:'#999',bot:'#444',dir:'g'},{k:'v',kind:'citadine',x:1200,y:600,color:'#8e9196',dir:'g'},{k:'p',x:1480,y:720,top:'#ccc',bot:'#333',sex:'F',hair:'long',dir:'g'}]); },
+  gare:function(n){ var s=facade(0,1600,120,'#cfd3d7',n)+busShelter(420)+busShelter(1000)+rect(1240,270,6,150,INK)+rect(1200,262,86,26,'#2f3338',3)+txt(1243,281,'Quai 3',13,'#fff','middle',600)+rect(380,262,86,26,'#2f3338',3)+txt(423,281,'Quai 1',13,'#fff','middle',600)+rect(960,262,86,26,'#2f3338',3)+txt(1003,281,'Quai 2',13,'#fff','middle',600)+lamp(700,n)+lamp(1400,n)+groundLayer({});
+    s+=rect(700,350,46,70,'#4b4f54',4)+rect(708,362,30,28,'#9fb7d4',2)+txt(723,412,'DAB',10,'#fff','middle',600);
+    return s+ambient([{k:'p',x:460,y:560,top:'#999',bot:'#444',dir:'d'},{k:'p',x:1040,y:570,top:'#ddd',bot:'#555',sex:'F',hair:'long',item:'sacados',dir:'g'},{k:'p',x:1380,y:730,top:'#777',bot:'#333',dir:'g'}]); },
+  quai:function(n){ var s=sea(n)+rect(300,360,140,40,'#dfe3e7',6)+rect(330,340,80,22,'#5a5d61',3)+rect(460,370,30,6,INK)+lamp(500,n)+lamp(1100,n)+groundLayer({});
+    return s+ambient([{k:'p',x:900,y:560,top:'#999',bot:'#444',dir:'g'},{k:'v',kind:'citadine',x:300,y:600,color:'#6c7177',dir:'d'}]); },
+  bars:function(n){ var s=facade(40,480,190,'#e6e0d4',n,{awning:'#b3a08c',sign:'BAR DU QUAI',door:true})+facade(560,420,170,'#d9d7d2',n,{awning:'#9fb0c0',door:true})+facade(1020,540,200,'#e0ddd6',n,{awning:'#a8413d',sign:'SNACK',door:true})+lamp(520,n)+lamp(1000,n)+groundLayer({});
+    for(var i=0;i<4;i++){ var x=120+i*120; s+=circle(x,470,22,'#d7d9dc')+rect(x-3,470,6,20,'#5a5d61')+rect(x-40,462,14,20,'#5a5d61',2)+rect(x+26,462,14,20,'#5a5d61',2); }
+    for(var j=0;j<3;j++){ var x2=1120+j*130; s+=circle(x2,470,22,'#d7d9dc')+rect(x2-3,470,6,20,'#5a5d61')+rect(x2-40,462,14,20,'#5a5d61',2)+rect(x2+26,462,14,20,'#5a5d61',2); }
+    return s+ambient([{k:'p',x:250,y:570,top:'#999',bot:'#444',dir:'d'},{k:'p',x:1300,y:580,top:'#ddd',bot:'#555',sex:'F',hair:'long',dir:'g'}]); },
+  rondpoint:function(n){ var s=facade(0,420,140,'#d2d5d8',n)+facade(1180,420,160,'#cfd3d7',n,{sign:'ZONE COMMERCIALE'})+tree(520,420,0.8)+tree(1080,420,0.8)+lamp(800,n)+groundLayer({});
+    s+=ellipse(800,600,260,80,'#7f8f78')+ellipse(800,600,180,52,'#98a68e')+rect(794,520,12,60,INK)+circle(800,512,22,'#3b5b8a')+poly([[792,512],[812,500],[812,524]],'#fff');
+    for(var a=0;a<12;a++){ var ang=a/12*Math.PI*2; s+=rect(800+Math.cos(ang)*330-14,600+Math.sin(ang)*105-3,28,6,'#d7d9dc'); }
+    return s+ambient([{k:'v',kind:'citadine',x:260,y:560,color:'#8e9196',dir:'d'},{k:'v',kind:'citadine',x:1380,y:640,color:'#3a3d42',dir:'g'}]); },
+  parking:function(n){ var s=facade(0,1600,200,'#d6d8da',n,{sign:'CENTRE COMMERCIAL',door:true})+lamp(400,n)+lamp(1200,n)+groundLayer({}); for(var x=60;x<1600;x+=170){ s+=rect(x,500,8,160,'#d7d9dc'); }
+    return s+ambient([{k:'v',kind:'citadine',x:230,y:600,color:'#8e9196',dir:'g'},{k:'v',kind:'citadine',x:570,y:600,color:'#3a3d42',dir:'g'},{k:'v',kind:'citadine',x:1420,y:600,color:'#f0f0f0',dir:'g'},{k:'p',x:900,y:580,top:'#ccc',bot:'#444',sex:'F',hair:'long',item:'sac',dir:'g'}]); },
+  cite:function(n){ var s=facade(80,360,330,'#d3d6da',n)+facade(500,300,290,'#cfd2d6',n)+facade(1120,420,360,'#d6d9dd',n)+tree(430,420,0.9)+tree(900,420,1)+tree(1020,420,0.8)+lamp(700,n)+lamp(1500,n)+groundLayer({dash:true})+rect(840,330,6,90,INK)+rect(760,300,166,30,'#2f3338',3)+txt(843,321,'Cité des Flamboyants',13,'#fff','middle',600);
+    return s+ambient([{k:'p',x:300,y:560,top:'#999',bot:'#444',dir:'d'},{k:'v',kind:'citadine',x:1350,y:600,color:'#8e9196',dir:'g'}]); },
+  collecte:function(n){ var s=facade(0,520,300,'#d3d6da',n)+facade(1100,500,250,'#cfd2d6',n)+tree(600,420,0.9)+tree(1000,420,0.9)+bins(640)+lamp(400,n)+lamp(1300,n)+groundLayer({});
+    return s+ambient([{k:'p',x:1380,y:570,top:'#999',bot:'#444',dir:'g'}]); },
+  stade:function(n){ var s=rect(0,300,1600,120,'#7a9a74')+rect(0,300,1600,6,'#dfe3e7'); for(var x=100;x<1600;x+=300) s+=rect(x,300,4,120,'#dfe3e7'); s+=rect(640,316,120,70,'none',0,' stroke="#f2f2f2" stroke-width="5"')+fence(0,1600,420)+lamp(300,n)+lamp(1300,n)+groundLayer({})+rect(760,230,6,90,INK)+rect(690,200,146,30,'#2f3338',3)+txt(763,221,'Stade municipal',13,'#fff','middle',600);
+    return s+ambient([{k:'p',x:500,y:560,top:'#999',bot:'#444',item:'sacados',dir:'d'},{k:'v',kind:'citadine',x:1300,y:600,color:'#f0f0f0',dir:'g'}]); },
+  lycee:function(n){ var s=facade(200,900,180,'#e0ddd6',n,{door:true,sign:'LYCÉE'})+fence(0,1600,420)+busShelter(1250)+tree(120,420,0.9)+lamp(700,n)+groundLayer({zebra:400});
+    return s+ambient([{k:'p',x:560,y:560,top:'#999',bot:'#444',item:'sacados',dir:'d'},{k:'p',x:1500,y:580,top:'#ddd',bot:'#555',sex:'F',hair:'long',item:'sacados',dir:'g'}]); }
+};
+
+function scaleFor(y,s){ return s || (0.45+Math.max(0,Math.min(1,(y-420)/480))*0.9); }
+
+function drawActor(a){ if(!a) return ''; if(a.k==='v') return vehicle(a); if(a.k==='o') return objectShape(a); return person(a); }
+
+function tagLabel(x,y,lab,sub,s){ if(!lab && !sub) return ''; var fs=Math.max(13,16*s); var w=Math.max(lab?lab.length:0, sub?sub.length:0)*fs*0.62+16; var h=sub?fs*2.4:fs*1.5; var r='';
+  r+=rect(x-w/2,y-h,w,h,'#ffffff',4,' stroke="#262626" stroke-width="1.2" opacity="0.95"');
+  if(lab) r+=txt(x,y-h+fs*1.1,lab,fs,'#262626','middle',700);
+  if(sub) r+=txt(x,y-fs*0.4,sub,fs*0.9,'#262626','middle',600,' font-family="Menlo,Consolas,monospace"');
+  return r; }
+
+function person(p){ var x=p.x||800, y=p.y||700, s=scaleFor(y,p.s), top=p.top||'#999', bot=p.bot||'#444', skin=p.skin||'#c9a27e', d=(p.dir==='g')?-1:1, g='';
+  g+=ellipse(x,y+3*s,(p.pose==='sol'?95:24)*s,8*s,'#000',0.28);
+  if(p.pose==='sol'){ var hx=x-72*s*d;
+    g+=rect(x-60*s*d-(d<0?70*s:0)+(d<0?0:0),y-30*s,70*s,26*s,top,6*s);
+    g+=rect(d>0?x+10*s:x-80*s,y-26*s,70*s,20*s,bot,5*s);
+    if(p.item==='gilet') g+=rect(d>0?x-60*s:x-10*s,y-30*s,70*s,26*s,'#e07a2b',6*s);
+    g+=circle(hx,y-18*s,14*s,skin);
+    if(p.hat==='casque') g+=circle(hx,y-20*s,16*s,p.hatc||'#ccc',0.9); else if(p.hair!=='ras') g+=ellipse(hx-4*s*d,y-24*s,13*s,9*s,p.hair==='blanc'?'#e8e8e8':'#2a2a2a');
+    g+=tagLabel(x,y-50*s,p.lab,null,s); return '<g>'+g+'</g>'; }
+  var H=170*s, hy=y-H+14*s, hr=14*s, bw=(p.sex==='F'?32:38)*s;
+  if(p.pose==='assis'){ var ty=y-110*s; g+=rect(x-bw/2,ty-16*s,bw,64*s,top,8*s); g+=rect(d>0?x:x-46*s,y-46*s,46*s,14*s,bot,4*s); g+=rect(d>0?x+34*s:x-46*s,y-40*s,12*s,40*s,bot,3*s); g+=rect(x-bw/2-9*s,ty-10*s,10*s,50*s,skin,4*s); g+=rect(x+bw/2-1*s,ty-10*s,10*s,50*s,skin,4*s); g+=circle(x,ty-30*s,hr,skin);
+    g+=hairAndHat(x,ty-30*s,hr,p,d,s); if(p.item==='canne') g+=line(x+d*28*s,ty,x+d*34*s,y,'#5b4636',4*s); if(p.item==='gilet') g+=rect(x-bw/2,ty-16*s,bw,64*s,'#e07a2b',8*s);
+    g+=tagLabel(x,ty-56*s,p.lab,null,s); return '<g>'+g+'</g>'; }
+  var lean=p.pose==='penche'?d*32:0, pivot='rotate('+lean+' '+r1(x)+' '+r1(y-72*s)+')';
+  var body='';
+  body+=rect(x-bw/2,y-140*s,bw,70*s,top,8*s);
+  if(p.item==='gilet'){ body+=rect(x-bw/2,y-140*s,bw,70*s,'#e07a2b',8*s)+rect(x-bw/2,y-118*s,bw,6*s,'#eee')+rect(x-bw/2,y-100*s,bw,6*s,'#eee'); }
+  body+=rect(x-bw/2-10*s,y-136*s,10*s,56*s,skin,4*s); body+=rect(x+bw/2,y-136*s,10*s,56*s,skin,4*s);
+  body+=circle(x,hy,hr,skin); body+=hairAndHat(x,hy,hr,p,d,s);
+  if(p.item==='sacados') body+=rect(d>0?x-bw/2-22*s:x+bw/2,y-134*s,22*s,54*s,'#1f1f1f',5*s);
+  if(p.item==='sac'){ body+=ellipse(x+d*(bw/2+10*s),y-82*s,15*s,11*s,'#1f1f1f'); body+=line(x+d*(bw/2+2*s),y-130*s,x+d*(bw/2+12*s),y-90*s,'#1f1f1f',3*s); }
+  if(p.item==='bouteille') body+=rect(x+d*(bw/2+6*s)-3*s,y-96*s,7*s,26*s,'#5a7f4f',2*s);
+  if(p.item==='tel') body+=rect(x+d*(bw/2+4*s)-3*s,y-150*s,8*s,16*s,'#111',2*s);
+  if(p.item==='canne') body+=line(x+d*(bw/2+12*s),y-80*s,x+d*(bw/2+16*s),y,'#5b4636',4*s);
+  g+='<g transform="'+pivot+'">'+body+'</g>';
+  if(p.pose==='marche'){ g+=poly([[x-7*s,y-72*s],[x+7*s,y-72*s],[x-16*s*d,y],[x-30*s*d,y]],bot); g+=poly([[x-7*s,y-72*s],[x+7*s,y-72*s],[x+30*s*d,y],[x+16*s*d,y]],bot);
+    for(var i=0;i<3;i++){ g+=line(x-d*(34+i*12)*s,y-(110-i*18)*s,x-d*(50+i*12)*s,y-(110-i*18)*s,'#fff',2.5*s,0.7); } }
+  else { g+=rect(x-15*s,y-72*s,13*s,72*s,bot,3*s); g+=rect(x+2*s,y-72*s,13*s,72*s,bot,3*s); }
+  g+=tagLabel(x,y-H-6*s,p.lab,null,s);
+  return '<g>'+g+'</g>'; }
+
+function hairAndHat(x,hy,hr,p,d,s){ var g='';
+  if(p.hair==='long'){ g+=rect(x-hr-2*s,hy-4*s,hr*2+4*s,hr*2.4,'#2a2a2a',hr*0.6); g+=circle(x,hy,hr,p.skin||'#c9a27e'); }
+  if(p.hat==='capuche'){ g+=circle(x,hy-2*s,hr*1.35,p.hatc||'#222'); g+=circle(x,hy+1*s,hr*0.95,p.skin||'#c9a27e'); return g; }
+  if(p.hat==='casque'){ g+=circle(x,hy-2*s,hr*1.25,p.hatc||'#ccc'); g+=rect(x-hr*1.2,hy-2*s,hr*2.4,hr*0.9,'#333',3*s); return g; }
+  if(p.hat==='casquette'){ g+=poly([[x-hr,hy-2*s],[x-hr*0.6,hy-hr*1.15],[x+hr*0.6,hy-hr*1.15],[x+hr,hy-2*s]],p.hatc||'#111'); g+=rect(d>0?x:x-hr*1.9,hy-5*s,hr*1.9,5*s,p.hatc||'#111',2*s); return g; }
+  if(p.hair!=='ras' && p.hair!=='chauve' && p.hair!=='long'){ g+=poly([[x-hr,hy-2*s],[x-hr*0.7,hy-hr*0.95],[x+hr*0.7,hy-hr*0.95],[x+hr,hy-2*s]],p.hair==='blanc'?'#e8e8e8':'#2a2a2a'); }
+  return g; }
+
+function vehicle(v){ var x=v.x||800, y=v.y||760, s=scaleFor(y,v.s), c=v.color||'#999', d=(v.dir==='g')?-1:1, k=v.kind||'citadine', b='';
+  var sh=1; var g='';
+  if(k==='scooter'){ if(v.pose==='sol'){ g+=ellipse(x,y+3*s,70*s,8*s,'#000',0.28); g+='<g transform="translate('+r1(x)+' '+r1(y)+') scale('+r1(d*s)+' '+r1(s)+') rotate(80)">'+rect(-50,-20,100,16,c,6)+circle(-50,0,18,'#222')+circle(50,0,18,'#222')+rect(30,-50,8,34,'#555')+rect(14,-54,40,8,'#555')+'</g>'; return g+tagLabel(x,y-60*s,v.lab||'scooter',null,s); }
+    g+=ellipse(x,y+3*s,60*s,8*s,'#000',0.28); g+='<g transform="translate('+r1(x)+' '+r1(y)+') scale('+r1(d*s)+' '+r1(s)+')">'+rect(-56,-44,90,20,c,8)+rect(-30,-70,30,30,'#555',6)+rect(26,-80,8,40,'#555')+rect(12,-84,36,8,'#555')+circle(-50,-16,18,'#222')+circle(50,-16,18,'#222')+circle(-50,-16,7,'#999')+circle(50,-16,7,'#999')+'</g>'; return g+tagLabel(x,y-100*s,v.lab,v.plate,s); }
+  var L=240, Hh=78, cabH=50;
+  if(k==='utilitaire'||k==='vsav'){ L=300; Hh=120; }
+  if(k==='fourgon'){ L=320; Hh=70; }
+  if(k==='bus'){ L=520; Hh=160; }
+  g+=ellipse(x,y+3*s,(L/2+10)*s,9*s,'#000',0.28);
+  if(k==='citadine'){ b+=rect(-L/2,-Hh,L,Hh-20,c,14)+rect(-L/2,-Hh+38,L,Hh-58,c)+poly([[-L/2+40,-Hh-cabH],[L/2-70,-Hh-cabH],[L/2-20,-Hh+10],[-L/2+20,-Hh+10]],c)+poly([[-L/2+48,-Hh-cabH+6],[L/2-74,-Hh-cabH+6],[L/2-36,-Hh+2],[-L/2+32,-Hh+2]],'#9fb7d4')+rect(-6,-Hh-cabH+2,6,cabH-2,c)+rect(L/2-8,-Hh+10,10,18,'#f2e6b0',2)+rect(-L/2-2,-Hh+10,10,18,'#a8413d',2); }
+  else if(k==='utilitaire'||k==='vsav'){ b+=rect(-L/2,-Hh,L*0.68,Hh-22,c,8)+poly([[-L/2+L*0.68-4,-Hh],[L/2-56,-Hh],[L/2-6,-Hh+50],[L/2-6,-22],[-L/2+L*0.68-4,-22]],c)+poly([[L/2-54,-Hh+6],[L/2-14,-Hh+48],[-L/2+L*0.68+2,-Hh+48],[-L/2+L*0.68+2,-Hh+6]],'#9fb7d4')+rect(-L/2+L*0.68+8,-Hh+56,52,40,'#9fb7d4',3)+rect(L/2-10,-60,10,18,'#f2e6b0',2)+rect(-L/2-2,-60,10,18,'#a8413d',2);
+    if(k==='vsav'){ b+=rect(-L/2+8,-Hh+44,L*0.66-16,16,'#a8413d')+rect(-L/2+20,-Hh-14,60,14,'#3b5b8a',3)+rect(-L/2+30,-Hh+8,22,22,'#f2f2f2')+rect(-L/2+38,-Hh+10,6,18,'#a8413d')+rect(-L/2+30,-Hh+16,22,6,'#a8413d'); } }
+  else if(k==='fourgon'){ b+=rect(L/2-96,-Hh-60,96,Hh+40,c,6)+rect(L/2-84,-Hh-52,66,40,'#9fb7d4',3)+rect(-L/2,-Hh-6,L-100,8,'#555')+rect(-L/2,-Hh,L-100,Hh-24,'#777')+rect(-L/2,-Hh-30,8,30,'#555')+rect(L/2-108,-Hh-30,8,30,'#555')+rect(-L/2+16,-Hh-40,L-140,36,'#8d8d8d',4)+rect(L/2-8,-60,10,18,'#f2e6b0',2); }
+  else if(k==='bus'){ b+=rect(-L/2,-Hh,L,Hh-20,c,10); for(var i=0;i<6;i++){ b+=rect(-L/2+30+i*78,-Hh+16,62,56,'#9fb7d4',4); } b+=rect(L/2-70,-Hh+16,56,110,'#9fb7d4',4)+rect(-L/2+20,-Hh+90,40,56,'#555',3)+rect(-L/2+120,-Hh+90,40,56,'#555',3)+rect(L/2-8,-60,10,18,'#f2e6b0',2); }
+  var wy=-22; var wx1=-L/2+60, wx2=L/2-60; if(k==='bus'){ wx1=-L/2+90; wx2=L/2-110; }
+  b+=circle(wx1,wy+8,26,'#222')+circle(wx2,wy+8,26,'#222')+circle(wx1,wy+8,11,'#9a9a9a')+circle(wx2,wy+8,11,'#9a9a9a');
+  g+='<g transform="translate('+r1(x)+' '+r1(y)+') scale('+r1(d*s)+' '+r1(s)+')">'+b+'</g>';
+  var topY=y-(Hh+(k==='citadine'?cabH:(k==='fourgon'?60:0))+8)*s;
+  g+=tagLabel(x,topY,v.lab,v.plate,s);
+  return g; }
+
+function objectShape(o){ var x=o.x||800, y=o.y||760, s=scaleFor(y,o.s), k=o.kind||'colis', g='';
+  if(k==='sac'){ g+=ellipse(x,y+2*s,30*s,7*s,'#000',0.3)+rect(x-22*s,y-56*s,44*s,56*s,'#1a1a1a',10*s)+rect(x-14*s,y-50*s,28*s,22*s,'#333',6*s)+line(x-16*s,y-56*s,x-8*s,y-70*s,'#1a1a1a',4*s)+line(x+16*s,y-56*s,x+8*s,y-70*s,'#1a1a1a',4*s); return g+tagLabel(x,y-78*s,o.lab,null,s); }
+  if(k==='colis'){ g+=ellipse(x,y+2*s,40*s,7*s,'#000',0.3)+rect(x-34*s,y-52*s,68*s,52*s,'#b58a5a',3*s)+rect(x-34*s,y-30*s,68*s,8*s,'#8a6a46'); return g+tagLabel(x,y-62*s,o.lab,null,s); }
+  if(k==='cone'){ g+=poly([[x-16*s,y],[x+16*s,y],[x+6*s,y-46*s],[x-6*s,y-46*s]],'#d8742b')+rect(x-20*s,y-4*s,40*s,6*s,'#333')+rect(x-11*s,y-28*s,22*s,7*s,'#f2f2f2'); return g; }
+  if(k==='flaque'){ return ellipse(x,y,80*s,14*s,'#3a3d42',0.6); }
+  if(k==='depot'){ g+=ellipse(x+40*s,y+4*s,120*s,10*s,'#000',0.3)+poly([[x-90*s,y],[x+60*s,y],[x+40*s,y-34*s],[x-20*s,y-44*s],[x-70*s,y-26*s]],'#8d8d8d')+poly([[x-60*s,y-20*s],[x-10*s,y-36*s],[x+20*s,y-10*s],[x-30*s,y-2*s]],'#a7a7a7')+rect(x+50*s,y-110*s,54*s,110*s,'#eeeeee',4*s)+rect(x+54*s,y-72*s,46*s,3*s,'#999')+rect(x+90*s,y-96*s,6*s,16*s,'#555')+rect(x-50*s,y-60*s,70*s,20*s,'#b58a5a',2*s)+rect(x-40*s,y-78*s,80*s,16*s,'#b58a5a',2*s)+rect(x+110*s,y-40*s,40*s,40*s,'#1a1a1a',6*s)+rect(x-100*s,y-14*s,30*s,14*s,'#1a1a1a',4*s); return g+tagLabel(x+10*s,y-124*s,o.lab||'dépôt',null,s); }
+  return ''; }
+
+function rainLayer(){ var s=''; for(var i=0;i<70;i++){ var x=srand(i)*1600, y=srand(i+200)*900; s+=line(x,y,x-10,y+40,'#e8ecf0',1.5,0.35); } return s; }
+function nightLayer(){ return rect(0,0,1600,900,'#0b1220',0,' opacity="0.5"'); }
+
+function sceneSVG(cam, st){ var amb=(st&&st.amb)||'jour', night=amb==='nuit', rain=amb==='pluie', parts=[];
+  parts.push(skyLayer(night,rain));
+  var bg=BACKGROUNDS[cam.scene]||BACKGROUNDS.rue; parts.push(bg(night));
+  var actors=(st&&st.actors)?st.actors.slice():[]; actors.sort(function(a,b){return (a.y||0)-(b.y||0);});
+  for(var i=0;i<actors.length;i++) parts.push(drawActor(actors[i]));
+  if(rain) parts.push(rainLayer());
+  if(night) parts.push(nightLayer());
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'+parts.join('')+'</svg>'; }
+
+/* ---------- Plan de la commune ---------- */
+function roadPath(dstr,w){ return '<path d="'+dstr+'" fill="none" stroke="#8d9298" stroke-width="'+(w+8)+'" stroke-linecap="round" stroke-linejoin="round"/><path d="'+dstr+'" fill="none" stroke="#ffffff" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round"/>'; }
+function zone(x,y,w,h,label){ return rect(x,y,w,h,'#d4d7db',14)+txt(x+14,y+26,label,21,'#4a4d52','start',600); }
+function block(x,y,w,h){ return rect(x,y,w,h,'#b9bec4',3); }
+function landmark(x,y,w,h,label,fill){ return rect(x,y,w,h,fill||'#8d9298',4)+txt(x+w/2,y+h/2+5,label,14,'#fff','middle',600); }
+function planSVG(){ var s='';
+  s+=rect(0,0,1600,900,'#e3e5e8');
+  s+='<path d="M0,800 C260,775 480,820 800,752 S1260,790 1600,756 L1600,900 L0,900 Z" fill="#b7c2cc"/>';
+  s+='<path d="M0,800 C260,775 480,820 800,752 S1260,790 1600,756" fill="none" stroke="#e9e4d6" stroke-width="12"/>';
+  for(var i=0;i<6;i++){ var wy=820+i*12; s+='<path d="M0,'+wy+' C400,'+(wy-10)+' 800,'+(wy+10)+' 1600,'+wy+'" fill="none" stroke="#c6cfd7" stroke-width="2"/>'; }
+  s+=zone(70,170,370,310,'Cité des Flamboyants')+zone(600,250,420,320,'Centre-bourg')+zone(1150,170,410,290,'Zone commerciale')+zone(1050,470,380,230,'Stade / Lycée')+zone(450,470,220,120,'Gare routière')+zone(560,640,660,100,'Front de mer');
+  /* îlots bâtis */
+  var blocks=[[110,230,60,40],[190,230,70,40],[300,225,60,40],[110,300,80,36],[300,300,60,36],[120,400,60,40],[330,380,70,46],[360,440,60,30],[640,300,60,30],[720,300,40,30],[640,470,60,36],[760,470,90,36],[880,480,60,36],[930,330,60,40],[940,400,50,40],[1190,220,70,40],[1280,330,40,40],[1200,380,60,40],[1230,520,50,36],[1350,520,60,40],[1360,580,50,36],[1120,640,40,30],[590,660,40,24],[650,660,50,24],[720,658,40,24],[1120,660,40,26],[1170,662,30,24]];
+  for(var b=0;b<blocks.length;b++){ s+=block.apply(null,blocks[b]); }
+  /* voirie */
+  s+=roadPath('M0,270 L1600,270',20);
+  s+=roadPath('M800,270 L800,711',16);
+  s+=roadPath('M800,400 L1152,540',12);
+  s+=roadPath('M560,711 L1200,711',14);
+  s+=roadPath('M1280,270 L1376,378 L1152,540 L1280,630 L1300,711',12);
+  s+=roadPath('M576,522 L800,522',10);
+  s+=roadPath('M288,270 L224,378 L224,470',10);
+  s+=roadPath('M1376,378 L1500,378',10);
+  s+=circle(1280,270,30,'#8d9298')+circle(1280,270,22,'#fff')+circle(1280,270,11,'#98a68e');
+  /* repères */
+  s+=landmark(815,296,90,46,'Mairie')+landmark(660,382,92,64,'Marché','#a7acb2')+landmark(520,502,118,54,'Gare routière')+landmark(1330,322,150,96,'Centre commercial')+ellipse(1152,540,70,40,'#9fb093')+ellipse(1152,540,46,24,'#b8c6ab')+txt(1152,545,'Stade',14,'#333','middle',600)+landmark(1246,586,88,56,'Lycée')+rect(700,716,420,14,'#9a9fa5')+txt(905,747,'Quai',13,'#4a4d52','middle',600)+rect(960,662,150,26,'#a7acb2',3)+txt(1035,680,'Bars',12,'#333','middle',600);
+  /* DAE */
+  for(var k=0;k<DAE.length;k++){ var dx=DAE[k].x*16, dy=DAE[k].y*9; s+=rect(dx-16,dy-10,32,20,'#4c7a58',3)+txt(dx,dy+4,'DAE',11,'#fff','middle',700); }
+  /* nord, titre */
+  s+='<g transform="translate(1540 70)">'+poly([[0,-30],[12,10],[0,2],[-12,10]],'#4a4d52')+txt(0,34,'N',16,'#4a4d52','middle',700)+'</g>';
+  s+=txt(20,884,COMMUNE+' — implantation des caméras (plan schématique, commune fictive)',14,'#4a4d52','start');
+  s+=rect(1380,862,160,6,'#4a4d52')+txt(1460,852,'500 m',12,'#4a4d52','middle');
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-label="Plan des quartiers">'+s+'</svg>'; }
+
+/* ===================== APPLICATION ===================== */
+(function(){
+'use strict';
+var LS_STATE='ovp_sim_state_v1', LS_SET='ovp_sim_settings_v1';
+function $(id){ return document.getElementById(id); }
+function pad(n){ return (n<10?'0':'')+n; }
+function fmtTime(d){ return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); }
+function fmtHM(d){ return pad(d.getHours())+':'+pad(d.getMinutes()); }
+function fmtDate(d){ return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear(); }
+function isoDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function fmtMMSS(t){ t=Math.max(0,Math.round(t)); return pad(Math.floor(t/60))+':'+pad(t%60); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function camById(id){ for(var i=0;i<CAMERAS.length;i++) if(CAMERAS[i].id===id) return CAMERAS[i]; return null; }
+function scenarioById(id){ for(var i=0;i<SCENARIOS.length;i++) if(SCENARIOS[i].id===id) return SCENARIOS[i]; return SCENARIOS[0]; }
+function scenario(){ return scenarioById(S.scenarioId); }
+function nameOf(id){ var lists=[MAIL_CONTACTS,RADIO,TEL]; for(var l=0;l<lists.length;l++){ for(var i=0;i<lists[l].length;i++) if(lists[l][i].id===id) return lists[l][i].nom; } return id; }
+function findContact(ch,id){ var list=ch==='radio'?RADIO:TEL; for(var i=0;i<list.length;i++) if(list[i].id===id) return list[i]; return null; }
+function fillSelect(sel,items,val){ sel.innerHTML=items.map(function(it){ return '<option value="'+esc(it.v)+'">'+esc(it.l)+'</option>'; }).join(''); if(val!=null) sel.value=val; }
+function nl2br(s){ return esc(s).replace(/\n/g,'<br>'); }
+
+/* ---------- état ---------- */
+var S, SET, timer=null, curCh='radio', curBox='recu', selMail=null, ptz={z:1,px:0,py:0}, placing=false, trainerOpen=false, audioCtx=null;
+var ZOOMS=[1,1.5,2,3,4];
+function defaultState(){ return { v:1, scenarioId:SCENARIOS[0].id, mode:'auto', speed:1, operateur:'', phase:'attente', elapsed:0, firedAt:{}, simStart:null, endedAt:null,
+  scene:{}, sceneAt:{}, alerts:{}, curCam:'C01', comms:[], mails:[], notes:[], mc:[], cr:{date:'',heure:'',dest:CR_DEST[0],objet:'',faits:'',mesures:'',suites:''},
+  inv:INVENTORY.map(function(){ return {etat:INV_ETATS[0],obs:''}; }), debrief:{checks:{},commentaire:''}, log:[], pending:[] }; }
+function defaultSettings(){ return { logo:null, camImages:{}, plan:{image:null,ratio:null,markers:{}}, notesPerm:clone(NOTES_DEFAUT), alertes:true, son:true }; }
+function merge(def,obj){ if(!obj||typeof obj!=='object') return def; for(var k in def){ if(!(k in obj)) obj[k]=def[k]; } return obj; }
+function load(){ try{ S=merge(defaultState(),JSON.parse(localStorage.getItem(LS_STATE)||'null')); }catch(e){ S=defaultState(); }
+  try{ SET=merge(defaultSettings(),JSON.parse(localStorage.getItem(LS_SET)||'null')); }catch(e){ SET=defaultSettings(); }
+  if(!S.inv||S.inv.length!==INVENTORY.length) S.inv=defaultState().inv;
+  if(S.phase==='encours'){ S.phase='pause'; }
+}
+var saveT=null;
+function saveSoon(){ if(saveT) clearTimeout(saveT); saveT=setTimeout(saveNow,400); }
+function saveNow(){ saveT=null; try{ localStorage.setItem(LS_STATE,JSON.stringify(S)); }catch(e){ } try{ localStorage.setItem(LS_SET,JSON.stringify(SET)); }catch(e){ toast('Mémoire du navigateur saturée','Les images chargées sont trop volumineuses pour être conservées. Utilisez « Sauvegarde » pour les garder dans un fichier.','alert'); } }
+
+/* ---------- horloge simulée ---------- */
+function computeSimStart(){ var sc=scenario(), d=new Date(), hm=sc.heure.split(':'); d.setHours(+hm[0],+hm[1],0,0); return d; }
+function simNow(){ var base=S.simStart?new Date(S.simStart):computeSimStart(); return new Date(base.getTime()+S.elapsed*1000); }
+function simAt(t){ var base=S.simStart?new Date(S.simStart):computeSimStart(); return new Date(base.getTime()+t*1000); }
+function updateClock(){ var now=simNow(); $('clockTime').textContent=fmtTime(now); $('clockDate').textContent=fmtDate(now)+(S.phase!=='attente'?'  ·  exercice '+fmtMMSS(S.elapsed):'  ·  heure de prise de poste');
+  $('osdTR').innerHTML=fmtDate(now)+'<br>'+fmtTime(now);
+  var st=$('status'); var map={attente:['En attente',''],encours:['Exercice en cours','on'],pause:['En pause','pause'],termine:['Exercice terminé','end']}; st.textContent=map[S.phase][0]; st.className='status '+map[S.phase][1];
+  if(!$('mcFaits').value && document.activeElement!==$('mcDate') && document.activeElement!==$('mcHeure')){ $('mcDate').value=isoDate(now); $('mcHeure').value=fmtTime(now); }
+  var al=$('osdAlarm'); var at=S.sceneAt[S.curCam]; al.textContent=(SET.alertes && at!=null && S.elapsed-at<60)?'ALARME VIDÉO':''; }
+function tick(){ if(S.phase!=='encours') return; S.elapsed+=S.speed; processDue(); updateClock(); saveSoon(); }
+function processDue(){ var sc=scenario();
+  if(S.mode==='auto'){ for(var i=0;i<sc.events.length;i++){ if(S.firedAt[i]==null && sc.events[i].t<=S.elapsed) fireEvent(i); } }
+  var still=[]; for(var j=0;j<S.pending.length;j++){ var p=S.pending[j]; if(p.at<=S.elapsed) addComm(p.comm); else still.push(p); } S.pending=still; }
+
+/* ---------- journal & notifications ---------- */
+function log(k,t){ var now=simNow(); S.log.push({h:fmtTime(now),el:S.elapsed,k:k,t:t}); if(trainerOpen) renderJournal(); }
+function toast(title,text,kind){ var box=$('toasts'), el=document.createElement('div'); el.className='toast '+(kind||''); el.innerHTML='<span class="k">'+esc(title)+'</span>'+esc(text||''); box.appendChild(el); setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },7000); }
+function ensureAudio(){ try{ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; if(!audioCtx) audioCtx=new AC(); if(audioCtx.state==='suspended') audioCtx.resume(); return audioCtx; }catch(e){ return null; } }
+function beep(kind){ if(!SET.son) return; var ctx=ensureAudio(); if(!ctx) return; var pattern={radio:[[880,0,.12],[880,.18,.12]],tel:[[660,0,.25],[660,.4,.25],[660,.8,.25]],mail:[[1046,0,.1],[1318,.12,.14]],alarm:[[520,0,.2],[700,.22,.2]]}[kind]||[[800,0,.12]];
+  pattern.forEach(function(p){ var o=ctx.createOscillator(), g=ctx.createGain(); o.type='sine'; o.frequency.value=p[0]; g.gain.value=0.0001; o.connect(g); g.connect(ctx.destination); var t0=ctx.currentTime+p[1]; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.18,t0+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t0+p[2]); o.start(t0); o.stop(t0+p[2]+0.02); }); }
+
+/* ---------- événements de scénario ---------- */
+function fireEvent(i){ var sc=scenario(), ev=sc.events[i]; if(!ev||S.firedAt[i]!=null) return; S.firedAt[i]=S.elapsed; applyEvent(ev,false); if(trainerOpen) renderTrainerEvents(); }
+function applyEvent(ev,libre){ var now=simNow(), suffix=libre?' (injection formateur)':'';
+  switch(ev.type){
+    case 'info': log('Information'+suffix,ev.texte); toast('Information',ev.texte,''); break;
+    case 'radio': addComm({ch:'radio',dir:'in',from:ev.de,text:ev.texte}); break;
+    case 'tel': addComm({ch:'tel',dir:'in',from:ev.de,text:ev.texte}); break;
+    case 'mail': S.mails.push({id:uid(),box:'recu',de:ev.de,a:'PC vidéo',objet:ev.objet||'(sans objet)',corps:ev.texte||'',heure:fmtTime(now),date:fmtDate(now),el:S.elapsed,lu:false}); log('Courriel reçu'+suffix,nameOf(ev.de)+' — '+(ev.objet||'')); renderMails(); toast('Nouveau courriel',ev.objet||'',''); beep('mail'); break;
+    case 'cam': S.scene[ev.cam]=ev.scene||{amb:'jour',actors:[]}; S.sceneAt[ev.cam]=S.elapsed; if(SET.alertes && ev.cam!==S.curCam) S.alerts[ev.cam]=true; log('Caméra '+ev.cam+suffix,ev.resume||''); renderCamera(); renderThumbs(); renderPlanMarkers(); if(SET.alertes){ var c=camById(ev.cam); toast('Alarme vidéo — '+ev.cam,c?c.nom:'','alert'); beep('alarm'); } break;
+    case 'note': S.notes.push({id:uid(),titre:ev.titre||'Note de service',texte:ev.texte||'',date:fmtDate(now)+' '+fmtHM(now)}); log('Note de service'+suffix,ev.titre||''); renderNotes(); toast('Note de service',ev.titre||'',''); break;
+  }
+  saveSoon(); }
+function addComm(c){ var now=simNow(); c.id=uid(); c.heure=fmtTime(now); c.el=S.elapsed; if(c.dir==='in' && !c.auto) c.answered=false; else c.answered=true; S.comms.push(c);
+  if(c.dir==='in'){ log((c.ch==='radio'?'Appel radio':'Appel téléphonique')+(c.auto?' (réponse)':' entrant'),nameOf(c.from)+' : '+c.text); if(!c.auto){ toast(c.ch==='radio'?'Appel radio entrant':'Appel téléphonique entrant',nameOf(c.from),'alert'); beep(c.ch); if(c.ch!==curCh){ setCh(c.ch); } } }
+  else { log(c.ch==='radio'?'Transmission radio':'Appel téléphonique émis','→ '+nameOf(c.to)+' : '+c.text); }
+  renderComms(); saveSoon(); }
+
+/* ---------- rendu : en-tête ---------- */
+function renderHeader(){ fillSelect($('selScenario'),SCENARIOS.map(function(s){ return {v:s.id,l:s.titre+' ('+s.heure.replace(':',' h ')+')'}; }),S.scenarioId);
+  $('selMode').value=S.mode; $('selSpeed').value=String(S.speed); $('inOperateur').value=S.operateur;
+  var locked=S.phase!=='attente'; $('selScenario').disabled=locked; $('selMode').disabled=locked;
+  $('btnStart').disabled=locked; $('btnPause').disabled=!(S.phase==='encours'||S.phase==='pause'); $('btnPause').textContent=S.phase==='pause'?'Reprendre':'Pause'; $('btnEnd').disabled=!(S.phase==='encours'||S.phase==='pause');
+  if(SET.logo){ $('logoImg').src=SET.logo; $('logoImg').hidden=false; $('logoTxt').hidden=true; } else { $('logoImg').hidden=true; $('logoTxt').hidden=false; }
+  $('soundLbl').textContent='Son : '+(SET.son?'activé':'coupé'); updateClock(); }
+
+/* ---------- rendu : caméra ---------- */
+function renderCamera(){ var cam=camById(S.curCam)||CAMERAS[0]; $('selCam').value=cam.id; $('camQuartier').textContent=cam.quartier;
+  var img=SET.camImages[cam.id]; $('camView').innerHTML=img?'<img src="'+img+'" alt="">':sceneSVG(cam,S.scene[cam.id]);
+  $('osdTL').innerHTML=esc(cam.id)+'  '+esc(cam.nom)+'<br>'+esc(cam.quartier);
+  if(S.alerts[cam.id]){ delete S.alerts[cam.id]; renderThumbs(); renderPlanMarkers(); }
+  applyPTZ(); updateClock(); }
+function applyPTZ(){ var z=ZOOMS[ptz.z-1]||1; $('camView').style.transform='scale('+z+') translate('+ptz.px+'%,'+ptz.py+'%)'; $('osdBR').textContent='ZOOM ×'+z+(ptz.px||ptz.py?'  PAN':''); }
+function doPTZ(a){ var zi=ptz.z; if(a==='zin') ptz.z=Math.min(ZOOMS.length,ptz.z+1); if(a==='zout') ptz.z=Math.max(1,ptz.z-1); if(a==='home'){ ptz.z=1; ptz.px=0; ptz.py=0; }
+  var z=ZOOMS[ptz.z-1], pmax=z>1?(1-1/z)/(2*z)*100:0, step=pmax/3;
+  if(a==='left') ptz.px=Math.min(pmax,ptz.px+step); if(a==='right') ptz.px=Math.max(-pmax,ptz.px-step); if(a==='up') ptz.py=Math.min(pmax,ptz.py+step); if(a==='down') ptz.py=Math.max(-pmax,ptz.py-step);
+  if(zi!==ptz.z){ ptz.px=Math.max(-pmax,Math.min(pmax,ptz.px)); ptz.py=Math.max(-pmax,Math.min(pmax,ptz.py)); }
+  applyPTZ(); }
+function renderThumbs(){ $('thumbs').innerHTML=CAMERAS.map(function(c){ var img=SET.camImages[c.id]; return '<button type="button" class="thumb'+(c.id===S.curCam?' active':'')+(S.alerts[c.id]&&SET.alertes?' alert':'')+'" data-cam="'+c.id+'" title="'+esc(c.nom)+'">'+(img?'<img src="'+img+'" alt="">':sceneSVG(c,S.scene[c.id]))+'<span class="lab">'+c.id+'</span></button>'; }).join(''); }
+function selectCam(id){ if(!camById(id)) return; S.curCam=id; ptz={z:1,px:0,py:0}; renderCamera(); renderThumbs(); renderPlanMarkers(); $('mcCam').value=id; saveSoon(); }
+
+/* ---------- rendu : plan ---------- */
+function renderPlan(){ var box=$('planBox'), pi=$('planImg');
+  if(SET.plan.image){ pi.innerHTML='<img src="'+SET.plan.image+'" alt="Plan">'; box.style.aspectRatio=SET.plan.ratio?String(SET.plan.ratio):'16/9'; $('btnPlace').hidden=false; }
+  else { pi.innerHTML=planSVG(); box.style.aspectRatio='16/9'; $('btnPlace').hidden=true; placing=false; }
+  box.className='planbox'+(placing?' placing':''); $('btnPlace').textContent=placing?'Terminer le placement':'Placer les caméras';
+  $('planHint').textContent=placing?'Touchez le plan pour positionner la caméra sélectionnée ('+S.curCam+').':'Touchez une caméra pour l’afficher sur l’écran 1.';
+  renderPlanMarkers(); }
+function markerPos(c){ var m=SET.plan.image?SET.plan.markers[c.id]:null; return m||{x:c.x,y:c.y}; }
+function renderPlanMarkers(){ $('planMarkers').innerHTML=CAMERAS.map(function(c){ var p=markerPos(c); return '<button type="button" class="marker'+(c.id===S.curCam?' active':'')+(S.alerts[c.id]&&SET.alertes?' alert':'')+'" style="left:'+p.x+'%;top:'+p.y+'%" data-cam="'+c.id+'" title="'+esc(c.nom)+'">'+c.id+'</button>'; }).join(''); }
+function renderIndicatifs(){ var rows=[['VIDÉO','PC vidéo (vous)']].concat(RADIO.map(function(r){ return [r.id,r.nom]; })); $('indicatifs').innerHTML=rows.map(function(r){ return '<b>'+esc(r[0])+'</b><span>'+esc(r[1])+'</span>'; }).join(''); }
+
+/* ---------- rendu : communications ---------- */
+function setCh(ch){ curCh=ch; var tabs=$('commTabs').querySelectorAll('.tab'); for(var i=0;i<tabs.length;i++) tabs[i].className='tab'+(tabs[i].getAttribute('data-ch')===ch?' active':'');
+  var list=ch==='radio'?RADIO:TEL; fillSelect($('selContact'),list.map(function(c){ return {v:c.id,l:c.id+' — '+c.nom}; }));
+  var ph=ch==='radio'?PHRASES_RADIO:PHRASES_TEL; fillSelect($('selPhrase'),ph.map(function(p,i){ return {v:String(i),l:p.l}; }),'0');
+  $('btnSend').textContent=ch==='radio'?'Émettre':'Appeler'; renderComms(); }
+function renderComms(){ var list=$('commsList'), items=S.comms.filter(function(c){ return c.ch===curCh; });
+  if(!items.length){ list.innerHTML='<div class="empty">Aucune communication '+(curCh==='radio'?'radio':'téléphonique')+' pour le moment.</div>'; }
+  else list.innerHTML=items.map(function(c){ var who=c.dir==='in'?nameOf(c.from):'→ '+nameOf(c.to); var todo=c.dir==='in'&&!c.answered;
+    return '<div class="msg '+(c.dir==='in'?'in':'out')+(todo?' todo':'')+'"><div class="meta"><b>'+esc(c.heure)+'</b><span class="ch">'+(c.ch==='radio'?'radio':'tél.')+'</span><span>'+esc(c.dir==='in'?(c.from+' — '+who):who)+'</span>'+(todo?'<span class="tag">à traiter</span>':'')+'</div><div>'+esc(c.text)+'</div><div class="acts">'+(todo?'<button type="button" class="lnk" data-reply="'+esc(c.from)+'">Répondre</button>':'')+'<button type="button" class="lnk" data-tomc="'+c.id+'">Reporter en main courante</button></div></div>'; }).join('');
+  list.scrollTop=list.scrollHeight; var n=S.comms.filter(function(c){ return c.dir==='in'&&!c.answered; }).length; $('commsBadge').textContent=n?String(n):''; }
+function sendMsg(){ var to=$('selContact').value, text=$('inMsg').value.trim(); if(!text){ toast('Message vide','Rédigez votre transmission avant d’émettre.',''); return; }
+  ensureAudio(); addComm({ch:curCh,dir:'out',to:to,text:text});
+  for(var i=S.comms.length-1;i>=0;i--){ var c=S.comms[i]; if(c.dir==='in'&&c.ch===curCh&&c.from===to&&!c.answered){ c.answered=true; break; } }
+  var ct=findContact(curCh,to); if(ct&&ct.ack){ var rep={ch:curCh,dir:'in',from:to,text:ct.ack,auto:true}; if(S.phase==='encours') S.pending.push({at:S.elapsed+2+Math.floor(Math.random()*3)*S.speed,comm:rep}); else addComm(rep); }
+  $('inMsg').value=''; $('selPhrase').value='0'; renderComms(); }
+function commToMC(id){ var c=null; for(var i=0;i<S.comms.length;i++) if(S.comms[i].id===id) c=S.comms[i]; if(!c) return;
+  var txt=c.dir==='in'?(c.ch==='radio'?'Appel radio reçu de ':'Appel téléphonique reçu de ')+nameOf(c.from)+' à '+c.heure+' : « '+c.text+' »':(c.ch==='radio'?'Transmission radio à ':'Appel téléphonique à ')+nameOf(c.to)+' à '+c.heure+' : « '+c.text+' »';
+  var f=$('mcFaits'); f.value=(f.value?f.value+'\n':'')+txt; $('mcNature').value=c.dir==='in'?(c.ch==='radio'?'Appel radio reçu':'Appel téléphonique reçu'):(c.ch==='radio'?'Transmission radio':'Appel téléphonique émis'); f.focus(); }
+
+/* ---------- rendu : messagerie ---------- */
+function setBox(b){ curBox=b; selMail=null; var tabs=$('mailTabs').querySelectorAll('.tab'); for(var i=0;i<tabs.length;i++) tabs[i].className='tab'+(tabs[i].getAttribute('data-box')===b?' active':''); renderMails(); }
+function renderMails(){ var items=S.mails.filter(function(m){ return m.box===curBox; }).slice().reverse(), list=$('mailList');
+  list.innerHTML=items.length?items.map(function(m){ return '<button type="button" class="mailitem'+(m.lu===false?' unread':'')+(selMail===m.id?' sel':'')+'" data-mail="'+m.id+'"><span class="obj">'+esc(m.objet)+'</span><span class="when">'+esc(m.date+' '+m.heure)+'</span><span class="from">'+esc(m.box==='recu'?'De : '+nameOf(m.de):'À : '+m.a)+'</span></button>'; }).join(''):'<div class="empty" style="padding:8px 10px">Aucun message.</div>';
+  var m=null; for(var i=0;i<S.mails.length;i++) if(S.mails[i].id===selMail) m=S.mails[i];
+  var rd=$('mailRead'); if(m){ rd.hidden=false; rd.innerHTML='<div class="h"><span><b>Objet :</b> '+esc(m.objet)+'</span><span><b>'+(m.box==='recu'?'De':'À')+' :</b> '+esc(m.box==='recu'?nameOf(m.de):m.a)+'</span><span><b>Le :</b> '+esc(m.date+' à '+m.heure)+'</span></div><div class="body">'+esc(m.corps)+'</div>'+(m.box==='recu'?'<div class="acts" style="margin-top:8px"><button type="button" class="btn btn-ghost btn-sm" data-replymail="'+m.id+'">Répondre</button></div>':''); } else { rd.hidden=true; rd.innerHTML=''; }
+  var n=S.mails.filter(function(x){ return x.box==='recu'&&x.lu===false; }).length; $('mailBadge').textContent=n?String(n):''; }
+function openMail(id){ for(var i=0;i<S.mails.length;i++) if(S.mails[i].id===id){ S.mails[i].lu=true; selMail=id; } renderMails(); saveSoon(); }
+function replyMail(id){ var m=null; for(var i=0;i<S.mails.length;i++) if(S.mails[i].id===id) m=S.mails[i]; if(!m) return; var found=false; for(var j=0;j<MAIL_CONTACTS.length;j++) if(MAIL_CONTACTS[j].id===m.de) found=true; $('mailTo').value=found?m.de:'AUTRE'; $('mailObj').value=(/^RE ?:/i.test(m.objet)?'':'RE : ')+m.objet; $('mailBody').focus(); }
+function sendMail(){ var to=$('mailTo').value, obj=$('mailObj').value.trim(), body=$('mailBody').value.trim(); if(!obj&&!body){ toast('Courriel vide','Indiquez un objet et un message.',''); return; } var now=simNow();
+  S.mails.push({id:uid(),box:'envoye',de:'PC vidéo',a:nameOf(to),objet:obj||'(sans objet)',corps:body,heure:fmtTime(now),date:fmtDate(now),el:S.elapsed,lu:true}); log('Courriel envoyé','→ '+nameOf(to)+' — '+(obj||'(sans objet)'));
+  $('mailObj').value=''; $('mailBody').value=''; toast('Courriel envoyé','À : '+nameOf(to),'ok'); setBox('envoye'); saveSoon(); }
+
+/* ---------- rendu : notes ---------- */
+function renderNotes(){ var html=SET.notesPerm.map(function(n){ return '<div class="card perm"><h4>'+esc(n.titre)+'</h4><div class="body">'+esc(n.texte)+'</div></div>'; }).join('');
+  html+=S.notes.slice().reverse().map(function(n){ return '<div class="card sess"><h4>'+esc(n.titre)+'</h4><div class="when">'+esc(n.date)+'</div><div class="body">'+esc(n.texte)+'</div></div>'; }).join('');
+  $('notesList').innerHTML=html||'<div class="empty">Aucune note de service.</div>'; }
+
+/* ---------- rendu : main courante ---------- */
+function renderMC(){ var tb=$('mcBody'); tb.innerHTML=S.mc.map(function(l){ return '<tr><td class="n">'+l.n+'</td><td class="t">'+esc(l.date)+'</td><td class="t">'+esc(l.heure)+'</td><td class="t">'+esc(l.cam)+'</td><td class="pre">'+esc(l.faits)+'</td><td class="pre">'+esc(l.mesures)+'</td><td>'+esc(l.op)+'</td></tr>'; }).join(''); $('mcEmpty').hidden=S.mc.length>0; }
+function addMC(){ var faits=$('mcFaits').value.trim(); if(!faits){ toast('Ligne incomplète','Renseignez au moins les faits constatés.',''); $('mcFaits').focus(); return; }
+  var dv=$('mcDate').value, hv=$('mcHeure').value, d=dv?new Date(dv+'T00:00:00'):simNow(); var nat=$('mcNature').value; var pre=(nat&&nat!==NATURES[0]&&faits.indexOf(nat)!==0)?nat+' – ':'';
+  S.mc.push({n:S.mc.length+1,date:fmtDate(d),heure:hv||fmtTime(simNow()),cam:$('mcCam').value,faits:pre+faits,mesures:$('mcMesures').value.trim()||'—',op:S.operateur||'—',el:S.elapsed});
+  log('Main courante','Ligne '+S.mc.length+' : '+(pre+faits).slice(0,120)); $('mcFaits').value=''; $('mcMesures').value=''; $('mcNature').value=NATURES[0]; renderMC(); updateClock(); toast('Ligne enregistrée','Main courante — ligne n° '+S.mc.length,'ok'); saveSoon(); }
+
+/* ---------- rendu : compte rendu ---------- */
+function renderCR(){ var now=simNow(); if(!S.cr.date) S.cr.date=isoDate(now); if(!S.cr.heure) S.cr.heure=fmtHM(now);
+  fillSelect($('crDest'),CR_DEST.map(function(d){ return {v:d,l:d}; }),S.cr.dest); $('crDate').value=S.cr.date; $('crHeure').value=S.cr.heure; $('crObjet').value=S.cr.objet; $('crFaits').value=S.cr.faits; $('crMesures').value=S.cr.mesures; $('crSuites').value=S.cr.suites; }
+function crFromMC(){ if(!S.mc.length){ toast('Main courante vide','Aucune ligne à reporter.',''); return; } var lines=S.mc.map(function(l){ return l.heure+' – '+l.cam+' – '+l.faits+(l.mesures&&l.mesures!=='—'?' (mesures : '+l.mesures+')':''); }).join('\n');
+  S.cr.faits=(S.cr.faits?S.cr.faits+'\n':'')+lines; S.cr.objet=S.cr.objet||scenario().titre; $('crFaits').value=S.cr.faits; $('crObjet').value=S.cr.objet; saveSoon(); }
+
+/* ---------- rendu : inventaire ---------- */
+function renderInv(){ $('invBody').innerHTML=INVENTORY.map(function(it,i){ var st=S.inv[i]||{etat:INV_ETATS[0],obs:''}; return '<tr><td class="n">'+(i+1)+'</td><td>'+esc(it.n)+'</td><td>'+esc(it.c)+'</td><td><select data-inv="'+i+'">'+INV_ETATS.map(function(e){ return '<option'+(e===st.etat?' selected':'')+'>'+esc(e)+'</option>'; }).join('')+'</select></td><td><input data-invobs="'+i+'" value="'+esc(st.obs)+'" placeholder="—"></td></tr>'; }).join(''); }
+
+/* ---------- déroulement ---------- */
+function startExercise(){ S.operateur=$('inOperateur').value.trim(); if(!S.operateur){ toast('Opérateur non renseigné','Indiquez le nom du stagiaire : il signe chaque ligne de main courante.','alert'); $('inOperateur').focus(); return; }
+  ensureAudio(); S.scenarioId=$('selScenario').value; S.mode=$('selMode').value; S.speed=+$('selSpeed').value; S.simStart=computeSimStart().toISOString(); S.elapsed=0; S.phase='encours'; S.firedAt={}; S.pending=[];
+  var sc=scenario(); S.notes.push({id:uid(),titre:'Briefing de prise de poste — '+sc.titre,texte:sc.contexte,date:fmtDate(simNow())+' '+fmtHM(simNow())}); renderNotes();
+  log('Exercice','Début — scénario « '+sc.titre+' », déroulé '+(S.mode==='auto'?'automatique':'formateur')+', vitesse ×'+S.speed+', opérateur '+S.operateur);
+  for(var i=0;i<sc.events.length;i++){ if(sc.events[i].t===0) fireEvent(i); }
+  S.cr.date=isoDate(simNow()); S.cr.heure=''; renderCR(); renderHeader(); toast('Exercice démarré',sc.titre,'ok'); saveNow(); }
+function togglePause(){ if(S.phase==='encours'){ S.phase='pause'; log('Exercice','Pause'); } else if(S.phase==='pause'){ S.phase='encours'; log('Exercice','Reprise'); ensureAudio(); } renderHeader(); saveNow(); }
+function endExercise(){ if(!confirm('Terminer l’exercice ? Le chronomètre s’arrête ; la main courante et le compte rendu restent modifiables.')) return; S.phase='termine'; S.endedAt=fmtTime(simNow()); log('Exercice','Fin — '+fmtMMSS(S.elapsed)); renderHeader(); toast('Exercice terminé','Passez au compte rendu, puis au débriefing (panneau Formateur).','ok'); saveNow(); }
+function newSession(){ if(!confirm('Nouvelle session : la main courante, les communications, les courriels, le compte rendu et le débriefing en cours seront effacés (les réglages et images sont conservés). Continuer ?')) return;
+  var keep={scenarioId:$('selScenario').value,mode:$('selMode').value,speed:+$('selSpeed').value,operateur:$('inOperateur').value.trim()}; S=defaultState(); S.scenarioId=keep.scenarioId; S.mode=keep.mode; S.speed=keep.speed; S.operateur=keep.operateur; ptz={z:1,px:0,py:0}; selMail=null; renderAll(); saveNow(); toast('Nouvelle session','Prêt à démarrer.','ok'); }
+
+/* ---------- sauvegarde / chargement ---------- */
+function downloadJSON(){ var data={app:'simulateur-ovp',version:1,savedAt:new Date().toISOString(),state:S,settings:SET}; var blob=new Blob([JSON.stringify(data)],{type:'application/json'}); var a=document.createElement('a'); var d=new Date();
+  a.download='simulateur-ovp_'+S.scenarioId+'_'+isoDate(d)+'_'+pad(d.getHours())+pad(d.getMinutes())+'.json'; a.href=URL.createObjectURL(blob); document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500); toast('Sauvegarde','Fichier JSON téléchargé (session + réglages + images).','ok'); }
+function loadJSONFile(file){ var r=new FileReader(); r.onload=function(){ try{ var d=JSON.parse(r.result); if(!d||d.app!=='simulateur-ovp'||!d.state) throw new Error('format'); S=merge(defaultState(),d.state); if(d.settings) SET=merge(defaultSettings(),d.settings); if(S.phase==='encours') S.phase='pause'; ptz={z:1,px:0,py:0}; selMail=null; renderAll(); saveNow(); toast('Session chargée',d.savedAt?('Enregistrée le '+new Date(d.savedAt).toLocaleString('fr-FR')):'', 'ok'); }catch(e){ toast('Fichier non reconnu','Choisissez une sauvegarde créée par ce simulateur (.json).','alert'); } }; r.readAsText(file); }
+function readImage(file,maxW,cb){ var r=new FileReader(); r.onload=function(){ var im=new Image(); im.onload=function(){ var w=im.naturalWidth,h=im.naturalHeight,sc=Math.min(1,maxW/Math.max(w,h)); if(sc<1||file.size>600000){ var c=document.createElement('canvas'); c.width=Math.round(w*sc); c.height=Math.round(h*sc); c.getContext('2d').drawImage(im,0,0,c.width,c.height); var png=/png|svg/i.test(file.type)&&file.size<400000; cb(c.toDataURL(png?'image/png':'image/jpeg',0.82),w/h); } else cb(r.result,w/h); }; im.onerror=function(){ toast('Image illisible','Le fichier n’a pas pu être ouvert.','alert'); }; im.src=r.result; }; r.readAsDataURL(file); }
+
+/* ---------- panneau formateur ---------- */
+function openTrainer(){ $('trainerModal').hidden=false; trainerOpen=true; if($('trPanel').hidden){ $('trCode').value=''; $('trErr').textContent=''; setTimeout(function(){ $('trCode').focus(); },50); } else renderTrainer(); }
+function closeTrainer(){ $('trainerModal').hidden=true; trainerOpen=false; }
+function unlockTrainer(){ if($('trCode').value===CODE_FORMATEUR){ $('trLock').hidden=true; $('trPanel').hidden=false; $('btnLock').hidden=false; showTrTab('trScen'); renderTrainer(); } else { $('trErr').textContent='Code incorrect.'; $('trCode').value=''; $('trCode').focus(); } }
+function lockTrainer(){ $('trPanel').hidden=true; $('trLock').hidden=false; $('btnLock').hidden=true; closeTrainer(); }
+function showTrTab(id){ ['trScen','trInj','trDeb','trSet'].forEach(function(t){ $(t).hidden=t!==id; }); var tabs=$('trTabs').querySelectorAll('.tab'); for(var i=0;i<tabs.length;i++) tabs[i].className='tab'+(tabs[i].getAttribute('data-tab')===id?' active':''); if(id==='trDeb') renderDebrief(); if(id==='trSet') renderSettings(); }
+function renderTrainer(){ renderTrainerEvents(); renderJournal(); renderInjForm(); renderDebrief(); renderSettings(); }
+function evSummary(ev){ if(ev.type==='cam') return '<span class="cam">'+esc(ev.cam)+'</span> '+esc(ev.resume||''); if(ev.type==='mail') return esc(nameOf(ev.de))+' — '+esc(ev.objet||''); if(ev.type==='radio'||ev.type==='tel') return esc(ev.de)+' : '+esc(ev.texte||''); if(ev.type==='note') return esc(ev.titre||''); return esc(ev.texte||''); }
+var TYPE_LBL={info:'info',radio:'radio',tel:'téléphone',mail:'courriel',cam:'caméra',note:'note'};
+function renderTrainerEvents(){ var sc=scenario(); $('trScenInfo').innerHTML='<p><b>'+esc(sc.titre)+'</b> — prise de poste '+esc(sc.heure.replace(':',' h '))+' — déroulé '+(S.mode==='auto'?'automatique':'formateur (injection manuelle)')+' — phase : '+esc({attente:'en attente',encours:'en cours',pause:'en pause',termine:'terminé'}[S.phase])+'</p><p class="hint">'+esc(sc.contexte)+'</p>';
+  var can=S.phase==='encours'||S.phase==='pause';
+  $('trEvents').innerHTML=sc.events.map(function(ev,i){ var done=S.firedAt[i]!=null; return '<div class="ev'+(done?' done':'')+'"><span class="t">'+fmtMMSS(ev.t)+'</span><span class="ty">'+TYPE_LBL[ev.type]+'</span><span>'+evSummary(ev)+'</span>'+(done?'<span class="st">injecté '+fmtMMSS(S.firedAt[i])+'</span>':'<button type="button" class="btn btn-sm" data-fire="'+i+'"'+(can?'':' disabled')+'>Injecter</button>')+'</div>'; }).join(''); }
+function renderJournal(){ $('trJournal').textContent=S.log.map(function(l){ return l.h+'  ['+l.k+']  '+l.t; }).join('\n')||'(journal vide)'; var j=$('trJournal'); j.scrollTop=j.scrollHeight; }
+function renderInjForm(){ var t=$('injType').value; $('injFromWrap').hidden=!(t==='radio'||t==='tel'||t==='mail'); $('injCamWrap').hidden=t!=='cam'; $('injPresetWrap').hidden=t!=='cam'; $('injObjWrap').hidden=!(t==='mail'||t==='note');
+  var list=t==='radio'?RADIO:(t==='tel'?TEL:MAIL_CONTACTS); fillSelect($('injFrom'),list.map(function(c){ return {v:c.id,l:c.id+' — '+c.nom}; }));
+  fillSelect($('injCam'),CAMERAS.map(function(c){ return {v:c.id,l:c.id+' — '+c.nom}; }),S.curCam); fillSelect($('injPreset'),PRESETS.map(function(p){ return {v:p.id,l:p.l}; })); }
+function inject(){ var t=$('injType').value, text=$('injText').value.trim(), ev={type:t};
+  if(t==='radio'||t==='tel'){ if(!text){ toast('Texte manquant','Saisissez le texte de l’appel.',''); return; } ev.de=$('injFrom').value; ev.texte=text; }
+  else if(t==='mail'){ ev.de=$('injFrom').value; ev.objet=$('injObj').value.trim()||'(sans objet)'; ev.texte=text; }
+  else if(t==='cam'){ var pr=null; for(var i=0;i<PRESETS.length;i++) if(PRESETS[i].id===$('injPreset').value) pr=PRESETS[i]; ev.cam=$('injCam').value; ev.scene=clone({amb:pr.amb,actors:pr.actors}); ev.resume=text||pr.l; }
+  else if(t==='note'){ ev.titre=$('injObj').value.trim()||'Note de service'; ev.texte=text; }
+  else { if(!text){ toast('Texte manquant','Saisissez l’information.',''); return; } ev.texte=text; }
+  applyEvent(ev,true); $('injText').value=''; $('injObj').value=''; toast('Injection effectuée',TYPE_LBL[t],'ok'); renderJournal(); }
+function metrics(){ var sc=scenario(), firstCam=null; for(var i=0;i<sc.events.length;i++){ if(sc.events[i].type==='cam'&&S.firedAt[i]!=null&&sc.events[i].t>0){ firstCam=S.firedAt[i]; break; } }
+  var firstOut=null; for(var j=0;j<S.comms.length;j++){ var c=S.comms[j]; if(c.dir==='out'&&firstCam!=null&&c.el>=firstCam){ firstOut=c.el; break; } }
+  var inc=S.comms.filter(function(c){ return c.dir==='in'&&!c.auto; }).length, unans=S.comms.filter(function(c){ return c.dir==='in'&&!c.answered; }).length;
+  return [ {k:'Durée de l’exercice',v:fmtMMSS(S.elapsed)}, {k:'Lignes de main courante',v:String(S.mc.length)}, {k:'Transmissions radio émises',v:String(S.comms.filter(function(c){ return c.dir==='out'&&c.ch==='radio'; }).length)}, {k:'Appels téléphoniques émis',v:String(S.comms.filter(function(c){ return c.dir==='out'&&c.ch==='tel'; }).length)}, {k:'Courriels envoyés',v:String(S.mails.filter(function(m){ return m.box==='envoye'; }).length)}, {k:'Appels entrants non traités',v:unans+' / '+inc}, {k:'Délai première alerte vidéo → première transmission',v:firstCam==null?'—':(firstOut==null?'aucune transmission':fmtMMSS(firstOut-firstCam))}, {k:'Compte rendu',v:S.cr.faits.trim()?'rédigé':'non rédigé'} ]; }
+function renderDebrief(){ var sc=scenario(); $('trMetrics').innerHTML=metrics().map(function(m){ return '<div class="metric"><div class="v">'+esc(m.v)+'</div><div class="k">'+esc(m.k)+'</div></div>'; }).join('');
+  $('trChecks').innerHTML=sc.attendus.map(function(a,i){ return '<label class="chk"><input type="checkbox" data-chk="'+i+'"'+(S.debrief.checks[i]?' checked':'')+'><span>'+esc(a)+'</span></label>'; }).join('');
+  $('trCorrige').innerHTML='<div class="tablewrap"><table class="register"><thead><tr><th>Heure</th><th>Caméra</th><th>Faits constatés</th><th>Mesures prises</th></tr></thead><tbody>'+sc.corrige.map(function(l){ return '<tr><td class="t">'+fmtHM(simAt(l.t))+'</td><td class="t">'+esc(l.cam)+'</td><td class="pre">'+esc(l.faits)+'</td><td class="pre">'+esc(l.mesures)+'</td></tr>'; }).join('')+'</tbody></table></div>';
+  $('trComment').value=S.debrief.commentaire||''; }
+function renderSettings(){ $('setAlerts').value=SET.alertes?'1':'0'; $('setSound').value=SET.son?'1':'0'; fillSelect($('setCam'),CAMERAS.map(function(c){ return {v:c.id,l:c.id+' — '+c.nom}; }),$('setCam').value||S.curCam);
+  $('setCamGrid').innerHTML=CAMERAS.map(function(c){ var im=SET.camImages[c.id]; return '<div class="it"><div class="pv">'+(im?'<img src="'+im+'" alt="">':sceneSVG(c,S.scene[c.id]))+'</div><span><b>'+c.id+'</b> '+esc(c.nom)+(im?' — photo':' — schéma')+'</span></div>'; }).join('');
+  $('setNotes').innerHTML=SET.notesPerm.map(function(n){ return '<div class="card perm"><h4>'+esc(n.titre)+'</h4><div class="body">'+esc(n.texte)+'</div><div class="acts" style="margin-top:6px"><button type="button" class="lnk" data-delnote="'+esc(n.id)+'">Supprimer</button></div></div>'; }).join('')||'<div class="empty">Aucune note permanente.</div>'; }
+
+/* ---------- impression ---------- */
+function pHead(title){ var sc=scenario(), st=S.simStart?new Date(S.simStart):computeSimStart(); return '<div class="phead"><div>'+(SET.logo?'<img src="'+SET.logo+'" alt="">':'<div class="o">TLF FORMATION</div>')+'<h2>'+esc(title)+'</h2><div class="m">Simulateur O.V.P. — exercice « '+esc(sc.titre)+' »</div></div><div class="m" style="text-align:right">PC vidéo de '+esc(COMMUNE)+' (commune fictive)<br>Prise de poste simulée : '+fmtDate(st)+' à '+fmtHM(st)+'<br>Opérateur : '+esc(S.operateur||'—')+'<br>Déroulé : '+(S.mode==='auto'?'automatique':'formateur')+' — vitesse ×'+S.speed+'</div></div>'; }
+function pFoot(){ return '<div class="pfoot">Document d’exercice produit par le simulateur O.V.P. — valeur pédagogique uniquement, sans portée réglementaire. Édité le '+fmtDate(new Date())+' à '+fmtHM(new Date())+'.</div>'; }
+function docMC(){ return '<div class="pdoc">'+pHead('Main courante')+'<table class="ptab"><thead><tr><th>N°</th><th>Date</th><th>Heure</th><th>Caméra</th><th>Faits constatés</th><th>Mesures prises</th><th>Opérateur</th></tr></thead><tbody>'+(S.mc.length?S.mc.map(function(l){ return '<tr><td>'+l.n+'</td><td>'+esc(l.date)+'</td><td>'+esc(l.heure)+'</td><td>'+esc(l.cam)+'</td><td class="pre">'+esc(l.faits)+'</td><td class="pre">'+esc(l.mesures)+'</td><td>'+esc(l.op)+'</td></tr>'; }).join(''):'<tr><td colspan="7">Aucune ligne.</td></tr>')+'</tbody></table><div class="psig"><div>Visa de l’opérateur</div><div>Visa du responsable</div></div>'+pFoot()+'</div>'; }
+function docCR(){ var c=S.cr, d=c.date?c.date.split('-').reverse().join('/'):''; return '<div class="pdoc">'+pHead('Compte rendu')+'<div class="pmeta"><div><b>Date :</b> '+esc(d)+'</div><div><b>Heure :</b> '+esc(c.heure)+'</div><div><b>De :</b> Opérateur vidéo '+esc(S.operateur||'—')+', PC vidéo</div><div><b>À :</b> '+esc(c.dest)+'</div></div><div class="pblock"><h3>Objet</h3><div class="v">'+esc(c.objet)+'</div></div><div class="pblock"><h3>Faits</h3><div class="v">'+esc(c.faits)+'</div></div><div class="pblock"><h3>Mesures prises</h3><div class="v">'+esc(c.mesures)+'</div></div><div class="pblock"><h3>Suites à donner / observations</h3><div class="v">'+esc(c.suites)+'</div></div><div class="psig"><div>Signature de l’opérateur</div><div>Visa du destinataire</div></div>'+pFoot()+'</div>'; }
+function docComms(){ return '<div class="pdoc">'+pHead('Journal des communications')+'<table class="ptab"><thead><tr><th>Heure</th><th>Canal</th><th>Sens</th><th>Correspondant</th><th>Message</th></tr></thead><tbody>'+(S.comms.length?S.comms.map(function(c){ return '<tr><td>'+esc(c.heure)+'</td><td>'+(c.ch==='radio'?'Radio':'Téléphone')+'</td><td>'+(c.dir==='in'?(c.auto?'Reçu (réponse)':'Reçu'):'Émis')+'</td><td>'+esc(c.dir==='in'?c.from:c.to)+'</td><td class="pre">'+esc(c.text)+'</td></tr>'; }).join(''):'<tr><td colspan="5">Aucune communication.</td></tr>')+'</tbody></table>'+pFoot()+'</div>'; }
+function docMails(){ var ms=S.mails.slice(); return '<div class="pdoc">'+pHead('Messagerie électronique')+(ms.length?ms.map(function(m){ return '<div class="pblock"><h3>'+(m.box==='recu'?'Reçu de '+esc(nameOf(m.de)):'Envoyé à '+esc(m.a))+' — '+esc(m.date+' '+m.heure)+'</h3><div><b>Objet :</b> '+esc(m.objet)+'</div><div class="v">'+esc(m.corps)+'</div></div>'; }).join(''):'<p>Aucun message.</p>')+pFoot()+'</div>'; }
+function docInv(){ return '<div class="pdoc">'+pHead('Inventaire du PC vidéo — prise de poste')+'<table class="ptab"><thead><tr><th>N°</th><th>Équipement / document</th><th>Catégorie</th><th>État</th><th>Observations</th></tr></thead><tbody>'+INVENTORY.map(function(it,i){ var st=S.inv[i]||{}; return '<tr><td>'+(i+1)+'</td><td>'+esc(it.n)+'</td><td>'+esc(it.c)+'</td><td>'+esc(st.etat||'')+'</td><td>'+esc(st.obs||'')+'</td></tr>'; }).join('')+'</tbody></table><div class="psig"><div>Opérateur entrant</div><div>Opérateur sortant / responsable</div></div>'+pFoot()+'</div>'; }
+function docDebrief(){ var sc=scenario(); return '<div class="pdoc">'+pHead('Fiche de débriefing')+'<div class="pmeta">'+metrics().map(function(m){ return '<div><b>'+esc(m.k)+' :</b> '+esc(m.v)+'</div>'; }).join('')+'</div><div class="pblock"><h3>Attendus du scénario</h3><ul class="pchk">'+sc.attendus.map(function(a,i){ return '<li class="'+(S.debrief.checks[i]?'on':'')+'">'+esc(a)+'</li>'; }).join('')+'</ul></div><div class="pblock"><h3>Chronologie des événements injectés</h3><table class="ptab"><thead><tr><th>Heure simulée</th><th>Type</th><th>Événement</th></tr></thead><tbody>'+sc.events.map(function(ev,i){ if(S.firedAt[i]==null) return ''; var txt=ev.type==='cam'?(ev.cam+' — '+(ev.resume||'')):(ev.type==='mail'?(nameOf(ev.de)+' — '+(ev.objet||'')):(ev.type==='note'?(ev.titre||''):((ev.de?ev.de+' : ':'')+(ev.texte||'')))); return '<tr><td>'+fmtTime(simAt(S.firedAt[i]))+'</td><td>'+TYPE_LBL[ev.type]+'</td><td class="pre">'+esc(txt)+'</td></tr>'; }).join('')+'</tbody></table></div><div class="pblock"><h3>Commentaire du formateur</h3><div class="v">'+esc(S.debrief.commentaire)+'</div></div><div class="psig"><div>Le stagiaire</div><div>Le formateur</div></div>'+pFoot()+'</div>'; }
+function doPrint(kind){ var map={mc:docMC,cr:docCR,comms:docComms,mails:docMails,inv:docInv,debrief:docDebrief}; var html=kind==='all'?[docMC(),docCR(),docComms(),docMails(),docInv(),docDebrief()].join(''):(map[kind]||docMC)(); $('printArea').innerHTML=html; $('printModal').hidden=true; setTimeout(function(){ window.print(); },60); }
+
+/* ---------- rendu global ---------- */
+function renderAll(){ renderHeader(); fillSelect($('selCam'),CAMERAS.map(function(c){ return {v:c.id,l:c.id+' — '+c.nom}; }),S.curCam); fillSelect($('mcCam'),[{v:'—',l:'— (hors caméra)'}].concat(CAMERAS.map(function(c){ return {v:c.id,l:c.id+' — '+c.nom}; })).concat([{v:'Plusieurs',l:'Plusieurs caméras'}]),S.curCam); fillSelect($('mcNature'),NATURES.map(function(n){ return {v:n,l:n}; }),NATURES[0]); fillSelect($('mailTo'),MAIL_CONTACTS.map(function(c){ return {v:c.id,l:c.nom+(c.adr?' <'+c.adr+'>':'')}; }));
+  renderCamera(); renderThumbs(); renderPlan(); renderIndicatifs(); setCh(curCh); setBox(curBox); renderNotes(); renderMC(); renderCR(); renderInv(); if(trainerOpen) renderTrainer(); }
+
+/* ---------- liaisons ---------- */
+function on(id,evt,fn){ var el=$(id); if(el) el.addEventListener(evt,fn); }
+function bind(){
+  on('btnStart','click',startExercise); on('btnPause','click',togglePause); on('btnEnd','click',endExercise); on('btnNew','click',newSession);
+  on('selScenario','change',function(){ S.scenarioId=this.value; S.scene={}; S.sceneAt={}; S.alerts={}; renderCamera(); renderThumbs(); renderPlanMarkers(); renderCR(); updateClock(); saveSoon(); });
+  on('selMode','change',function(){ S.mode=this.value; saveSoon(); }); on('selSpeed','change',function(){ S.speed=+this.value; saveSoon(); }); on('inOperateur','change',function(){ S.operateur=this.value.trim(); saveSoon(); });
+  on('btnSound','click',function(){ SET.son=!SET.son; renderHeader(); if(SET.son){ ensureAudio(); beep('radio'); } saveSoon(); });
+  on('btnPrint','click',function(){ $('printModal').hidden=false; }); on('btnDoPrint','click',function(){ doPrint($('printKind').value); });
+  on('btnSave','click',downloadJSON); on('btnLoad','click',function(){ $('loadFile').value=''; $('loadFile').click(); }); on('loadFile','change',function(){ if(this.files[0]) loadJSONFile(this.files[0]); });
+  on('btnTrainer','click',openTrainer); on('btnUnlock','click',unlockTrainer); on('trCode','keydown',function(e){ if(e.key==='Enter') unlockTrainer(); }); on('btnLock','click',lockTrainer);
+  on('logoBtn','click',function(){ if(!$('trPanel').hidden){ $('logoFile').click(); } else toast('Logo','Le logo se charge depuis le panneau Formateur (onglet Paramètres).',''); });
+  document.addEventListener('click',function(e){ var t=e.target.closest ? e.target.closest('[data-close]') : null; if(t){ var m=$(t.getAttribute('data-close')); if(m){ m.hidden=true; if(m.id==='trainerModal') trainerOpen=false; } }
+    var p=e.target.closest ? e.target.closest('[data-print]') : null; if(p) doPrint(p.getAttribute('data-print')); });
+  /* caméra */
+  on('selCam','change',function(){ selectCam(this.value); });
+  var ptzBtns=document.querySelectorAll('[data-ptz]'); for(var i=0;i<ptzBtns.length;i++){ ptzBtns[i].addEventListener('click',function(){ doPTZ(this.getAttribute('data-ptz')); }); }
+  on('thumbs','click',function(e){ var b=e.target.closest('[data-cam]'); if(b) selectCam(b.getAttribute('data-cam')); });
+  /* plan */
+  on('planMarkers','click',function(e){ var b=e.target.closest('[data-cam]'); if(b&&!placing){ selectCam(b.getAttribute('data-cam')); } });
+  on('planBox','click',function(e){ if(!placing||!SET.plan.image) return; var r=this.getBoundingClientRect(); var x=Math.round((e.clientX-r.left)/r.width*1000)/10, y=Math.round((e.clientY-r.top)/r.height*1000)/10; SET.plan.markers[S.curCam]={x:x,y:y}; renderPlanMarkers(); toast('Caméra placée',S.curCam+' → '+x+' % ; '+y+' %','ok'); saveSoon(); });
+  on('btnPlace','click',function(){ placing=!placing; renderPlan(); });
+  /* communications */
+  on('commTabs','click',function(e){ var b=e.target.closest('[data-ch]'); if(b) setCh(b.getAttribute('data-ch')); });
+  on('selPhrase','change',function(){ var ph=(curCh==='radio'?PHRASES_RADIO:PHRASES_TEL)[+this.value]; if(ph&&ph.t){ var t=ph.t.replace(/\{X\}/g,$('selContact').value); var m=$('inMsg'); m.value=(m.value?m.value+'\n':'')+t; m.focus(); } });
+  on('btnSend','click',sendMsg); on('btnMsgClear','click',function(){ $('inMsg').value=''; $('selPhrase').value='0'; });
+  on('inMsg','keydown',function(e){ if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)) sendMsg(); });
+  on('commsList','click',function(e){ var r=e.target.closest('[data-reply]'); if(r){ $('selContact').value=r.getAttribute('data-reply'); $('inMsg').focus(); return; } var m=e.target.closest('[data-tomc]'); if(m) commToMC(m.getAttribute('data-tomc')); });
+  /* main courante */
+  on('btnMcAdd','click',addMC);
+  /* compte rendu */
+  var crf=document.querySelectorAll('[data-cr]'); for(var j=0;j<crf.length;j++){ crf[j].addEventListener('input',function(){ S.cr[this.getAttribute('data-cr')]=this.value; saveSoon(); }); crf[j].addEventListener('change',function(){ S.cr[this.getAttribute('data-cr')]=this.value; saveSoon(); }); }
+  on('btnCrFromMc','click',crFromMC);
+  /* messagerie */
+  on('mailTabs','click',function(e){ var b=e.target.closest('[data-box]'); if(b) setBox(b.getAttribute('data-box')); });
+  on('mailList','click',function(e){ var b=e.target.closest('[data-mail]'); if(b) openMail(b.getAttribute('data-mail')); });
+  on('mailRead','click',function(e){ var b=e.target.closest('[data-replymail]'); if(b) replyMail(b.getAttribute('data-replymail')); });
+  on('btnMailSend','click',sendMail); on('btnMailClear','click',function(){ $('mailObj').value=''; $('mailBody').value=''; });
+  /* inventaire */
+  on('invBody','change',function(e){ var s=e.target.getAttribute('data-inv'); if(s!=null){ S.inv[+s].etat=e.target.value; saveSoon(); } var o=e.target.getAttribute('data-invobs'); if(o!=null){ S.inv[+o].obs=e.target.value; saveSoon(); } });
+  on('btnInvOk','click',function(){ for(var k=0;k<S.inv.length;k++) S.inv[k].etat=INV_ETATS[1]; renderInv(); saveSoon(); toast('Inventaire','Tous les équipements marqués « présent – fonctionne ».','ok'); });
+  /* formateur */
+  on('trTabs','click',function(e){ var b=e.target.closest('[data-tab]'); if(b) showTrTab(b.getAttribute('data-tab')); });
+  on('trEvents','click',function(e){ var b=e.target.closest('[data-fire]'); if(b){ fireEvent(+b.getAttribute('data-fire')); renderTrainerEvents(); } });
+  on('injType','change',renderInjForm); on('btnInject','click',inject);
+  on('trChecks','change',function(e){ var c=e.target.getAttribute('data-chk'); if(c!=null){ S.debrief.checks[c]=e.target.checked; saveSoon(); } });
+  on('trComment','input',function(){ S.debrief.commentaire=this.value; saveSoon(); });
+  on('setAlerts','change',function(){ SET.alertes=this.value==='1'; if(!SET.alertes) S.alerts={}; renderThumbs(); renderPlanMarkers(); updateClock(); saveSoon(); });
+  on('setSound','change',function(){ SET.son=this.value==='1'; renderHeader(); saveSoon(); });
+  on('btnLogoLoad','click',function(){ $('logoFile').value=''; $('logoFile').click(); }); on('logoFile','change',function(){ if(this.files[0]) readImage(this.files[0],480,function(data){ SET.logo=data; renderHeader(); saveSoon(); toast('Logo chargé','','ok'); }); });
+  on('btnLogoDel','click',function(){ SET.logo=null; renderHeader(); saveSoon(); });
+  on('btnPlanLoad','click',function(){ $('planFile').value=''; $('planFile').click(); }); on('planFile','change',function(){ if(this.files[0]) readImage(this.files[0],1600,function(data,ratio){ SET.plan.image=data; SET.plan.ratio=Math.round(ratio*1000)/1000; placing=true; renderPlan(); saveSoon(); toast('Plan chargé','Placez maintenant chaque caméra : sélectionnez-la puis touchez le plan.','ok'); }); });
+  on('btnPlanDel','click',function(){ SET.plan.image=null; SET.plan.ratio=null; placing=false; renderPlan(); saveSoon(); });
+  on('btnCamLoad','click',function(){ $('camFile').value=''; $('camFile').click(); }); on('camFile','change',function(){ var id=$('setCam').value; if(this.files[0]) readImage(this.files[0],1400,function(data){ SET.camImages[id]=data; renderCamera(); renderThumbs(); renderSettings(); saveSoon(); toast('Photo chargée',id,'ok'); }); });
+  on('btnCamDel','click',function(){ var id=$('setCam').value; delete SET.camImages[id]; renderCamera(); renderThumbs(); renderSettings(); saveSoon(); });
+  on('setNotes','click',function(e){ var b=e.target.closest('[data-delnote]'); if(b){ var id=b.getAttribute('data-delnote'); SET.notesPerm=SET.notesPerm.filter(function(n){ return n.id!==id; }); renderNotes(); renderSettings(); saveSoon(); } });
+  on('btnNoteAdd','click',function(){ var t=$('setNoteTitle').value.trim(), x=$('setNoteText').value.trim(); if(!t&&!x){ toast('Note vide','Indiquez un titre et un texte.',''); return; } SET.notesPerm.push({id:uid(),titre:t||'Note de service',texte:x}); $('setNoteTitle').value=''; $('setNoteText').value=''; renderNotes(); renderSettings(); saveSoon(); });
+  on('btnWipe','click',function(){ if(confirm('Effacer toutes les données enregistrées dans ce navigateur (session, réglages, logo, images) ? Cette action est définitive.')){ localStorage.removeItem(LS_STATE); localStorage.removeItem(LS_SET); location.reload(); } });
+  window.addEventListener('keydown',function(e){ if(e.key==='Escape'){ $('printModal').hidden=true; if(!$('trainerModal').hidden) closeTrainer(); } });
+}
+
+/* ---------- démarrage ---------- */
+if(!Element.prototype.closest){ Element.prototype.closest=function(sel){ var el=this; while(el&&el.nodeType===1){ if(el.matches(sel)) return el; el=el.parentElement; } return null; }; }
+load(); bind(); renderAll(); timer=setInterval(tick,1000);
+if(S.phase==='pause' && S.mc.length+S.comms.length>0){ toast('Session restaurée','L’exercice précédent a été rechargé en pause. Reprenez-le ou ouvrez une nouvelle session.',''); }
+})();
+
+</script>
+</body>
+</html>
