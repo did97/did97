@@ -24,7 +24,14 @@ a{color:inherit}
 [hidden]{display:none !important}
 :focus-visible{outline:2px solid #1f6feb;outline-offset:1px}
 
-#app{display:grid;grid-template-columns:118px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);min-height:100vh}
+#app{display:grid;grid-template-columns:118px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);min-height:100vh;min-height:100dvh}
+/* Safari iOS < 15 : pas de aspect-ratio → on réserve la hauteur 16/9 avec un pseudo-élément */
+@supports not (aspect-ratio:16/9){
+  .monitor::before,.planbox::before,.thumb::before,.thumbgrid .it .pv::before{content:"";display:block;padding-top:56.25%}
+  .monitor .view,.monitor .osd{position:absolute}
+  .thumb svg,.thumb img,.thumbgrid .it .pv svg,.thumbgrid .it .pv img{position:absolute;left:0;top:0}
+  .thumb,.thumbgrid .it .pv{position:relative}
+}
 
 /* ---------- En-tête ---------- */
 header.top{grid-column:1/-1;display:flex;align-items:center;gap:22px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -40,6 +47,13 @@ header.top{grid-column:1/-1;display:flex;align-items:center;gap:22px;padding:10p
 .clock{margin-left:auto;text-align:right;min-width:150px}
 .clock .time{font:600 26px/1 var(--mono);letter-spacing:.02em}
 .clock .date{font-size:12px;color:var(--ink2);margin-top:3px}
+.ctx{grid-column:1/-1;font-size:12.5px;color:var(--ink2);border-left:3px solid var(--line);padding:3px 10px;margin-top:-2px}
+.ctx b{color:var(--ink)}
+.ctx:empty{display:none}
+.scorebar{display:flex;align-items:center;gap:10px;font-size:13px;flex-wrap:wrap}
+.scorebar .bar{flex:1 1 160px;height:8px;background:#e9eaec;border-radius:4px;overflow:hidden}
+.scorebar .bar i{display:block;height:100%;background:var(--ok)}
+.scorebar b{font-family:var(--mono)}
 .status{display:inline-block;margin-top:5px;font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid var(--line);color:var(--ink2);background:#f6f6f7}
 .status.on{border-color:var(--ok);color:var(--ok)}
 .status.pause{border-color:var(--warn);color:var(--warn)}
@@ -118,8 +132,8 @@ main.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;p
 .ptz button{border:1px solid #6a6d73;background:#24262a;color:#eee;border-radius:4px;cursor:pointer;font-size:14px;line-height:1;padding:0}
 .ptz button:hover{background:#3a3d42}
 .ptz .wide{grid-column:span 3;font-size:12px}
-.thumbs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
-.thumb{flex:0 0 118px;position:relative;aspect-ratio:16/9;background:#1e2024;border:2px solid #55585e;border-radius:3px;padding:0;cursor:pointer;overflow:hidden}
+.thumbs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.thumb{position:relative;aspect-ratio:16/9;background:#1e2024;border:2px solid #55585e;border-radius:3px;padding:0;cursor:pointer;overflow:hidden;min-width:0}
 .thumb svg,.thumb img{width:100%;height:100%;display:block;object-fit:cover}
 .thumb .lab{position:absolute;left:4px;top:3px;color:#fff;font:600 10px var(--mono);text-shadow:0 1px 2px #000}
 .thumb.active{border-color:#fff}
@@ -210,7 +224,7 @@ details.ax td,details.ax th{border:1px solid var(--line2);padding:3px 6px;text-a
 
 /* ---------- Fenêtres ---------- */
 .modal{position:fixed;inset:0;background:rgba(20,22,25,.55);display:flex;align-items:center;justify-content:center;padding:14px;z-index:100}
-.dialog{background:#fff;border-radius:8px;width:min(980px,100%);max-height:94vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.dialog{background:#fff;border-radius:8px;width:min(980px,100%);max-height:94vh;max-height:94dvh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .dialog.sm{width:min(520px,100%)}
 .dialog-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
 .dialog-h h3{font-size:16px}
@@ -260,6 +274,8 @@ details.ax td,details.ax th{border:1px solid var(--line2);padding:3px 6px;text-a
   main.grid{grid-template-columns:minmax(0,1fr)}
   #secCam,#secPlan,#secComms,#secMC,#secCR,#secMail,#secNotes,#secAnnex,#secInv{grid-column:span 1}
   .clock{margin-left:0;text-align:left}
+  .thumbs{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .ptz{grid-template-columns:repeat(3,40px);grid-auto-rows:40px}
   .ev{grid-template-columns:52px 1fr auto}
   .ev .ty{display:none}
 }
@@ -325,6 +341,7 @@ details.ax td,details.ax th{border:1px solid var(--line2);padding:3px 6px;text-a
     <div class="date" id="clockDate">—</div>
     <span class="status" id="status">En attente</span>
   </div>
+  <div class="ctx" id="scenCtx"></div>
 </header>
 
 <nav class="rail" aria-label="Actions">
@@ -489,6 +506,18 @@ details.ax td,details.ax th{border:1px solid var(--line2);padding:3px 6px;text-a
     <div class="sec-h"><h2>Annexes</h2></div>
     <div class="sec-b">
 
+      <details class="ax"><summary>Prise en main du simulateur (stagiaire)</summary><div class="c">
+        <ol>
+          <li><b>Prise de poste</b> : renseignez votre nom, vérifiez l’inventaire du PC vidéo, lisez les notes de service, puis consignez la prise de poste en main courante.</li>
+          <li><b>Démarrer l’exercice</b> : l’horloge simulée se lance à l’heure du scénario. Les événements arrivent par la radio, le téléphone, la messagerie ou les caméras (marqueur rouge sur le mur d’images et sur le plan).</li>
+          <li><b>Écran 1</b> : choisissez la caméra (liste, mur d’images ou plan), utilisez le PTZ pour zoomer. L’OSD indique l’heure simulée.</li>
+          <li><b>Radio / téléphone</b> : chaque appel entrant est « à traiter » tant que vous n’avez pas répondu au correspondant. Les phrases types vous aident à structurer vos transmissions.</li>
+          <li><b>Main courante</b> : une ligne par fait ou action, au fil de l’eau. « Reporter en main courante » depuis une communication pré-remplit la ligne.</li>
+          <li><b>Compte rendu</b> : en fin d’exercice, « Pré-remplir depuis la main courante » puis rédigez objet, mesures et suites.</li>
+          <li><b>Terminer</b> : arrêtez le chronomètre, puis faites le débriefing avec le formateur (panneau Formateur). « Impression » produit le dossier complet en PDF.</li>
+        </ol>
+      </div></details>
+
       <details class="ax"><summary>Mémo réglementaire (extraits simplifiés)</summary><div class="c">
         <p class="hint">Rappels pédagogiques. Les références sont à vérifier dans leur version en vigueur sur Légifrance.</p>
         <table>
@@ -545,6 +574,34 @@ details.ax td,details.ax th{border:1px solid var(--line2);padding:3px 6px;text-a
           <tr><td>196</td><td>Secours en mer (CROSS)</td></tr>
         </table>
         <p class="hint" style="margin-top:6px">Message d’alerte : qui appelle, où exactement (commune, voie, repère, caméra), quoi, combien de victimes et état apparent, dangers persistants, puis répondre aux questions et ne raccrocher que sur consigne.</p>
+      </div></details>
+
+      <details class="ax"><summary>Remise d’images : réquisition et registre des extractions</summary><div class="c">
+        <ul>
+          <li>Aucune image n’est visionnée par un tiers ni extraite sans <b>réquisition judiciaire écrite</b> (OPJ, art. 60-1, 77-1-1 ou 99-3 CPP) ou demande écrite de la direction. Un particulier, même victime, est orienté vers le dépôt de plainte.</li>
+          <li>Vérifier la réquisition : service demandeur, signature, caméras et créneau horaire précis. Extraire uniquement ce qui est demandé.</li>
+          <li>Remise sur support neuf, scellé si demandé, contre <b>récépissé</b> ; copie de la réquisition conservée au PC.</li>
+          <li>Consigner dans le <b>registre des extractions</b> : date, heure, demandeur, caméras, créneau, support, opérateur. Tracer aussi toute visite au PC dans le registre des visiteurs.</li>
+          <li>Préservation : en cas d’incident, signaler sans délai au responsable les caméras et le créneau à conserver au-delà de la durée d’effacement automatique.</li>
+        </ul>
+      </div></details>
+
+      <details class="ax"><summary>Incident technique (perte de signal, panne)</summary><div class="c">
+        <ul>
+          <li>Noter l’heure exacte de la perte et du retour du signal, les caméras concernées et le symptôme (écran noir, image figée, pas d’enregistrement).</li>
+          <li>Prévenir le responsable du PC vidéo et le service technique ou la maintenance ; consigner en main courante (nature « Incident technique »).</li>
+          <li>Continuer la surveillance du secteur avec les caméras voisines ; informer les patrouilles de la zone non couverte.</li>
+          <li>Vérifier l’enregistreur à la reprise du signal et signaler toute lacune d’enregistrement.</li>
+        </ul>
+      </div></details>
+
+      <details class="ax"><summary>Rassemblements et manifestations</summary><div class="c">
+        <ul>
+          <li>Rendre compte de façon factuelle : effectif estimé, position, direction, attitude (calme, hostile), emprise sur la chaussée, incidents.</li>
+          <li>Pas de qualification politique, syndicale ou religieuse des participants ; pas de zoom sur les visages ou les pancartes hors infraction constatée.</li>
+          <li>Suivre uniquement les auteurs d’infractions (dégradations, violences) avec un signalement précis.</li>
+          <li>Aucune image communiquée à la presse ou à un tiers ; toute demande passe par la direction.</li>
+        </ul>
       </div></details>
 
       <details class="ax"><summary>Conduite à tenir : objet ou colis abandonné</summary><div class="c">
@@ -640,6 +697,7 @@ details.ax td,details.ax th{border:1px solid var(--line2);padding:3px 6px;text-a
       <div class="dialog-b" id="trDeb" hidden>
         <div class="metrics" id="trMetrics"></div>
         <h4>Attendus du scénario</h4>
+        <div class="scorebar" id="trScore"></div>
         <div id="trChecks"></div>
         <h4>Corrigé indicatif (main courante)</h4>
         <div id="trCorrige"></div>
@@ -716,7 +774,9 @@ var TEL = [
   {id:'RESP CSU', nom:'Responsable du PC vidéo', ack:'Responsable : merci. Consignez tout en main courante et faites-moi un compte rendu écrit.'},
   {id:'ASTREINTE', nom:'Élu d’astreinte', ack:'Élu d’astreinte : entendu, tenez-moi informé de l’évolution.'},
   {id:'GARE', nom:'Accueil de la gare routière', ack:'Accueil gare : d’accord, j’applique vos consignes.'},
-  {id:'PC CC', nom:'PC sécurité du centre commercial', ack:'PC sécurité : bien reçu, nous regardons de notre côté.'}
+  {id:'PC CC', nom:'PC sécurité du centre commercial', ack:'PC sécurité : bien reçu, nous regardons de notre côté.'},
+  {id:'TÉLÉSURV', nom:'Société de télésurveillance (alarmes bâtiments)', ack:'Télésurveillance : bien noté, nous engageons l’intervenant et prévenons les forces de l’ordre. Rappelez-nous pour tout élément nouveau.'},
+  {id:'MAINT', nom:'Maintenance vidéo (astreinte technique)', ack:'Maintenance : incident enregistré, un technicien est prévenu. Notez l’heure de la panne et du retour éventuel du signal.'}
 ];
 var MAIL_CONTACTS = [
   {id:'RESP CSU', nom:'Responsable du PC vidéo', adr:'pcvideo@bellevue-les-anses.fr'},
@@ -780,6 +840,11 @@ var NOTES_DEFAUT = [
 var PRESETS = [
   {id:'ras', l:'Rien à signaler (scène calme, jour)', amb:'jour', actors:[]},
   {id:'nuit', l:'Scène calme, mode nuit', amb:'nuit', actors:[]},
+  {id:'pluie', l:'Scène calme, pluie', amb:'pluie', actors:[]},
+  {id:'hs', l:'Perte du signal vidéo (caméra hors service)', amb:'hs', actors:[]},
+  {id:'police', l:'Arrivée d’une patrouille (véhicule de police municipale)', amb:'jour', actors:[{k:'v',kind:'police',x:420,y:790,color:'#f2f2f2',dir:'d',lab:'PM'},{k:'p',x:700,y:730,top:'#3b5b8a',bot:'#222',item:'gilet',dir:'d'},{k:'p',x:800,y:740,top:'#3b5b8a',bot:'#222',item:'gilet',dir:'g'}]},
+  {id:'manif', l:'Rassemblement avec pancartes (une quinzaine de personnes)', amb:'jour', actors:[{k:'p',x:520,y:700,top:'#999',bot:'#333',item:'pancarte'},{k:'p',x:620,y:730,top:'#eee',bot:'#555'},{k:'p',x:700,y:710,top:'#a33',bot:'#222',item:'pancarte'},{k:'p',x:780,y:745,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long'},{k:'p',x:860,y:715,top:'#222',bot:'#666'},{k:'p',x:940,y:735,top:'#ddd',bot:'#333',sex:'F',hair:'long',item:'pancarte'},{k:'p',x:1020,y:720,top:'#777',bot:'#444'},{k:'p',x:1100,y:740,top:'#eee',bot:'#222',hat:'casquette',hatc:'#111'},{k:'p',x:580,y:770,top:'#3b5b8a',bot:'#777'},{k:'p',x:980,y:775,top:'#999',bot:'#222',sex:'F',hair:'long'}]},
+  {id:'effraction', l:'Deux individus forçant une porte (nuit)', amb:'nuit', actors:[{k:'p',x:760,y:720,top:'#222',bot:'#222',hat:'capuche',hatc:'#111',item:'outil',pose:'penche',dir:'d',lab:'N'},{k:'p',x:900,y:735,top:'#3a3f4a',bot:'#222',hat:'bonnet',hatc:'#222',dir:'g',lab:'O'}]},
   {id:'ind1', l:'Individu seul (homme, casquette noire, sac à dos)', amb:'jour', actors:[{k:'p',x:820,y:720,top:'#444',bot:'#555',hat:'casquette',hatc:'#111',item:'sacados',pose:'debout',lab:'A'}]},
   {id:'ind2', l:'Deux individus en discussion', amb:'jour', actors:[{k:'p',x:740,y:720,top:'#eee',bot:'#333',hair:'court',pose:'debout',dir:'d',lab:'A'},{k:'p',x:860,y:720,top:'#3b5b8a',bot:'#777',hat:'casquette',hatc:'#eee',pose:'debout',dir:'g',lab:'B'}]},
   {id:'groupe', l:'Groupe de cinq personnes', amb:'jour', actors:[{k:'p',x:600,y:700,top:'#999',bot:'#333'},{k:'p',x:700,y:730,top:'#eee',bot:'#555',hat:'casquette',hatc:'#111'},{k:'p',x:800,y:710,top:'#a33',bot:'#222'},{k:'p',x:900,y:740,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long'},{k:'p',x:980,y:700,top:'#222',bot:'#666'}]},
@@ -988,6 +1053,190 @@ var SCENARIOS = [
     {t:145, cam:'C12', faits:'Appel du SAMU pour confirmation.', mesures:'Éléments factuels transmis (position, état apparent, DAE au stade). PM 2 orientée pour apporter le DAE.'},
     {t:290, cam:'C12', faits:'Arrivée de PM 2 puis du VSAV ; prise en charge de la victime, public écarté.', mesures:'Compte rendu rédigé. Aucune image extraite.'}
   ]
+},
+{
+  id:'scooter', titre:'Vol de scooter sur le parking et demandes d’images (réquisition)', heure:'09:40', amb:'jour',
+  contexte:'Mardi matin. PM 1 en patrouille véhicule en zone commerciale, AGENT CC présent au centre commercial. Rappel de la note de service : registre des visiteurs et registre des extractions à tenir ; aucune image ne sort du PC sans réquisition écrite.',
+  events:[
+    {t:0, type:'info', texte:'Prise de poste 9 h 40. Parking du centre commercial (C08) : affluence modérée.'},
+    {t:30, type:'cam', cam:'C08', resume:'Deux individus (H : sweat gris à capuche, jean ; I : t-shirt noir, short noir, casquette blanche) tournent autour d’un scooter noir stationné près de l’entrée.', scene:{amb:'jour', actors:[{k:'v',kind:'scooter',x:820,y:770,color:'#1a1a1a',plate:'FB-6··-ZT',dir:'g'},{k:'p',x:720,y:740,top:'#8a8a8a',bot:'#3b5b8a',hat:'capuche',hatc:'#8a8a8a',dir:'d',lab:'H'},{k:'p',x:940,y:730,top:'#222',bot:'#222',hat:'casquette',hatc:'#eee',item:'tel',dir:'g',lab:'I'}]}},
+    {t:70, type:'cam', cam:'C08', resume:'H, penché sur le scooter, force le neiman avec un outil ; I fait le guet, téléphone à la main, regarde vers l’entrée du centre commercial.', scene:{amb:'jour', actors:[{k:'v',kind:'scooter',x:820,y:770,color:'#1a1a1a',plate:'FB-6··-ZT',dir:'g'},{k:'p',x:730,y:748,top:'#8a8a8a',bot:'#3b5b8a',hat:'capuche',hatc:'#8a8a8a',item:'outil',pose:'penche',dir:'d',lab:'H'},{k:'p',x:980,y:725,top:'#222',bot:'#222',hat:'casquette',hatc:'#eee',item:'tel',dir:'g',lab:'I'}]}},
+    {t:100, type:'cam', cam:'C08', resume:'Les deux individus partent sur le scooter noir (immatriculation partielle lisible : FB-6··-ZT), I en passager sans casque, vers la sortie du parking (rond-point, C07).', scene:{amb:'jour', actors:[{k:'v',kind:'scooter',x:1300,y:790,color:'#1a1a1a',plate:'FB-6··-ZT',dir:'d',lab:'2 occupants, sans casque'}]}},
+    {t:130, type:'cam', cam:'C07', resume:'Le scooter FB-6··-ZT franchit le rond-point de la zone commerciale et prend la direction du centre-bourg (ouest).', scene:{amb:'jour', actors:[{k:'v',kind:'scooter',x:520,y:780,color:'#1a1a1a',plate:'FB-6··-ZT',dir:'g',lab:'2 occupants'}]}},
+    {t:150, type:'radio', de:'AGENT CC', texte:'Vidéo d’AGENT CC : un client me signale qu’on vient de lui voler son scooter noir sur le parking, il y a deux minutes. Vous avez vu quelque chose ? À vous.'},
+    {t:200, type:'radio', de:'PM 1', texte:'Vidéo de PM 1 : bien reçu pour le vol de scooter, nous sommes au rond-point. Donnez-nous la direction et le signalement des auteurs. À vous.'},
+    {t:240, type:'cam', cam:'C03', resume:'Le scooter noir et ses deux occupants remontent la rue de la République et tournent vers la cité des Flamboyants.', scene:{amb:'jour', actors:[{k:'v',kind:'scooter',x:700,y:785,color:'#1a1a1a',plate:'FB-6··-ZT',dir:'g',lab:'2 occupants'}]}},
+    {t:290, type:'tel', de:'STANDARD', texte:'Standard de la mairie : j’ai la victime du vol de scooter en ligne. Il voudrait passer au PC vidéo tout de suite pour voir les images et relever la plaque des voleurs pour sa plainte. Je lui dis de venir ?'},
+    {t:340, type:'tel', de:'17', texte:'CIC police nationale : un OPJ du commissariat va vous adresser une réquisition pour les images du vol de scooter. En attendant, préservez les enregistrements de C08, C07 et C03 entre 9 h 40 et 9 h 50. Vous pouvez me confirmer les caméras utiles et le créneau ?'},
+    {t:400, type:'mail', de:'RESP CSU', objet:'Réquisition à venir – vol de scooter', texte:'Bonjour,\n\nLe commissariat va adresser une réquisition judiciaire écrite (art. 60-1 CPP) pour les images de ce matin.\nProcédure : vérifier la réquisition (service, signature, caméras, créneau), extraire uniquement ce qui est demandé, remettre sur support neuf contre récépissé, consigner dans le registre des extractions.\nAucune remise ni visionnage par un particulier, même victime : orientation vers le dépôt de plainte.\n\nLe responsable du PC vidéo'},
+    {t:450, type:'radio', de:'PM 1', texte:'Vidéo de PM 1 : scooter retrouvé abandonné à l’entrée de la cité des Flamboyants, les deux individus sont partis à pied. Vous les avez ? À vous.'},
+    {t:480, type:'cam', cam:'C09', resume:'H (capuche grise) et I (casquette blanche) traversent à pied l’entrée de la cité vers les immeubles ; scooter laissé sur le trottoir. Arrivée de PM 1.', scene:{amb:'jour', actors:[{k:'v',kind:'scooter',x:1180,y:790,color:'#1a1a1a',plate:'FB-6··-ZT',dir:'g'},{k:'p',x:520,y:715,top:'#8a8a8a',bot:'#3b5b8a',hat:'capuche',hatc:'#8a8a8a',pose:'marche',dir:'g',lab:'H'},{k:'p',x:620,y:725,top:'#222',bot:'#222',hat:'casquette',hatc:'#eee',pose:'marche',dir:'g',lab:'I'},{k:'v',kind:'police',x:1450,y:800,color:'#f2f2f2',dir:'g',lab:'PM 1'}]}}
+  ],
+  attendus:[
+    'Détecte la manipulation du scooter sur C08 et alerte PM 1 (ou le 17) dès la tentative, sans attendre l’appel d’AGENT CC.',
+    'Signalement complet des deux auteurs et du scooter (couleur, immatriculation partielle épelée, deux occupants sans casque, direction).',
+    'Suivi caméra C08 → C07 → C03 → C09 et guidage de PM 1 en temps réel.',
+    'Refuse le visionnage et la communication de la plaque au particulier ; l’oriente vers le dépôt de plainte et en informe le responsable.',
+    'Confirme au CIC les caméras utiles et le créneau à préserver ; demande la réquisition écrite avant toute extraction.',
+    'Connaît la procédure de remise : réquisition vérifiée, extraction limitée, support neuf, récépissé, registre des extractions.',
+    'Main courante au fil de l’eau (y compris les demandes d’images et les refus) et compte rendu écrit.'
+  ],
+  corrige:[
+    {t:0, cam:'—', faits:'Prise de poste. Vérification du mur d’images et de l’inventaire : RAS.', mesures:'—'},
+    {t:30, cam:'C08', faits:'Deux individus (H : sweat gris à capuche, jean ; I : t-shirt noir, short noir, casquette blanche) tournent autour d’un scooter noir près de l’entrée.', mesures:'Surveillance renforcée C08.'},
+    {t:70, cam:'C08', faits:'H force le neiman du scooter avec un outil, I fait le guet.', mesures:'Alerte radio PM 1 : vol de scooter en cours, signalement des auteurs. AGENT CC informé.'},
+    {t:100, cam:'C08', faits:'Départ des deux individus sur le scooter noir FB-6··-ZT (Foxtrot Bravo – 6 – Zulu Tango), passager sans casque, vers le rond-point.', mesures:'Direction transmise à PM 1 ; suivi caméra C07.'},
+    {t:240, cam:'C03', faits:'Scooter remonte la rue de la République puis tourne vers la cité des Flamboyants.', mesures:'PM 1 guidée vers la cité ; préservation des images C08, C07, C03 (9 h 40 – 9 h 50).'},
+    {t:290, cam:'—', faits:'Demande de la victime (via standard) de visionner les images et relever la plaque.', mesures:'Refus : orientation vers le dépôt de plainte, images réservées à la réquisition. Responsable informé.'},
+    {t:340, cam:'—', faits:'Appel du CIC : réquisition à venir, demande de préservation.', mesures:'Caméras et créneau confirmés ; extraction uniquement sur réquisition écrite, remise contre récépissé, registre des extractions.'},
+    {t:480, cam:'C09', faits:'Scooter abandonné entrée de la cité ; H et I partent à pied vers les immeubles. Arrivée de PM 1.', mesures:'Dernière position et direction transmises à PM 1. Compte rendu rédigé.'}
+  ]
+},
+{
+  id:'panne', titre:'Perte de signal et intrusion au stade municipal', heure:'22:40', amb:'nuit',
+  contexte:'Soirée, dernier match terminé à 22 h, stade fermé depuis 22 h 30. PM 2 en patrouille véhicule, TECH 1 d’astreinte, maintenance vidéo (MAINT) joignable par téléphone. Caméras en mode nuit.',
+  events:[
+    {t:0, type:'info', texte:'Prise de poste 22 h 40. Stade municipal fermé, éclairage public allumé secteur stade / lycée.'},
+    {t:30, type:'cam', cam:'C11', resume:'Perte du signal vidéo sur C11 (stade) : écran noir « perte du signal ».', scene:{amb:'hs', actors:[]}},
+    {t:60, type:'cam', cam:'C12', resume:'Perte du signal sur C12 (lycée – arrêt de bus), même secteur.', scene:{amb:'hs', actors:[]}},
+    {t:100, type:'radio', de:'TECH 1', texte:'Vidéo de TECH 1 : on a une coupure électrique signalée secteur stade, l’éclairage public est éteint rue du stade. Vous avez encore vos caméras là-bas ? À vous.'},
+    {t:150, type:'cam', cam:'C11', resume:'Retour du signal sur C11 après environ deux minutes. Deux individus (J : capuche noire, pantalon noir ; K : blouson clair, jean, bonnet) escaladent la clôture du stade côté tribune.', scene:{amb:'nuit', actors:[{k:'p',x:700,y:700,top:'#222',bot:'#222',hat:'capuche',hatc:'#111',pose:'marche',dir:'d',lab:'J'},{k:'p',x:800,y:705,top:'#d8d2c4',bot:'#3b5b8a',hat:'bonnet',hatc:'#333',pose:'marche',dir:'d',lab:'K'}]}},
+    {t:180, type:'radio', de:'PM 2', texte:'Vidéo de PM 2 : nous sommes en zone commerciale, rien à signaler, à vous.'},
+    {t:220, type:'cam', cam:'C11', resume:'J et K se dirigent vers le local matériel sous la tribune ; J porte un objet long (type barre).', scene:{amb:'nuit', actors:[{k:'p',x:560,y:690,top:'#222',bot:'#222',hat:'capuche',hatc:'#111',item:'outil',pose:'marche',dir:'g',lab:'J'},{k:'p',x:660,y:700,top:'#d8d2c4',bot:'#3b5b8a',hat:'bonnet',hatc:'#333',pose:'marche',dir:'g',lab:'K'}]}},
+    {t:250, type:'cam', cam:'C12', resume:'Retour du signal sur C12. Une citadine sombre est stationnée feux éteints à l’arrêt de bus du lycée, moteur tournant, un occupant au volant.', scene:{amb:'nuit', actors:[{k:'v',kind:'citadine',x:1100,y:785,color:'#2b2f36',plate:'GA-1··-ZT',dir:'g',lab:'citadine sombre'}]}},
+    {t:290, type:'tel', de:'RESP CSU', texte:'Responsable du PC vidéo : on m’appelle pour une coupure secteur stade. Qu’avez-vous constaté exactement, à quelle heure, et qu’avez-vous fait ? L’incident technique est-il consigné et la maintenance prévenue ?'},
+    {t:340, type:'cam', cam:'C11', resume:'J force la porte du local sous la tribune avec la barre ; K fait le guet, regarde vers la caméra.', scene:{amb:'nuit', actors:[{k:'p',x:520,y:735,top:'#222',bot:'#222',hat:'capuche',hatc:'#111',item:'outil',pose:'penche',dir:'g',lab:'J'},{k:'p',x:660,y:720,top:'#d8d2c4',bot:'#3b5b8a',hat:'bonnet',hatc:'#333',dir:'d',lab:'K'}]}},
+    {t:380, type:'radio', de:'PM 2', texte:'Vidéo de PM 2 : on arrive au stade dans trois minutes, tous feux éteints. Ils sont où exactement, combien ? Le véhicule est toujours à l’arrêt de bus ? À vous.'},
+    {t:430, type:'cam', cam:'C12', resume:'La citadine sombre démarre et quitte l’arrêt de bus vers le nord (rond-point) avant l’arrivée de PM 2.', scene:{amb:'nuit', actors:[{k:'v',kind:'citadine',x:400,y:785,color:'#2b2f36',plate:'GA-1··-ZT',dir:'g',lab:'citadine sombre'}]}},
+    {t:460, type:'cam', cam:'C11', resume:'Arrivée de PM 2 ; J et K interpellés à la sortie du local.', scene:{amb:'nuit', actors:[{k:'v',kind:'police',x:1200,y:800,color:'#f2f2f2',dir:'g',lab:'PM 2'},{k:'p',x:600,y:730,top:'#222',bot:'#222',hat:'capuche',hatc:'#111',dir:'d',lab:'J'},{k:'p',x:700,y:735,top:'#d8d2c4',bot:'#3b5b8a',hat:'bonnet',hatc:'#333',dir:'d',lab:'K'},{k:'p',x:820,y:725,top:'#3b5b8a',bot:'#222',item:'gilet',dir:'g'},{k:'p',x:920,y:740,top:'#3b5b8a',bot:'#222',item:'gilet',dir:'g'}]}},
+    {t:500, type:'mail', de:'RESP CSU', objet:'Incident technique C11/C12 et intrusion au stade', texte:'Merci de consigner l’incident technique (heure de perte et de retour du signal pour chaque caméra, personnes prévenues) et de rédiger un compte rendu sur l’intrusion au stade.\nPréservez les images C11 et C12 à partir de 22 h 40 et vérifiez que l’enregistreur n’a pas de lacune.\n\nLe responsable du PC vidéo'}
+  ],
+  attendus:[
+    'Constate et consigne la perte de signal (heure, caméras, symptôme) ; prévient la maintenance / TECH 1 et le responsable (incident technique).',
+    'Maintient la surveillance du secteur avec les caméras voisines et informe PM 2 de la zone non couverte.',
+    'Détecte l’escalade dès le retour du signal et alerte PM 2 (ou le 17) immédiatement.',
+    'Signalement de J et K (tenues, objet porté) et du véhicule (citadine sombre, immatriculation partielle, position, occupant).',
+    'Guide PM 2 en temps réel (position exacte des individus, véhicule) et rend compte au responsable de façon factuelle et horodatée.',
+    'Consigne le retour du signal, vérifie l’enregistrement ; main courante complète et compte rendu écrit.'
+  ],
+  corrige:[
+    {t:0, cam:'—', faits:'Prise de poste. Mur d’images en mode nuit, RAS. Stade fermé depuis 22 h 30.', mesures:'—'},
+    {t:30, cam:'C11', faits:'Incident technique – perte du signal vidéo sur C11 à 22 h 40.', mesures:'Maintenance (MAINT) et responsable prévenus ; surveillance du secteur par C12.'},
+    {t:60, cam:'C12', faits:'Incident technique – perte du signal sur C12 à 22 h 41. Secteur stade / lycée non couvert.', mesures:'PM 2 informée de la zone non couverte ; TECH 1 informé de la coupure constatée.'},
+    {t:150, cam:'C11', faits:'Retour du signal sur C11 à 22 h 42. Deux individus (J : capuche noire, pantalon noir ; K : blouson clair, jean, bonnet) escaladent la clôture du stade côté tribune.', mesures:'Alerte radio PM 2 : intrusion en cours, signalement. 17 informé.'},
+    {t:250, cam:'C12', faits:'Retour du signal sur C12 à 22 h 44. Citadine sombre GA-1··-ZT feux éteints à l’arrêt de bus du lycée, moteur tournant, un occupant.', mesures:'PM 2 informée du véhicule (possible complice).'},
+    {t:340, cam:'C11', faits:'J force la porte du local sous la tribune avec une barre ; K fait le guet.', mesures:'PM 2 guidée (local sous tribune, deux individus). Préservation des images C11 et C12 dès 22 h 40.'},
+    {t:460, cam:'C11', faits:'Arrivée de PM 2 ; J et K interpellés à la sortie du local. Véhicule parti vers le nord à 22 h 47.', mesures:'Direction du véhicule transmise au 17. Vérification de l’enregistreur. Compte rendu rédigé.'}
+  ]
+},
+{
+  id:'manif', titre:'Rassemblement non déclaré devant la mairie', heure:'14:00', amb:'jour',
+  contexte:'Mercredi 14 h, conseil municipal prévu à 18 h. PM 1 en poste fixe devant la mairie (C01), PM CHEF présent au poste. Élu d’astreinte joignable. Un rassemblement d’opposants à un projet d’aménagement est annoncé sur les réseaux sociaux, non déclaré en préfecture.',
+  events:[
+    {t:0, type:'info', texte:'Prise de poste 14 h. Rassemblement possible devant la mairie (C01), non déclaré.'},
+    {t:30, type:'cam', cam:'C01', resume:'Une quinzaine de personnes se rassemblent sur le parvis de la mairie, trois pancartes, attitude calme.', scene:{amb:'jour', actors:[{k:'p',x:520,y:700,top:'#999',bot:'#333',item:'pancarte'},{k:'p',x:620,y:730,top:'#eee',bot:'#555'},{k:'p',x:700,y:710,top:'#a33',bot:'#222',item:'pancarte'},{k:'p',x:780,y:745,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long'},{k:'p',x:860,y:715,top:'#222',bot:'#666'},{k:'p',x:940,y:735,top:'#ddd',bot:'#333',sex:'F',hair:'long',item:'pancarte'},{k:'p',x:1020,y:720,top:'#777',bot:'#444'},{k:'p',x:1100,y:740,top:'#eee',bot:'#222',hat:'casquette',hatc:'#111'},{k:'p',x:580,y:770,top:'#3b5b8a',bot:'#777'},{k:'p',x:980,y:775,top:'#999',bot:'#222',sex:'F',hair:'long'},{k:'p',x:1180,y:760,top:'#555',bot:'#333'},{k:'p',x:440,y:750,top:'#ddd',bot:'#555',hair:'blanc'}]}},
+    {t:70, type:'radio', de:'PM 1', texte:'Vidéo de PM 1 : un groupe se forme devant la mairie avec des pancartes, calme pour l’instant. Vous pouvez me donner un comptage régulier et surveiller les accès de la mairie ? À vous.'},
+    {t:110, type:'cam', cam:'C01', resume:'Le groupe atteint une quarantaine de personnes. Un homme (L : chemise rouge, pantalon noir, mégaphone) prend la parole depuis les marches ; attitude calme, pas d’emprise sur la chaussée.', scene:{amb:'jour', actors:[{k:'p',x:800,y:650,top:'#a8413d',bot:'#222',item:'megaphone',dir:'g',lab:'L'},{k:'p',x:480,y:700,top:'#999',bot:'#333',item:'pancarte'},{k:'p',x:560,y:730,top:'#eee',bot:'#555'},{k:'p',x:640,y:712,top:'#a33',bot:'#222',item:'pancarte'},{k:'p',x:720,y:745,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long'},{k:'p',x:880,y:715,top:'#222',bot:'#666'},{k:'p',x:960,y:735,top:'#ddd',bot:'#333',sex:'F',hair:'long',item:'pancarte'},{k:'p',x:1040,y:720,top:'#777',bot:'#444'},{k:'p',x:1120,y:740,top:'#eee',bot:'#222',hat:'casquette',hatc:'#111'},{k:'p',x:520,y:775,top:'#3b5b8a',bot:'#777'},{k:'p',x:1000,y:778,top:'#999',bot:'#222',sex:'F',hair:'long'},{k:'p',x:1200,y:760,top:'#555',bot:'#333'},{k:'p',x:400,y:750,top:'#ddd',bot:'#555',hair:'blanc'},{k:'p',x:1280,y:730,top:'#eee',bot:'#444',item:'pancarte'},{k:'p',x:600,y:800,top:'#777',bot:'#222'},{k:'p',x:840,y:805,top:'#3b5b8a',bot:'#333',sex:'F',hair:'long'},{k:'p',x:1100,y:800,top:'#999',bot:'#444'},{k:'p',x:1360,y:790,top:'#222',bot:'#555'}]}},
+    {t:150, type:'tel', de:'ASTREINTE', texte:'Élu d’astreinte : on me dit qu’il y a une manifestation devant la mairie. Ils sont combien, c’est qui, c’est violent ? Vous pouvez me dire de quel bord ils sont et me filmer les meneurs de près ?'},
+    {t:200, type:'cam', cam:'C03', resume:'Une trentaine de personnes quittent le parvis et s’engagent sur la chaussée de la rue de la République, en direction de la place du marché ; circulation bloquée dans les deux sens.', scene:{amb:'jour', actors:[{k:'p',x:600,y:700,top:'#999',bot:'#333',item:'pancarte',pose:'marche',dir:'g'},{k:'p',x:700,y:720,top:'#eee',bot:'#555',pose:'marche',dir:'g'},{k:'p',x:780,y:705,top:'#a33',bot:'#222',item:'pancarte',pose:'marche',dir:'g'},{k:'p',x:860,y:735,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long',pose:'marche',dir:'g'},{k:'p',x:940,y:712,top:'#222',bot:'#666',pose:'marche',dir:'g'},{k:'p',x:1020,y:740,top:'#ddd',bot:'#333',sex:'F',hair:'long',item:'pancarte',pose:'marche',dir:'g'},{k:'p',x:1100,y:718,top:'#777',bot:'#444',pose:'marche',dir:'g'},{k:'p',x:1180,y:745,top:'#eee',bot:'#222',hat:'casquette',hatc:'#111',pose:'marche',dir:'g'},{k:'p',x:660,y:775,top:'#3b5b8a',bot:'#777',pose:'marche',dir:'g'},{k:'p',x:1060,y:778,top:'#999',bot:'#222',sex:'F',hair:'long',pose:'marche',dir:'g'},{k:'v',kind:'citadine',x:1500,y:790,color:'#8e9196',dir:'g'},{k:'v',kind:'utilitaire',x:260,y:790,color:'#f2f2f2',dir:'d'}]}},
+    {t:240, type:'radio', de:'PM CHEF', texte:'Vidéo de PM CHEF : le rassemblement n’est pas déclaré. Donnez-moi l’effectif, la position exacte du cortège, l’emprise sur la chaussée et s’il y a des éléments hostiles. Préservez les images. À vous.'},
+    {t:290, type:'cam', cam:'C03', resume:'En marge du cortège, un individu (M : sweat noir à capuche, visage masqué par un foulard, sac à dos noir) jette une bouteille contre la vitrine d’un commerce, qui se brise. Le cortège continue.', scene:{amb:'jour', actors:[{k:'p',x:460,y:735,top:'#111',bot:'#222',hat:'capuche',hatc:'#111',item:'bouteille',masque:'#333',dir:'g',lab:'M'},{k:'p',x:800,y:705,top:'#a33',bot:'#222',item:'pancarte',pose:'marche',dir:'g'},{k:'p',x:880,y:735,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long',pose:'marche',dir:'g'},{k:'p',x:960,y:712,top:'#222',bot:'#666',pose:'marche',dir:'g'},{k:'p',x:1040,y:740,top:'#ddd',bot:'#333',sex:'F',hair:'long',item:'pancarte',pose:'marche',dir:'g'},{k:'p',x:1120,y:718,top:'#777',bot:'#444',pose:'marche',dir:'g'}]}},
+    {t:330, type:'mail', de:'STANDARD', objet:'Images de la manifestation', texte:'Bonjour,\n\nUn journaliste du quotidien régional demande si vous pouvez lui transmettre des images du rassemblement et lui indiquer qui sont les organisateurs. Il rappelle dans dix minutes. Je lui dis quoi ?\n\nLe standard'},
+    {t:370, type:'cam', cam:'C01', resume:'Le cortège revient sur le parvis ; une vingtaine de personnes restent, les autres se dispersent. PM 1 présente, situation calme.', scene:{amb:'jour', actors:[{k:'p',x:600,y:700,top:'#999',bot:'#333',item:'pancarte'},{k:'p',x:700,y:730,top:'#eee',bot:'#555'},{k:'p',x:780,y:712,top:'#a33',bot:'#222',item:'pancarte'},{k:'p',x:860,y:745,top:'#3b5b8a',bot:'#444',sex:'F',hair:'long'},{k:'p',x:940,y:715,top:'#222',bot:'#666'},{k:'p',x:1020,y:740,top:'#777',bot:'#444'},{k:'p',x:1200,y:760,top:'#3b5b8a',bot:'#222',item:'gilet',dir:'g'},{k:'p',x:1290,y:745,top:'#3b5b8a',bot:'#222',item:'gilet',dir:'g'},{k:'p',x:460,y:770,top:'#ddd',bot:'#555',hair:'blanc'}]}},
+    {t:420, type:'radio', de:'PM 1', texte:'Vidéo de PM 1 : le cortège est revenu sur le parvis, la rue est dégagée. Le lanceur de bouteille, vous l’avez suivi ? Signalement et direction ? À vous.'},
+    {t:450, type:'cam', cam:'C04', resume:'M (sweat noir à capuche baissée, sac à dos noir, foulard retiré : homme, 20-25 ans, cheveux courts bruns) traverse la gare routière vers le front de mer (sud).', scene:{amb:'jour', actors:[{k:'p',x:760,y:730,top:'#111',bot:'#222',item:'sacados',hair:'court',pose:'marche',dir:'g',lab:'M'}]}},
+    {t:490, type:'mail', de:'RESP CSU', objet:'Rassemblement du 14 h – consignes', texte:'Rappel : nos comptes rendus décrivent des faits (effectif, position, emprise, incidents), jamais l’appartenance ou les opinions des participants, et nous ne filmons pas les visages ou les pancartes hors infraction.\nAucune image à la presse. Compte rendu écrit attendu avec la chronologie et le signalement de l’auteur de la dégradation.\n\nLe responsable du PC vidéo'}
+  ],
+  attendus:[
+    'Fournit à PM 1 et PM CHEF des comptages réguliers et factuels (effectif estimé, position, emprise sur la chaussée, attitude).',
+    'Répond à l’élu sans qualification politique ni identification des « meneurs » ; refuse de zoomer sur les visages hors infraction.',
+    'Signale le blocage de la rue de la République (circulation, sécurité) à PM CHEF / TECH 1.',
+    'Détecte la dégradation (bouteille contre la vitrine), signale M avec un signalement précis et assure son suivi C03 → C04.',
+    'Refuse la transmission d’images et d’informations au journaliste ; renvoie vers la direction et informe le responsable.',
+    'Main courante neutre et horodatée ; préservation des images ; compte rendu écrit.'
+  ],
+  corrige:[
+    {t:0, cam:'—', faits:'Prise de poste. RAS. Rassemblement non déclaré annoncé devant la mairie.', mesures:'Surveillance C01 et C03.'},
+    {t:30, cam:'C01', faits:'Une quinzaine de personnes sur le parvis, trois pancartes, attitude calme.', mesures:'PM 1 et PM CHEF informés (effectif, position).'},
+    {t:110, cam:'C01', faits:'Environ 40 personnes ; prise de parole au mégaphone depuis les marches (L : H, chemise rouge, pantalon noir). Pas d’emprise sur la chaussée.', mesures:'Comptage transmis. Accès de la mairie surveillés.'},
+    {t:150, cam:'—', faits:'Appel de l’élu d’astreinte : demande d’effectif, d’identification et de filmage des « meneurs ».', mesures:'Réponse factuelle (effectif, attitude) ; refus d’identifier ou de filmer les personnes hors infraction ; orientation vers PM CHEF.'},
+    {t:200, cam:'C03', faits:'Une trentaine de personnes sur la chaussée rue de la République, direction place du marché ; circulation bloquée dans les deux sens.', mesures:'PM CHEF informé (position, emprise, effectif) ; TECH 1 / PM 1 pour la circulation.'},
+    {t:290, cam:'C03', faits:'Un individu en marge (sweat noir à capuche, visage masqué, sac à dos noir) jette une bouteille contre une vitrine qui se brise.', mesures:'PM 1 et PM CHEF alertés ; signalement ; suivi caméra ; préservation des images C03.'},
+    {t:330, cam:'—', faits:'Demande d’images et d’identification des organisateurs par un journaliste via le standard.', mesures:'Refus ; renvoi vers la direction ; responsable informé.'},
+    {t:450, cam:'C04', faits:'L’auteur de la dégradation (H, 20-25 ans, cheveux courts bruns, sweat noir, sac à dos noir) traverse la gare routière vers le front de mer.', mesures:'Signalement et direction transmis à PM 1. Compte rendu rédigé.'}
+  ]
+},
+{
+  id:'cambriolage', titre:'Tentative d’intrusion de nuit dans la mairie', heure:'03:20', amb:'nuit',
+  contexte:'Nuit de mardi à mercredi. PM 2 est la seule patrouille de service (véhicule). La mairie est sous alarme anti-intrusion reliée à une société de télésurveillance. Standard de la mairie fermé ; élu d’astreinte joignable.',
+  events:[
+    {t:0, type:'info', texte:'Prise de poste 3 h 20. Nuit calme, mur d’images en mode nuit.'},
+    {t:30, type:'cam', cam:'C03', resume:'Une citadine sombre (immatriculation partielle : GA-1··-ZT) remonte lentement la rue de la République feux de position seuls et s’arrête à l’angle du parvis.', scene:{amb:'nuit', actors:[{k:'v',kind:'citadine',x:1180,y:785,color:'#2b2f36',plate:'GA-1··-ZT',dir:'d',lab:'citadine sombre'}]}},
+    {t:70, type:'cam', cam:'C01', resume:'Deux individus (N : capuche noire, gants, sac à dos ; O : blouson sombre, bonnet) arrivent à pied sur le parvis et se dirigent vers la porte latérale de la mairie. Le conducteur reste au volant.', scene:{amb:'nuit', actors:[{k:'p',x:700,y:700,top:'#222',bot:'#222',hat:'capuche',hatc:'#111',item:'sacados',pose:'marche',dir:'d',lab:'N'},{k:'p',x:800,y:710,top:'#3a3f4a',bot:'#222',hat:'bonnet',hatc:'#222',pose:'marche',dir:'d',lab:'O'}]}},
+    {t:100, type:'cam', cam:'C01', resume:'N tente de forcer la porte latérale avec un pied-de-biche ; O fait le guet et regarde vers la rue.', scene:{amb:'nuit', actors:[{k:'p',x:760,y:720,top:'#222',bot:'#222',hat:'capuche',hatc:'#111',item:'outil',pose:'penche',dir:'d',lab:'N'},{k:'p',x:900,y:735,top:'#3a3f4a',bot:'#222',hat:'bonnet',hatc:'#222',dir:'g',lab:'O'}]}},
+    {t:140, type:'tel', de:'TÉLÉSURV', texte:'Société de télésurveillance : alarme intrusion déclenchée à la mairie de ' + COMMUNE + ', porte latérale, à 3 h 22. Pouvez-vous nous faire une levée de doute vidéo avant que nous engagions notre intervenant ?'},
+    {t:180, type:'radio', de:'PM 2', texte:'Vidéo de PM 2 : on entend une alarme côté mairie, vous confirmez quelque chose ? Nous sommes sur le front de mer. À vous.'},
+    {t:220, type:'cam', cam:'C01', resume:'La porte latérale cède ; N entre dans le bâtiment, O reste devant la porte et surveille la rue.', scene:{amb:'nuit', actors:[{k:'p',x:900,y:735,top:'#3a3f4a',bot:'#222',hat:'bonnet',hatc:'#222',dir:'g',lab:'O'}]}},
+    {t:260, type:'cam', cam:'C03', resume:'La citadine sombre fait demi-tour et se positionne face à la gare routière (ouest), moteur tournant, feux éteints.', scene:{amb:'nuit', actors:[{k:'v',kind:'citadine',x:1100,y:785,color:'#2b2f36',plate:'GA-1··-ZT',dir:'g',lab:'citadine sombre'}]}},
+    {t:310, type:'cam', cam:'C01', resume:'N ressort avec un sac volumineux ; N et O courent vers la rue de la République.', scene:{amb:'nuit', actors:[{k:'p',x:1100,y:720,top:'#222',bot:'#222',hat:'capuche',hatc:'#111',item:'sac',pose:'marche',dir:'d',lab:'N'},{k:'p',x:1200,y:735,top:'#3a3f4a',bot:'#222',hat:'bonnet',hatc:'#222',pose:'marche',dir:'d',lab:'O'}]}},
+    {t:340, type:'cam', cam:'C03', resume:'N et O montent dans la citadine GA-1··-ZT qui démarre vers l’ouest (gare routière, route nationale) à vive allure.', scene:{amb:'nuit', actors:[{k:'v',kind:'citadine',x:420,y:785,color:'#2b2f36',plate:'GA-1··-ZT',dir:'g',lab:'3 occupants'}]}},
+    {t:370, type:'radio', de:'PM 2', texte:'Vidéo de PM 2 : on arrive sur le parvis, personne en vue, porte latérale ouverte. Direction du véhicule ? Vous avez prévenu le 17 ? À vous.'},
+    {t:410, type:'cam', cam:'C04', resume:'La citadine sombre passe devant la gare routière vers l’ouest, à vive allure, trois occupants.', scene:{amb:'nuit', actors:[{k:'v',kind:'citadine',x:300,y:790,color:'#2b2f36',plate:'GA-1··-ZT',dir:'g',lab:'3 occupants'}]}},
+    {t:450, type:'mail', de:'RESP CSU', objet:'Cambriolage de la mairie – consignes', texte:'Préservez les images C01, C03 et C04 entre 3 h 15 et 3 h 35 ; la police nationale fera une réquisition.\nCompte rendu détaillé attendu pour le dépôt de plainte de la commune (chronologie, signalements, véhicule, personnes prévenues).\nRappel : la levée de doute se fait sur les images et par la patrouille, jamais en quittant le PC.\n\nLe responsable du PC vidéo'}
+  ],
+  attendus:[
+    'Alerte le 17 et PM 2 dès la tentative d’effraction (porte forcée), sans attendre l’appel de la télésurveillance.',
+    'Effectue une levée de doute factuelle pour la télésurveillance : confirme l’intrusion, nombre d’individus, porte concernée, véhicule.',
+    'Signalement de N et O (tenues, objets portés) et du véhicule (citadine sombre, immatriculation partielle épelée, trois occupants, direction).',
+    'Suivi caméra C01 → C03 → C04 et transmission immédiate de la direction de fuite à PM 2 et au 17.',
+    'Reste au PC (pas de levée de doute physique) ; informe le responsable et l’élu d’astreinte.',
+    'Préservation des images ; main courante horodatée ; compte rendu écrit pour le dépôt de plainte.'
+  ],
+  corrige:[
+    {t:0, cam:'—', faits:'Prise de poste. Mur d’images en mode nuit, RAS.', mesures:'—'},
+    {t:30, cam:'C03', faits:'Citadine sombre GA-1··-ZT (Golf Alpha – 1 – Zulu Tango) remonte lentement la rue de la République feux de position et s’arrête à l’angle du parvis.', mesures:'Surveillance renforcée C01 / C03.'},
+    {t:100, cam:'C01', faits:'Deux individus (N : capuche noire, gants, sac à dos ; O : blouson sombre, bonnet) tentent de forcer la porte latérale de la mairie, N avec un pied-de-biche.', mesures:'Appel 17 : effraction en cours, signalement, véhicule. PM 2 alertée par radio.'},
+    {t:140, cam:'C01', faits:'Appel de la télésurveillance : alarme intrusion mairie, demande de levée de doute.', mesures:'Levée de doute vidéo confirmée : intrusion en cours, deux individus, porte latérale, véhicule à l’angle. Intervenant engagé.'},
+    {t:220, cam:'C01', faits:'La porte cède ; N entre dans la mairie, O fait le guet devant la porte.', mesures:'PM 2 et 17 informés ; responsable et élu d’astreinte prévenus.'},
+    {t:340, cam:'C03', faits:'N ressort avec un sac volumineux ; N et O montent dans la citadine GA-1··-ZT qui part vers l’ouest à 3 h 25, trois occupants.', mesures:'Direction et véhicule transmis au 17 et à PM 2. Suivi C04.'},
+    {t:410, cam:'C04', faits:'Véhicule passe devant la gare routière vers l’ouest (route nationale) à vive allure.', mesures:'Préservation des images C01, C03, C04 (3 h 15 – 3 h 35). Compte rendu rédigé.'}
+  ]
+},
+{
+  id:'disparition', titre:'Recherche d’une personne vulnérable disparue', heure:'18:40', amb:'jour',
+  contexte:'Fin d’après-midi. PM 1 en patrouille véhicule côté cité des Flamboyants, ASVP 1 à pied dans le centre-bourg. La police nationale va solliciter le PC vidéo pour une recherche : les caméras ne déclenchent aucune alarme, c’est à l’opérateur de balayer le mur d’images.',
+  events:[
+    {t:0, type:'info', texte:'Prise de poste 18 h 40. Centre-bourg et front de mer animés en fin de journée.'},
+    {t:20, type:'tel', de:'17', texte:'CIC police nationale : nous recherchons une femme de 82 ans, désorientée, partie de son domicile rue de la République vers 17 h 30. Signalement : 1,60 m, cheveux blancs courts, gilet rose, jupe grise, chaussons, sac à main beige. Pouvez-vous balayer vos caméras et nous rappeler dès que vous avez quelque chose ?'},
+    {t:40, type:'cam', cam:'C03', silent:true, resume:'(Sans alarme) Une femme âgée correspondant au signalement (gilet rose, jupe grise, cheveux blancs, sac beige) marche lentement vers l’ouest et s’arrête devant une vitrine.', scene:{amb:'jour', actors:[{k:'p',x:900,y:730,top:'#e8a0b8',bot:'#8a8a8a',sex:'F',hair:'blanc',item:'sac',dir:'g',lab:'?'}]}},
+    {t:90, type:'radio', de:'PM 1', texte:'Vidéo de PM 1 : on cherche la personne disparue côté cité des Flamboyants, rien pour l’instant. Vous avez quelque chose sur les caméras ? À vous.'},
+    {t:130, type:'cam', cam:'C04', silent:true, resume:'(Sans alarme) La femme traverse la gare routière et s’assoit sur un banc du quai 1.', scene:{amb:'jour', actors:[{k:'p',x:470,y:745,top:'#e8a0b8',bot:'#8a8a8a',sex:'F',hair:'blanc',item:'sac',pose:'assis',dir:'g',lab:'?'}]}},
+    {t:170, type:'radio', de:'ASVP 1', texte:'Vidéo d’ASVP 1 : je suis place du marché, disponible pour la recherche. Dites-moi où aller. À vous.'},
+    {t:220, type:'cam', cam:'C04', silent:true, resume:'(Sans alarme) La femme se lève et quitte la gare routière vers le sud (front de mer), d’un pas lent et hésitant.', scene:{amb:'jour', actors:[{k:'p',x:1200,y:770,top:'#e8a0b8',bot:'#8a8a8a',sex:'F',hair:'blanc',item:'sac',pose:'marche',dir:'d',lab:'?'}]}},
+    {t:260, type:'tel', de:'STANDARD', texte:'Standard de la mairie : la fille de la dame disparue est en ligne, très inquiète. Elle demande si vous l’avez vue et où. Je vous la passe ?'},
+    {t:300, type:'cam', cam:'C05', silent:true, resume:'(Sans alarme) La femme marche sur le quai du front de mer, près du bord, sans se tenir à la rambarde.', scene:{amb:'jour', actors:[{k:'p',x:760,y:700,top:'#e8a0b8',bot:'#8a8a8a',sex:'F',hair:'blanc',item:'sac',pose:'marche',dir:'g',lab:'?'}]}},
+    {t:340, type:'radio', de:'PM CHEF', texte:'Vidéo de PM CHEF : point de situation ? Si vous l’avez en visu, guidez PM 1 et ASVP 1 en direct et ne la lâchez pas : personne vulnérable près de l’eau. À vous.'},
+    {t:390, type:'cam', cam:'C05', resume:'ASVP 1 rejoint la femme sur le quai et l’accompagne à l’écart du bord ; PM 1 arrive.', scene:{amb:'jour', actors:[{k:'p',x:760,y:720,top:'#e8a0b8',bot:'#8a8a8a',sex:'F',hair:'blanc',item:'sac',dir:'g',lab:'?'},{k:'p',x:860,y:730,top:'#3b5b8a',bot:'#222',item:'gilet',dir:'g'},{k:'v',kind:'police',x:1300,y:800,color:'#f2f2f2',dir:'g',lab:'PM 1'}]}},
+    {t:430, type:'mail', de:'RESP CSU', objet:'Recherche de personne – compte rendu', texte:'Merci pour la recherche. Compte rendu attendu : heure de la demande du CIC, caméras balayées, positions successives, moyens guidés, heure de prise en charge.\nRappel : aucune information nominative sur la radio, aucune information à la famille en direct (passer par le CIC ou la police municipale).\n\nLe responsable du PC vidéo'}
+  ],
+  attendus:[
+    'Prend le signalement complet au CIC et balaye activement les caméras (sans attendre d’alarme), en commençant par le secteur du domicile (C03).',
+    'Repère la personne sur C03 et rappelle immédiatement le 17 ; informe PM 1 et ASVP 1 (position, direction).',
+    'Assure le suivi C03 → C04 → C05 et guide ASVP 1 et PM 1 en direct jusqu’à la prise en charge.',
+    'Signale le danger (bord de quai) et demande une intervention rapide ; garde la visu permanente.',
+    'Ne donne aucune information nominative sur la radio ni à la famille en direct ; renvoie le standard vers le CIC / la police municipale.',
+    'Main courante horodatée (positions successives) et compte rendu écrit.'
+  ],
+  corrige:[
+    {t:0, cam:'—', faits:'Prise de poste. RAS.', mesures:'—'},
+    {t:20, cam:'—', faits:'Appel du CIC : recherche d’une femme de 82 ans désorientée (1,60 m, cheveux blancs courts, gilet rose, jupe grise, chaussons, sac beige), partie rue de la République vers 17 h 30.', mesures:'Balayage des caméras du centre-bourg (C03, C02, C01) puis gare et front de mer.'},
+    {t:40, cam:'C03', faits:'Femme correspondant au signalement rue de la République, marche lentement vers l’ouest, s’arrête devant une vitrine.', mesures:'CIC rappelé ; PM 1 et ASVP 1 informés (position, direction). Visu maintenue.'},
+    {t:130, cam:'C04', faits:'La personne traverse la gare routière et s’assoit sur un banc du quai 1.', mesures:'ASVP 1 guidé vers la gare routière.'},
+    {t:220, cam:'C04', faits:'La personne quitte la gare vers le sud (front de mer), pas hésitant.', mesures:'ASVP 1 et PM 1 réorientés vers le quai (C05).'},
+    {t:260, cam:'—', faits:'Appel de la fille de la personne via le standard.', mesures:'Pas d’information en direct ; standard orienté vers le CIC. Aucun nom sur la radio.'},
+    {t:300, cam:'C05', faits:'La personne marche près du bord du quai, sans se tenir à la rambarde.', mesures:'Danger signalé à ASVP 1 et PM 1 ; intervention rapide demandée ; visu permanente.'},
+    {t:390, cam:'C05', faits:'ASVP 1 prend en charge la personne et l’écarte du bord ; PM 1 arrive.', mesures:'CIC et PM CHEF informés de la prise en charge. Compte rendu rédigé.'}
+  ]
 }
 ];
 
@@ -1098,6 +1347,10 @@ function person(p){ var x=p.x||800, y=p.y||700, s=scaleFor(y,p.s), top=p.top||'#
   if(p.item==='bouteille') body+=rect(x+d*(bw/2+6*s)-3*s,y-96*s,7*s,26*s,'#5a7f4f',2*s);
   if(p.item==='tel') body+=rect(x+d*(bw/2+4*s)-3*s,y-150*s,8*s,16*s,'#111',2*s);
   if(p.item==='canne') body+=line(x+d*(bw/2+12*s),y-80*s,x+d*(bw/2+16*s),y,'#5b4636',4*s);
+  if(p.item==='outil') body+=line(x+d*(bw/2+4*s),y-84*s,x+d*(bw/2+14*s),y-46*s,'#2a2a2a',5*s);
+  if(p.item==='megaphone') body+=poly([[x+d*(bw/2+4*s),y-100*s],[x+d*(bw/2+30*s),y-112*s],[x+d*(bw/2+30*s),y-84*s],[x+d*(bw/2+4*s),y-92*s]],'#d8742b');
+  if(p.item==='pancarte'){ var px=x+d*(bw/2+8*s); body+=rect(px-2*s,y-200*s,4*s,100*s,'#8a6a46')+rect(px-34*s,y-236*s,68*s,40*s,p.pc||'#f4f4f4',2*s,' stroke="#262626" stroke-width="1.5"')+rect(px-24*s,y-224*s,48*s,4*s,'#555')+rect(px-24*s,y-212*s,36*s,4*s,'#555'); }
+  if(p.masque) body+=rect(x-hr*0.8,hy+1*s,hr*1.6,hr*0.8,p.masque===true?'#f2f2f2':p.masque,3*s);
   g+='<g transform="'+pivot+'">'+body+'</g>';
   if(p.pose==='marche'){ g+=poly([[x-7*s,y-72*s],[x+7*s,y-72*s],[x-16*s*d,y],[x-30*s*d,y]],bot); g+=poly([[x-7*s,y-72*s],[x+7*s,y-72*s],[x+30*s*d,y],[x+16*s*d,y]],bot);
     for(var i=0;i<3;i++){ g+=line(x-d*(34+i*12)*s,y-(110-i*18)*s,x-d*(50+i*12)*s,y-(110-i*18)*s,'#fff',2.5*s,0.7); } }
@@ -1109,6 +1362,7 @@ function hairAndHat(x,hy,hr,p,d,s){ var g='';
   if(p.hair==='long'){ g+=rect(x-hr-2*s,hy-4*s,hr*2+4*s,hr*2.4,'#2a2a2a',hr*0.6); g+=circle(x,hy,hr,p.skin||'#c9a27e'); }
   if(p.hat==='capuche'){ g+=circle(x,hy-2*s,hr*1.35,p.hatc||'#222'); g+=circle(x,hy+1*s,hr*0.95,p.skin||'#c9a27e'); return g; }
   if(p.hat==='casque'){ g+=circle(x,hy-2*s,hr*1.25,p.hatc||'#ccc'); g+=rect(x-hr*1.2,hy-2*s,hr*2.4,hr*0.9,'#333',3*s); return g; }
+  if(p.hat==='bonnet'){ g+=circle(x,hy-4*s,hr*1.1,p.hatc||'#333'); g+=rect(x-hr*1.1,hy-6*s,hr*2.2,hr*0.5,p.hatc||'#333',2*s); g+=rect(x-hr*1.1,hy-hr*0.55,hr*2.2,hr*0.5,p.hatc||'#333',2*s); return g; }
   if(p.hat==='casquette'){ g+=poly([[x-hr,hy-2*s],[x-hr*0.6,hy-hr*1.15],[x+hr*0.6,hy-hr*1.15],[x+hr,hy-2*s]],p.hatc||'#111'); g+=rect(d>0?x:x-hr*1.9,hy-5*s,hr*1.9,5*s,p.hatc||'#111',2*s); return g; }
   if(p.hair!=='ras' && p.hair!=='chauve' && p.hair!=='long'){ g+=poly([[x-hr,hy-2*s],[x-hr*0.7,hy-hr*0.95],[x+hr*0.7,hy-hr*0.95],[x+hr,hy-2*s]],p.hair==='blanc'?'#e8e8e8':'#2a2a2a'); }
   return g; }
@@ -1117,12 +1371,13 @@ function vehicle(v){ var x=v.x||800, y=v.y||760, s=scaleFor(y,v.s), c=v.color||'
   var sh=1; var g='';
   if(k==='scooter'){ if(v.pose==='sol'){ g+=ellipse(x,y+3*s,70*s,8*s,'#000',0.28); g+='<g transform="translate('+r1(x)+' '+r1(y)+') scale('+r1(d*s)+' '+r1(s)+') rotate(80)">'+rect(-50,-20,100,16,c,6)+circle(-50,0,18,'#222')+circle(50,0,18,'#222')+rect(30,-50,8,34,'#555')+rect(14,-54,40,8,'#555')+'</g>'; return g+tagLabel(x,y-60*s,v.lab||'scooter',null,s); }
     g+=ellipse(x,y+3*s,60*s,8*s,'#000',0.28); g+='<g transform="translate('+r1(x)+' '+r1(y)+') scale('+r1(d*s)+' '+r1(s)+')">'+rect(-56,-44,90,20,c,8)+rect(-30,-70,30,30,'#555',6)+rect(26,-80,8,40,'#555')+rect(12,-84,36,8,'#555')+circle(-50,-16,18,'#222')+circle(50,-16,18,'#222')+circle(-50,-16,7,'#999')+circle(50,-16,7,'#999')+'</g>'; return g+tagLabel(x,y-100*s,v.lab,v.plate,s); }
-  var L=240, Hh=78, cabH=50;
+  var L=240, Hh=78, cabH=50, police=(k==='police'); if(police){ k='citadine'; c=v.color||'#f2f2f2'; }
   if(k==='utilitaire'||k==='vsav'){ L=300; Hh=120; }
   if(k==='fourgon'){ L=320; Hh=70; }
   if(k==='bus'){ L=520; Hh=160; }
   g+=ellipse(x,y+3*s,(L/2+10)*s,9*s,'#000',0.28);
-  if(k==='citadine'){ b+=rect(-L/2,-Hh,L,Hh-20,c,14)+rect(-L/2,-Hh+38,L,Hh-58,c)+poly([[-L/2+40,-Hh-cabH],[L/2-70,-Hh-cabH],[L/2-20,-Hh+10],[-L/2+20,-Hh+10]],c)+poly([[-L/2+48,-Hh-cabH+6],[L/2-74,-Hh-cabH+6],[L/2-36,-Hh+2],[-L/2+32,-Hh+2]],'#9fb7d4')+rect(-6,-Hh-cabH+2,6,cabH-2,c)+rect(L/2-8,-Hh+10,10,18,'#f2e6b0',2)+rect(-L/2-2,-Hh+10,10,18,'#a8413d',2); }
+  if(k==='citadine'){ b+=rect(-L/2,-Hh,L,Hh-20,c,14)+rect(-L/2,-Hh+38,L,Hh-58,c)+poly([[-L/2+40,-Hh-cabH],[L/2-70,-Hh-cabH],[L/2-20,-Hh+10],[-L/2+20,-Hh+10]],c)+poly([[-L/2+48,-Hh-cabH+6],[L/2-74,-Hh-cabH+6],[L/2-36,-Hh+2],[-L/2+32,-Hh+2]],'#9fb7d4')+rect(-6,-Hh-cabH+2,6,cabH-2,c)+rect(L/2-8,-Hh+10,10,18,'#f2e6b0',2)+rect(-L/2-2,-Hh+10,10,18,'#a8413d',2);
+    if(police){ b+=rect(-L/2,-Hh+22,L,14,'#3b5b8a')+rect(-L/2+8,-Hh+2,L-16,8,'#d8742b')+rect(-40,-Hh-cabH-12,80,12,'#3b5b8a',3)+rect(-34,-Hh-cabH-10,30,8,'#5aa0ff',2)+rect(4,-Hh-cabH-10,30,8,'#5aa0ff',2); } }
   else if(k==='utilitaire'||k==='vsav'){ b+=rect(-L/2,-Hh,L*0.68,Hh-22,c,8)+poly([[-L/2+L*0.68-4,-Hh],[L/2-56,-Hh],[L/2-6,-Hh+50],[L/2-6,-22],[-L/2+L*0.68-4,-22]],c)+poly([[L/2-54,-Hh+6],[L/2-14,-Hh+48],[-L/2+L*0.68+2,-Hh+48],[-L/2+L*0.68+2,-Hh+6]],'#9fb7d4')+rect(-L/2+L*0.68+8,-Hh+56,52,40,'#9fb7d4',3)+rect(L/2-10,-60,10,18,'#f2e6b0',2)+rect(-L/2-2,-60,10,18,'#a8413d',2);
     if(k==='vsav'){ b+=rect(-L/2+8,-Hh+44,L*0.66-16,16,'#a8413d')+rect(-L/2+20,-Hh-14,60,14,'#3b5b8a',3)+rect(-L/2+30,-Hh+8,22,22,'#f2f2f2')+rect(-L/2+38,-Hh+10,6,18,'#a8413d')+rect(-L/2+30,-Hh+16,22,6,'#a8413d'); } }
   else if(k==='fourgon'){ b+=rect(L/2-96,-Hh-60,96,Hh+40,c,6)+rect(L/2-84,-Hh-52,66,40,'#9fb7d4',3)+rect(-L/2,-Hh-6,L-100,8,'#555')+rect(-L/2,-Hh,L-100,Hh-24,'#777')+rect(-L/2,-Hh-30,8,30,'#555')+rect(L/2-108,-Hh-30,8,30,'#555')+rect(-L/2+16,-Hh-40,L-140,36,'#8d8d8d',4)+rect(L/2-8,-60,10,18,'#f2e6b0',2); }
@@ -1130,6 +1385,7 @@ function vehicle(v){ var x=v.x||800, y=v.y||760, s=scaleFor(y,v.s), c=v.color||'
   var wy=-22; var wx1=-L/2+60, wx2=L/2-60; if(k==='bus'){ wx1=-L/2+90; wx2=L/2-110; }
   b+=circle(wx1,wy+8,26,'#222')+circle(wx2,wy+8,26,'#222')+circle(wx1,wy+8,11,'#9a9a9a')+circle(wx2,wy+8,11,'#9a9a9a');
   g+='<g transform="translate('+r1(x)+' '+r1(y)+') scale('+r1(d*s)+' '+r1(s)+')">'+b+'</g>';
+  if(police) g+='<g transform="translate('+r1(x)+' '+r1(y)+') scale('+r1(s)+')">'+txt(0,-Hh+33,'POLICE MUNICIPALE',11,'#fff','middle',700)+'</g>';
   var topY=y-(Hh+(k==='citadine'?cabH:(k==='fourgon'?60:0))+8)*s;
   g+=tagLabel(x,topY,v.lab,v.plate,s);
   return g; }
@@ -1145,7 +1401,11 @@ function objectShape(o){ var x=o.x||800, y=o.y||760, s=scaleFor(y,o.s), k=o.kind
 function rainLayer(){ var s=''; for(var i=0;i<70;i++){ var x=srand(i)*1600, y=srand(i+200)*900; s+=line(x,y,x-10,y+40,'#e8ecf0',1.5,0.35); } return s; }
 function nightLayer(){ return rect(0,0,1600,900,'#0b1220',0,' opacity="0.5"'); }
 
+function noSignalSVG(cam){ var s=rect(0,0,1600,900,'#101214'); for(var i=0;i<160;i++){ var x=srand(i+900)*1600, y=srand(i+1300)*900; s+=rect(x,y,srand(i+77)*40+6,2,'#2a2e33'); }
+  s+=rect(0,420,1600,60,'#1a1d21')+txt(800,400,'PERTE DU SIGNAL VIDÉO',44,'#8a8f96','middle',700,' font-family="Menlo,Consolas,monospace"')+txt(800,470,cam.id+' — '+cam.nom,24,'#5f646b','middle',500,' font-family="Menlo,Consolas,monospace"')+txt(800,560,'NO SIGNAL · vérifier l’alimentation et la liaison',20,'#4a4f56','middle',400,' font-family="Menlo,Consolas,monospace"');
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'+s+'</svg>'; }
 function sceneSVG(cam, st){ var amb=(st&&st.amb)||'jour', night=amb==='nuit', rain=amb==='pluie', parts=[];
+  if(amb==='hs') return noSignalSVG(cam);
   parts.push(skyLayer(night,rain));
   var bg=BACKGROUNDS[cam.scene]||BACKGROUNDS.rue; parts.push(bg(night));
   var actors=(st&&st.actors)?st.actors.slice():[]; actors.sort(function(a,b){return (a.y||0)-(b.y||0);});
@@ -1221,6 +1481,7 @@ function load(){ try{ S=merge(defaultState(),JSON.parse(localStorage.getItem(LS_
   try{ SET=merge(defaultSettings(),JSON.parse(localStorage.getItem(LS_SET)||'null')); }catch(e){ SET=defaultSettings(); }
   if(!S.inv||S.inv.length!==INVENTORY.length) S.inv=defaultState().inv;
   if(S.phase==='encours'){ S.phase='pause'; }
+  if(S.scenarioId!==scenarioById(S.scenarioId).id) S.scenarioId=SCENARIOS[0].id;
 }
 var saveT=null;
 function saveSoon(){ if(saveT) clearTimeout(saveT); saveT=setTimeout(saveNow,400); }
@@ -1233,7 +1494,7 @@ function simAt(t){ var base=S.simStart?new Date(S.simStart):computeSimStart(); r
 function updateClock(){ var now=simNow(); $('clockTime').textContent=fmtTime(now); $('clockDate').textContent=fmtDate(now)+(S.phase!=='attente'?'  ·  exercice '+fmtMMSS(S.elapsed):'  ·  heure de prise de poste');
   $('osdTR').innerHTML=fmtDate(now)+'<br>'+fmtTime(now);
   var st=$('status'); var map={attente:['En attente',''],encours:['Exercice en cours','on'],pause:['En pause','pause'],termine:['Exercice terminé','end']}; st.textContent=map[S.phase][0]; st.className='status '+map[S.phase][1];
-  if(!$('mcFaits').value && document.activeElement!==$('mcDate') && document.activeElement!==$('mcHeure')){ $('mcDate').value=isoDate(now); $('mcHeure').value=fmtTime(now); }
+  if(!$('mcFaits').value && !$('mcMesures').value && document.activeElement!==$('mcDate') && document.activeElement!==$('mcHeure')){ $('mcDate').value=isoDate(now); $('mcHeure').value=fmtTime(now); }
   var al=$('osdAlarm'); var at=S.sceneAt[S.curCam]; al.textContent=(SET.alertes && at!=null && S.elapsed-at<60)?'ALARME VIDÉO':''; }
 function tick(){ if(S.phase!=='encours') return; S.elapsed+=S.speed; processDue(); updateClock(); saveSoon(); }
 function processDue(){ var sc=scenario();
@@ -1242,7 +1503,7 @@ function processDue(){ var sc=scenario();
 
 /* ---------- journal & notifications ---------- */
 function log(k,t){ var now=simNow(); S.log.push({h:fmtTime(now),el:S.elapsed,k:k,t:t}); if(trainerOpen) renderJournal(); }
-function toast(title,text,kind){ var box=$('toasts'), el=document.createElement('div'); el.className='toast '+(kind||''); el.innerHTML='<span class="k">'+esc(title)+'</span>'+esc(text||''); box.appendChild(el); setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },7000); }
+function toast(title,text,kind){ var box=$('toasts'), el=document.createElement('div'); el.className='toast '+(kind||''); el.innerHTML='<span class="k">'+esc(title)+'</span>'+esc(text||''); box.appendChild(el); while(box.children.length>5) box.removeChild(box.firstChild); setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },7000); }
 function ensureAudio(){ try{ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; if(!audioCtx) audioCtx=new AC(); if(audioCtx.state==='suspended') audioCtx.resume(); return audioCtx; }catch(e){ return null; } }
 function beep(kind){ if(!SET.son) return; var ctx=ensureAudio(); if(!ctx) return; var pattern={radio:[[880,0,.12],[880,.18,.12]],tel:[[660,0,.25],[660,.4,.25],[660,.8,.25]],mail:[[1046,0,.1],[1318,.12,.14]],alarm:[[520,0,.2],[700,.22,.2]]}[kind]||[[800,0,.12]];
   pattern.forEach(function(p){ var o=ctx.createOscillator(), g=ctx.createGain(); o.type='sine'; o.frequency.value=p[0]; g.gain.value=0.0001; o.connect(g); g.connect(ctx.destination); var t0=ctx.currentTime+p[1]; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.18,t0+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t0+p[2]); o.start(t0); o.stop(t0+p[2]+0.02); }); }
@@ -1255,12 +1516,12 @@ function applyEvent(ev,libre){ var now=simNow(), suffix=libre?' (injection forma
     case 'radio': addComm({ch:'radio',dir:'in',from:ev.de,text:ev.texte}); break;
     case 'tel': addComm({ch:'tel',dir:'in',from:ev.de,text:ev.texte}); break;
     case 'mail': S.mails.push({id:uid(),box:'recu',de:ev.de,a:'PC vidéo',objet:ev.objet||'(sans objet)',corps:ev.texte||'',heure:fmtTime(now),date:fmtDate(now),el:S.elapsed,lu:false}); log('Courriel reçu'+suffix,nameOf(ev.de)+' — '+(ev.objet||'')); renderMails(); toast('Nouveau courriel',ev.objet||'',''); beep('mail'); break;
-    case 'cam': S.scene[ev.cam]=ev.scene||{amb:'jour',actors:[]}; S.sceneAt[ev.cam]=S.elapsed; if(SET.alertes && ev.cam!==S.curCam) S.alerts[ev.cam]=true; log('Caméra '+ev.cam+suffix,ev.resume||''); renderCamera(); renderThumbs(); renderPlanMarkers(); if(SET.alertes){ var c=camById(ev.cam); toast('Alarme vidéo — '+ev.cam,c?c.nom:'','alert'); beep('alarm'); } break;
+    case 'cam': { var alert=SET.alertes && !ev.silent; S.scene[ev.cam]=ev.scene||{amb:'jour',actors:[]}; S.sceneAt[ev.cam]=alert?S.elapsed:null; if(alert && ev.cam!==S.curCam) S.alerts[ev.cam]=true; log('Caméra '+ev.cam+suffix+(ev.silent?' (sans alarme)':''),ev.resume||''); renderCamera(); renderThumbs(); renderPlanMarkers(); if(alert){ var c=camById(ev.cam); var hs=ev.scene&&ev.scene.amb==='hs'; toast(hs?'Perte de signal — '+ev.cam:'Alarme vidéo — '+ev.cam,c?c.nom:'','alert'); beep('alarm'); } break; }
     case 'note': S.notes.push({id:uid(),titre:ev.titre||'Note de service',texte:ev.texte||'',date:fmtDate(now)+' '+fmtHM(now)}); log('Note de service'+suffix,ev.titre||''); renderNotes(); toast('Note de service',ev.titre||'',''); break;
   }
   saveSoon(); }
 function addComm(c){ var now=simNow(); c.id=uid(); c.heure=fmtTime(now); c.el=S.elapsed; if(c.dir==='in' && !c.auto) c.answered=false; else c.answered=true; S.comms.push(c);
-  if(c.dir==='in'){ log((c.ch==='radio'?'Appel radio':'Appel téléphonique')+(c.auto?' (réponse)':' entrant'),nameOf(c.from)+' : '+c.text); if(!c.auto){ toast(c.ch==='radio'?'Appel radio entrant':'Appel téléphonique entrant',nameOf(c.from),'alert'); beep(c.ch); if(c.ch!==curCh){ setCh(c.ch); } } }
+  if(c.dir==='in'){ log((c.ch==='radio'?'Appel radio':'Appel téléphonique')+(c.auto?' (réponse)':' entrant'),nameOf(c.from)+' : '+c.text); if(!c.auto){ toast(c.ch==='radio'?'Appel radio entrant':'Appel téléphonique entrant',nameOf(c.from),'alert'); beep(c.ch); if(c.ch!==curCh && !$('inMsg').value.trim()){ setCh(c.ch); } } }
   else { log(c.ch==='radio'?'Transmission radio':'Appel téléphonique émis','→ '+nameOf(c.to)+' : '+c.text); }
   renderComms(); saveSoon(); }
 
@@ -1270,7 +1531,8 @@ function renderHeader(){ fillSelect($('selScenario'),SCENARIOS.map(function(s){ 
   var locked=S.phase!=='attente'; $('selScenario').disabled=locked; $('selMode').disabled=locked;
   $('btnStart').disabled=locked; $('btnPause').disabled=!(S.phase==='encours'||S.phase==='pause'); $('btnPause').textContent=S.phase==='pause'?'Reprendre':'Pause'; $('btnEnd').disabled=!(S.phase==='encours'||S.phase==='pause');
   if(SET.logo){ $('logoImg').src=SET.logo; $('logoImg').hidden=false; $('logoTxt').hidden=true; } else { $('logoImg').hidden=true; $('logoTxt').hidden=false; }
-  $('soundLbl').textContent='Son : '+(SET.son?'activé':'coupé'); updateClock(); }
+  $('soundLbl').textContent='Son : '+(SET.son?'activé':'coupé'); renderCtx(); updateClock(); }
+function renderCtx(){ var sc=scenarioById($('selScenario').value||S.scenarioId); $('scenCtx').innerHTML=S.phase==='attente'?'<b>Contexte de prise de poste :</b> '+esc(sc.contexte):''; }
 
 /* ---------- rendu : caméra ---------- */
 function renderCamera(){ var cam=camById(S.curCam)||CAMERAS[0]; $('selCam').value=cam.id; $('camQuartier').textContent=cam.quartier;
@@ -1366,7 +1628,7 @@ function newSession(){ if(!confirm('Nouvelle session : la main courante, les com
 /* ---------- sauvegarde / chargement ---------- */
 function downloadJSON(){ var data={app:'simulateur-ovp',version:1,savedAt:new Date().toISOString(),state:S,settings:SET}; var blob=new Blob([JSON.stringify(data)],{type:'application/json'}); var a=document.createElement('a'); var d=new Date();
   a.download='simulateur-ovp_'+S.scenarioId+'_'+isoDate(d)+'_'+pad(d.getHours())+pad(d.getMinutes())+'.json'; a.href=URL.createObjectURL(blob); document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500); toast('Sauvegarde','Fichier JSON téléchargé (session + réglages + images).','ok'); }
-function loadJSONFile(file){ var r=new FileReader(); r.onload=function(){ try{ var d=JSON.parse(r.result); if(!d||d.app!=='simulateur-ovp'||!d.state) throw new Error('format'); S=merge(defaultState(),d.state); if(d.settings) SET=merge(defaultSettings(),d.settings); if(S.phase==='encours') S.phase='pause'; ptz={z:1,px:0,py:0}; selMail=null; renderAll(); saveNow(); toast('Session chargée',d.savedAt?('Enregistrée le '+new Date(d.savedAt).toLocaleString('fr-FR')):'', 'ok'); }catch(e){ toast('Fichier non reconnu','Choisissez une sauvegarde créée par ce simulateur (.json).','alert'); } }; r.readAsText(file); }
+function loadJSONFile(file){ var r=new FileReader(); r.onload=function(){ try{ var d=JSON.parse(r.result); if(!d||d.app!=='simulateur-ovp'||!d.state) throw new Error('format'); S=merge(defaultState(),d.state); if(d.settings) SET=merge(defaultSettings(),d.settings); if(!scenarioById(S.scenarioId)||S.scenarioId!==scenarioById(S.scenarioId).id){ S.scenarioId=SCENARIOS[0].id; } if(!S.inv||S.inv.length!==INVENTORY.length) S.inv=defaultState().inv; if(S.phase==='encours') S.phase='pause'; ptz={z:1,px:0,py:0}; selMail=null; renderAll(); saveNow(); toast('Session chargée',d.savedAt?('Enregistrée le '+new Date(d.savedAt).toLocaleString('fr-FR')):'', 'ok'); }catch(e){ toast('Fichier non reconnu','Choisissez une sauvegarde créée par ce simulateur (.json).','alert'); } }; r.readAsText(file); }
 function readImage(file,maxW,cb){ var r=new FileReader(); r.onload=function(){ var im=new Image(); im.onload=function(){ var w=im.naturalWidth,h=im.naturalHeight,sc=Math.min(1,maxW/Math.max(w,h)); if(sc<1||file.size>600000){ var c=document.createElement('canvas'); c.width=Math.round(w*sc); c.height=Math.round(h*sc); c.getContext('2d').drawImage(im,0,0,c.width,c.height); var png=/png|svg/i.test(file.type)&&file.size<400000; cb(c.toDataURL(png?'image/png':'image/jpeg',0.82),w/h); } else cb(r.result,w/h); }; im.onerror=function(){ toast('Image illisible','Le fichier n’a pas pu être ouvert.','alert'); }; im.src=r.result; }; r.readAsDataURL(file); }
 
 /* ---------- panneau formateur ---------- */
@@ -1395,8 +1657,11 @@ function inject(){ var t=$('injType').value, text=$('injText').value.trim(), ev=
 function metrics(){ var sc=scenario(), firstCam=null; for(var i=0;i<sc.events.length;i++){ if(sc.events[i].type==='cam'&&S.firedAt[i]!=null&&sc.events[i].t>0){ firstCam=S.firedAt[i]; break; } }
   var firstOut=null; for(var j=0;j<S.comms.length;j++){ var c=S.comms[j]; if(c.dir==='out'&&firstCam!=null&&c.el>=firstCam){ firstOut=c.el; break; } }
   var inc=S.comms.filter(function(c){ return c.dir==='in'&&!c.auto; }).length, unans=S.comms.filter(function(c){ return c.dir==='in'&&!c.answered; }).length;
-  return [ {k:'Durée de l’exercice',v:fmtMMSS(S.elapsed)}, {k:'Lignes de main courante',v:String(S.mc.length)}, {k:'Transmissions radio émises',v:String(S.comms.filter(function(c){ return c.dir==='out'&&c.ch==='radio'; }).length)}, {k:'Appels téléphoniques émis',v:String(S.comms.filter(function(c){ return c.dir==='out'&&c.ch==='tel'; }).length)}, {k:'Courriels envoyés',v:String(S.mails.filter(function(m){ return m.box==='envoye'; }).length)}, {k:'Appels entrants non traités',v:unans+' / '+inc}, {k:'Délai première alerte vidéo → première transmission',v:firstCam==null?'—':(firstOut==null?'aucune transmission':fmtMMSS(firstOut-firstCam))}, {k:'Compte rendu',v:S.cr.faits.trim()?'rédigé':'non rédigé'} ]; }
+  var sco=score();
+  return [ {k:'Durée de l’exercice',v:fmtMMSS(S.elapsed)}, {k:'Attendus validés (note indicative)',v:sco.ok+' / '+sco.n+' — '+sco.note+' / 20'}, {k:'Lignes de main courante',v:String(S.mc.length)}, {k:'Transmissions radio émises',v:String(S.comms.filter(function(c){ return c.dir==='out'&&c.ch==='radio'; }).length)}, {k:'Appels téléphoniques émis',v:String(S.comms.filter(function(c){ return c.dir==='out'&&c.ch==='tel'; }).length)}, {k:'Courriels envoyés',v:String(S.mails.filter(function(m){ return m.box==='envoye'; }).length)}, {k:'Appels entrants non traités',v:unans+' / '+inc}, {k:'Délai première alerte vidéo → première transmission',v:firstCam==null?'—':(firstOut==null?'aucune transmission':fmtMMSS(firstOut-firstCam))}, {k:'Compte rendu',v:S.cr.faits.trim()?'rédigé':'non rédigé'} ]; }
+function score(){ var sc=scenario(), n=sc.attendus.length, ok=0; for(var i=0;i<n;i++) if(S.debrief.checks[i]) ok++; var note=n?Math.round(ok/n*20*2)/2:0; return {n:n,ok:ok,pct:n?Math.round(ok/n*100):0,note:note}; }
 function renderDebrief(){ var sc=scenario(); $('trMetrics').innerHTML=metrics().map(function(m){ return '<div class="metric"><div class="v">'+esc(m.v)+'</div><div class="k">'+esc(m.k)+'</div></div>'; }).join('');
+  var sco=score(); $('trScore').innerHTML='<span>'+sco.ok+' / '+sco.n+' attendus cochés</span><div class="bar"><i style="width:'+sco.pct+'%"></i></div><b>'+String(sco.note).replace('.',',')+' / 20</b>';
   $('trChecks').innerHTML=sc.attendus.map(function(a,i){ return '<label class="chk"><input type="checkbox" data-chk="'+i+'"'+(S.debrief.checks[i]?' checked':'')+'><span>'+esc(a)+'</span></label>'; }).join('');
   $('trCorrige').innerHTML='<div class="tablewrap"><table class="register"><thead><tr><th>Heure</th><th>Caméra</th><th>Faits constatés</th><th>Mesures prises</th></tr></thead><tbody>'+sc.corrige.map(function(l){ return '<tr><td class="t">'+fmtHM(simAt(l.t))+'</td><td class="t">'+esc(l.cam)+'</td><td class="pre">'+esc(l.faits)+'</td><td class="pre">'+esc(l.mesures)+'</td></tr>'; }).join('')+'</tbody></table></div>';
   $('trComment').value=S.debrief.commentaire||''; }
@@ -1423,7 +1688,7 @@ function renderAll(){ renderHeader(); fillSelect($('selCam'),CAMERAS.map(functio
 function on(id,evt,fn){ var el=$(id); if(el) el.addEventListener(evt,fn); }
 function bind(){
   on('btnStart','click',startExercise); on('btnPause','click',togglePause); on('btnEnd','click',endExercise); on('btnNew','click',newSession);
-  on('selScenario','change',function(){ S.scenarioId=this.value; S.scene={}; S.sceneAt={}; S.alerts={}; renderCamera(); renderThumbs(); renderPlanMarkers(); renderCR(); updateClock(); saveSoon(); });
+  on('selScenario','change',function(){ S.scenarioId=this.value; S.scene={}; S.sceneAt={}; S.alerts={}; renderCamera(); renderThumbs(); renderPlanMarkers(); renderCR(); renderCtx(); updateClock(); saveSoon(); });
   on('selMode','change',function(){ S.mode=this.value; saveSoon(); }); on('selSpeed','change',function(){ S.speed=+this.value; saveSoon(); }); on('inOperateur','change',function(){ S.operateur=this.value.trim(); saveSoon(); });
   on('btnSound','click',function(){ SET.son=!SET.son; renderHeader(); if(SET.son){ ensureAudio(); beep('radio'); } saveSoon(); });
   on('btnPrint','click',function(){ $('printModal').hidden=false; }); on('btnDoPrint','click',function(){ doPrint($('printKind').value); });
@@ -1463,7 +1728,7 @@ function bind(){
   on('trTabs','click',function(e){ var b=e.target.closest('[data-tab]'); if(b) showTrTab(b.getAttribute('data-tab')); });
   on('trEvents','click',function(e){ var b=e.target.closest('[data-fire]'); if(b){ fireEvent(+b.getAttribute('data-fire')); renderTrainerEvents(); } });
   on('injType','change',renderInjForm); on('btnInject','click',inject);
-  on('trChecks','change',function(e){ var c=e.target.getAttribute('data-chk'); if(c!=null){ S.debrief.checks[c]=e.target.checked; saveSoon(); } });
+  on('trChecks','change',function(e){ var c=e.target.getAttribute('data-chk'); if(c!=null){ S.debrief.checks[c]=e.target.checked; renderDebrief(); saveSoon(); } });
   on('trComment','input',function(){ S.debrief.commentaire=this.value; saveSoon(); });
   on('setAlerts','change',function(){ SET.alertes=this.value==='1'; if(!SET.alertes) S.alerts={}; renderThumbs(); renderPlanMarkers(); updateClock(); saveSoon(); });
   on('setSound','change',function(){ SET.son=this.value==='1'; renderHeader(); saveSoon(); });
